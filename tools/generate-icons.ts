@@ -13,7 +13,7 @@ function createIcon(size: number): Buffer {
 
   const cx = size / 2;
   const cy = size / 2;
-  const r = size * 0.4; // circle radius
+  const r = size * 0.4;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -23,11 +23,10 @@ function createIcon(size: number): Buffer {
       const idx = (y * size + x) * channels;
 
       if (dist <= r) {
-        // Gradient fill: blue-purple (#6366f1 to #8b5cf6)
         const t = dist / r;
-        const rVal = Math.round(99 + t * (139 - 99));    // 63 -> 8b
-        const gVal = Math.round(102 + t * (92 - 102));   // 66 -> 5c
-        const bVal = Math.round(241 + t * (246 - 241));  // f1 -> f6
+        const rVal = Math.round(99 + t * (139 - 99));
+        const gVal = Math.round(102 + t * (92 - 102));
+        const bVal = Math.round(241 + t * (246 - 241));
         raw[idx] = rVal;
         raw[idx + 1] = gVal;
         raw[idx + 2] = bVal;
@@ -73,11 +72,10 @@ function chunk(type: string, data: Buffer): Buffer {
 }
 
 function encodePNG(width: number, height: number, pixelData: Buffer): Buffer {
-  // Build raw scanlines with filter byte 0 (None) per row
   const stride = width * 4;
   const rawScanlines = Buffer.alloc(height * (stride + 1));
   for (let y = 0; y < height; y++) {
-    rawScanlines[y * (stride + 1)] = 0; // filter byte
+    rawScanlines[y * (stride + 1)] = 0;
     pixelData.copy(rawScanlines, y * (stride + 1) + 1, y * stride, (y + 1) * stride);
   }
 
@@ -88,11 +86,11 @@ function encodePNG(width: number, height: number, pixelData: Buffer): Buffer {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(width, 0);
   ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8;  // bit depth
-  ihdr[9] = 6;  // color type: RGBA
-  ihdr[10] = 0; // compression
-  ihdr[11] = 0; // filter
-  ihdr[12] = 0; // interlace
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
 
   return Buffer.concat([
     signature,
