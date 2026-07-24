@@ -1,0 +1,16 @@
+name: Infer Agent
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  infer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: inference-gateway/infer-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          provider-api-key: ${{ secrets.INFER_PROVIDER_API_KEY }}
+          model: ${{ secrets.INFER_MODEL || 'claude-sonnet-4-20250514' }}
