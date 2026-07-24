@@ -2,7 +2,7 @@
 
 Reusable, copy-paste answers for the Web Store listing's **Privacy** tab. Keep these
 in sync with `manifest.json` and [`PRIVACY.md`](../../PRIVACY.md). These declarations
-apply identically to Chrome Web Store and Microsoft Edge Add-ons.
+apply identically to Chrome Web Store, Microsoft Edge Add-ons, and Firefox Add-ons.
 
 ## Single purpose
 

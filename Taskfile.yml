@@ -46,6 +46,18 @@ tasks:
       - cd dist && zip -r ../edge-extension.zip .
       - sha256sum edge-extension.zip > edge-extension.zip.sha256
 
+  build:firefox:
+    desc: Build the extension for Firefox into dist/
+    cmds:
+      - bun run build.ts --firefox
+
+  package:firefox:
+    desc: Package dist/ into a Firefox Add-ons ZIP with SHA-256 checksum
+    deps: [build:firefox]
+    cmds:
+      - cd dist && zip -r ../firefox-extension.zip .
+      - sha256sum firefox-extension.zip > firefox-extension.zip.sha256
+
   check:
     desc: Run all CI checks
     cmds:

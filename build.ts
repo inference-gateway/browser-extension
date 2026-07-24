@@ -1,7 +1,6 @@
-// Bundles the extension into dist/ (the load-unpacked target).
-// One bundler, no webpack/vite - Bun's own. React is defined to production mode
-// so the bundle carries no `process` reference (undefined in a content script).
-import { rm, mkdir, cp } from "node:fs/promises";
+import { rm, mkdir, cp, readFile, writeFile } from "node:fs/promises";
+
+const isFirefox = process.argv.includes("--firefox");
 
 await rm("dist", { recursive: true, force: true });
 await mkdir("dist", { recursive: true });
@@ -19,8 +18,16 @@ if (!result.success) {
   process.exit(1);
 }
 
-// Static assets copied verbatim next to the bundles.
-await cp("manifest.json", "dist/manifest.json");
+const base = JSON.parse(await readFile("manifest.json", "utf-8"));
+
+if (isFirefox) {
+  const overrides = JSON.parse(await readFile("manifest.firefox.json", "utf-8"));
+  const manifest = { ...base, ...overrides };
+  await writeFile("dist/manifest.json", JSON.stringify(manifest, null, 2));
+} else {
+  await cp("manifest.json", "dist/manifest.json");
+}
+
 await cp("src/styles.css", "dist/styles.css");
 await cp("src/options.html", "dist/options.html");
 await cp("src/popup.html", "dist/popup.html");

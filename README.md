@@ -17,6 +17,10 @@
   <a href="https://microsoftedge.microsoft.com/addons/detail/inference-gateway-for-git/REPLACE_WITH_EDGE_EXTENSION_ID">
     <img src="https://img.shields.io/badge/Edge%20Add--ons-available-brightgreen?style=flat-square" alt="Edge Add-ons"/>
   </a>
+  <!-- Firefox Add-ons Badge -->
+  <a href="https://addons.mozilla.org/firefox/addon/inference-gateway-for-git/REPLACE_WITH_FIREFOX_ADDON_ID">
+    <img src="https://img.shields.io/amo/v/inference-gateway-for-git?style=flat-square&label=Firefox%20Add-ons" alt="Firefox Add-ons"/>
+  </a>
 </p>
 
 A Manifest V3 browser extension that makes the org's **repo skills** and common
@@ -83,6 +87,10 @@ GitHub's own draft/preview state stay consistent.
 
 [![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Install-brightgreen?style=flat-square)](https://microsoftedge.microsoft.com/addons/detail/inference-gateway-for-git/REPLACE_WITH_EDGE_EXTENSION_ID)
 
+**Firefox Add-ons**:
+
+[![Firefox Add-ons](https://img.shields.io/amo/v/inference-gateway-for-git?label=Install%20from%20Firefox%20Add-ons)](https://addons.mozilla.org/firefox/addon/inference-gateway-for-git/REPLACE_WITH_FIREFOX_ADDON_ID)
+
 **Manual (unpacked)** for development or self-building:
 
 ```bash
@@ -132,7 +140,7 @@ The same `dist/` is the whole extension, and the only privileged API used is
 | Browser      | What's needed                                                            |
 | ------------ | ------------------------------------------------------------------------ |
 | Chrome, Edge | Works as-is (`background.service_worker`). Chrome Web Store and Edge Add-ons use the same `dist/` ZIP. |
-| Firefox 109+ | In `manifest.json`, swap `background.service_worker` → `background.scripts: ["background.js"]` and add a `browser_specific_settings.gecko.id`. |
+| Firefox 109+ | Build with `task build:firefox` (applies `manifest.firefox.json` overrides: `background.scripts` + `browser_specific_settings.gecko.id`). |
 | Safari       | Wrap `dist/` with `xcrun safari-web-extension-converter` (no code change).|
 
 If the API surface ever grows beyond `chrome.storage`, drop in Mozilla's single-file
@@ -159,9 +167,10 @@ To produce a store ZIP:
 ```bash
 task package:chrome    # builds, zips dist/ to browser-extension.zip, writes SHA-256
 task package:edge      # same ZIP, named edge-extension.zip for Edge Add-ons
+task package:firefox   # builds with Firefox manifest, zips to firefox-extension.zip, writes SHA-256
 ```
 
-The ZIP is also built and attached automatically to every GitHub Release by the
+The ZIPs are also built and attached automatically to every GitHub Release by the
 release workflow.
 
 ## Roadmap
