@@ -47,9 +47,11 @@ function Options() {
       <h1>GitHub Comment Helper</h1>
 
       <section>
-        <h2>Personal access token (optional)</h2>
-        <p>Only needed to list skills in <strong>private</strong> repos. Fine-grained token with
-          <code> Contents: read</code>. Stored in this browser's extension storage.</p>
+        <h2>Personal access token</h2>
+        <p>Required to install the Infer Agent workflow. Also used to list skills in
+          <strong>private</strong> repos. Fine-grained token with
+          <code> Contents: write</code>, <code> Pull requests: write</code>, and
+          <code> Workflows: write</code>. Stored in this browser's extension storage.</p>
         <input
           type="password"
           className="igw-field"

@@ -47,6 +47,9 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
   a port is a manifest tweak, not a rewrite.
 - 🔒 **Private-Repo Support**: Optional fine-grained PAT (`Contents: read`), stored
   in extension storage.
+- 🚀 **One-Click Infer Agent Install**: Open the toolbar popup on any GitHub repo to
+  install the Infer Agent workflow via a pull request. Requires a PAT with
+  `Contents: write`, `Pull requests: write`, and `Workflows: write`.
 
 ## Overview
 
@@ -89,9 +92,11 @@ bun run build      # outputs dist/
 
 Right-click the extension → **Options** (or the Details page → *Extension options*):
 
-- **Personal access token** - optional, only needed to list skills in **private**
-  repos. Use a fine-grained token with `Contents: read`. Click *Remove token* to
-  delete it, or save with the field blank - either way the stored key is removed.
+- **Personal access token** - required to install the Infer Agent workflow via the
+  toolbar popup. Also needed to list skills in **private** repos. Use a fine-grained
+  token with `Contents: write`, `Pull requests: write`, and `Workflows: write`.
+  Click *Remove token* to delete it, or save with the field blank - either way the
+  stored key is removed.
 - **Quick prompts** - a JSON array of `{ id, label, description, insert }`, editable,
   with a *Reset to defaults* button.
 
