@@ -127,6 +127,15 @@ Layout: `src/content.ts` is the imperative controller (DOM detection, caret math
 insertion, keyboard); `src/ui/*` is the React view (skill menu + palette);
 `src/background.ts` is the service worker that fetches and caches skills.
 
+To produce a Chrome Web Store ZIP:
+
+```bash
+task package:chrome    # builds, zips dist/ to browser-extension.zip, writes SHA-256
+```
+
+The ZIP is also built and attached automatically to every GitHub Release by the
+release workflow.
+
 ## Roadmap
 
 - The newer React/ProseMirror composer on some 2024+ issue pages (v1 targets the
