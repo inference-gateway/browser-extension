@@ -33,7 +33,7 @@ Capture these screenshots at 1280x800 on a GitHub issue or PR page:
 3. Press Ctrl+Shift+P (or Cmd+Shift+P on Mac) - the quick-prompts palette should open as a centered overlay. Type to filter, Enter to insert.
 4. Click the lightning bolt button in the comment toolbar - the same palette opens.
 5. Right-click the extension icon -> Options (or chrome://extensions -> Details -> Extension options). The options page shows a token field and an editable quick-prompts JSON editor with a Reset to defaults button.
-6. Verify the extension only requests `storage` permission and host access to `https://api.github.com/*` and `https://github.com/*`.
+6. Verify the extension only requests `storage` permission, `host_permissions` limited to `https://api.github.com/*`, and a content-script match on `https://github.com/*`.
 
 ## URLs for the listing
 
