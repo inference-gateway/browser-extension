@@ -4,7 +4,8 @@
   "description": "Repo-skill tab-completion and quick-prompts in GitHub issue/PR comments.",
   "version": "0.2.0",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab"
   ],
   "host_permissions": [
     "https://api.github.com/*"
@@ -33,6 +34,10 @@
     "128": "icons/icon-128.png"
   },
   "homepage_url": "https://github.com/inference-gateway/browser-extension",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Infer Agent"
+  },
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
