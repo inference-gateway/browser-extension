@@ -4,7 +4,7 @@
 import * as storage from "./shared/storage";
 import type { Skill } from "./shared/messages";
 
-const TTL = 10 * 60 * 1000; // 10 min
+const TTL = 10 * 60 * 1000;
 
 const WORKFLOW_PATH = ".github/workflows/infer-agent.yml";
 const BRANCH = "infer-agent-install";
@@ -114,7 +114,6 @@ async function doInstall(owner: string, repo: string): Promise<{ prUrl: string }
   const pat = await storage.get<string>("pat");
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Contents: write, Pull requests: write, and Workflows: write in the extension options." };
 
-  // 1. Get default branch and head SHA
   const repoRes = await ghFetch(owner, repo, "");
   if (!repoRes.ok) {
     if (repoRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write, Pull requests: write, and Workflows: write." };
@@ -124,14 +123,12 @@ async function doInstall(owner: string, repo: string): Promise<{ prUrl: string }
   const defaultBranch = repoData.default_branch;
   const headSha = repoData.head?.sha ?? (await ghFetch(owner, repo, `git/refs/heads/${defaultBranch}`).then((r) => r.json())).object.sha;
 
-  // 2. Create branch
   const branchRes = await ghFetch(owner, repo, "git/refs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ref: `refs/heads/${BRANCH}`, sha: headSha }),
   });
   if (!branchRes.ok && branchRes.status !== 422) {
-    // 422 = branch already exists, that's fine
     if (branchRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write, Pull requests: write, and Workflows: write." };
     throw new Error(`GitHub ${branchRes.status}`);
   }
