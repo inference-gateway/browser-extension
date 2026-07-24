@@ -12,7 +12,7 @@ import { caretPosition } from "./lib/caret";
 import { fuzzyFilter } from "./lib/fuzzy";
 import { replaceRange } from "./lib/insert";
 import * as storage from "./shared/storage";
-import { DEFAULT_PROMPTS, type Prompt } from "./shared/prompts";
+import { mergePrompts, type Prompt } from "./shared/prompts";
 import type { Skill } from "./shared/messages";
 
 let root: Root | null = null;
@@ -125,8 +125,7 @@ function closeSkill(): void {
 async function openPalette(box: HTMLTextAreaElement): Promise<void> {
   closeSkill();
   lastBox = box;
-  const custom = await storage.get<Prompt[]>("prompts");
-  const prompts = custom && custom.length ? custom : DEFAULT_PROMPTS;
+  const prompts = mergePrompts(await storage.get<Prompt[]>("prompts"));
   view = {
     kind: "palette",
     prompts,
@@ -203,9 +202,13 @@ document.addEventListener(
 const buttoned = new WeakSet<Element>();
 function tryInjectButton(box: HTMLTextAreaElement): void {
   try {
-    const toolbar = box.id
-      ? document.querySelector(`markdown-toolbar[for="${CSS.escape(box.id)}"]`)
+    const md = box.id
+      ? document.querySelector<HTMLElement>(`markdown-toolbar[for="${CSS.escape(box.id)}"]`)
       : null;
+    if (!md) return;
+    const toolbar = md.offsetParent
+      ? md
+      : md.parentElement?.querySelector<HTMLElement>('[class*="ActionBar"]');
     if (!toolbar || buttoned.has(toolbar)) return;
     buttoned.add(toolbar);
     const btn = document.createElement("button");

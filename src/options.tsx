@@ -1,7 +1,7 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
-import { DEFAULT_PROMPTS, type Prompt } from "./shared/prompts";
+import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, type BotConfig, type Permissions } from "./shared/models";
 
 function Options() {
@@ -15,7 +15,7 @@ function Options() {
   useEffect(() => {
     void (async () => {
       setPat((await storage.get<string>("pat")) ?? "");
-      const p = (await storage.get<Prompt[]>("prompts")) ?? DEFAULT_PROMPTS;
+      const p = mergePrompts(await storage.get<Prompt[]>("prompts"));
       setPromptsText(JSON.stringify(p, null, 2));
       const m = (await storage.get<unknown[]>("models")) ?? DEFAULT_MODELS;
       setModelsText(JSON.stringify(m, null, 2));
