@@ -1,0 +1,13 @@
+#!/bin/sh
+# pre-commit hook: run project checks before allowing a commit
+# Skipped when GIT_HOOKS_SKIP is set (e.g. CI, emergency commits)
+
+if [ -n "$GIT_HOOKS_SKIP" ]; then
+  exit 0
+fi
+
+echo "--- pre-commit: typecheck ---"
+bun run typecheck || exit 1
+
+echo "--- pre-commit: tests ---"
+bun test || exit 1

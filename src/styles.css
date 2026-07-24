@@ -1,0 +1,460 @@
+/* All overlay styles are namespaced .igw-* and lean on GitHub's own CSS variables
+   so light/dark follow the page automatically. */
+
+.igw-menu {
+  position: fixed;
+  z-index: 2147483000;
+  min-width: 220px;
+  max-width: 340px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px;
+  font-size: 13px;
+  color: var(--color-fg-default, #1f2328);
+  background: var(--color-canvas-overlay, #fff);
+  border: 1px solid var(--color-border-default, #d0d7de);
+  border-radius: 6px;
+  box-shadow: var(--color-shadow-large, 0 8px 24px rgba(31, 35, 40, 0.2));
+}
+
+.igw-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.igw-item.igw-active {
+  background: var(--color-accent-subtle, #ddf4ff);
+}
+.igw-name {
+  font-weight: 600;
+}
+.igw-name b {
+  color: var(--color-accent-fg, #0969da);
+}
+.igw-desc {
+  font-size: 12px;
+  color: var(--color-fg-muted, #656d76);
+}
+.igw-insert {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+  color: var(--color-fg-muted, #656d76);
+}
+.igw-empty {
+  padding: 6px 8px;
+  color: var(--color-fg-muted, #656d76);
+}
+
+/* Quick-prompt palette */
+.igw-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12vh;
+  background: rgba(31, 35, 40, 0.3);
+}
+.igw-palette {
+  width: min(560px, 92vw);
+  overflow: hidden;
+  color: var(--color-fg-default, #1f2328);
+  background: var(--color-canvas-overlay, #fff);
+  border: 1px solid var(--color-border-default, #d0d7de);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(31, 35, 40, 0.3);
+}
+.igw-palette-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-default, #d0d7de);
+  outline: none;
+}
+.igw-palette-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 6px;
+}
+.igw-palette .igw-insert {
+  display: block;
+  margin-top: 2px;
+}
+
+/* Injected toolbar button */
+.igw-palette-btn {
+  padding: 4px 6px;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  color: var(--color-fg-muted, #656d76);
+  font-size: 14px;
+  line-height: 1;
+}
+.igw-palette-btn:hover {
+  color: var(--color-accent-fg, #0969da);
+}
+
+/* Options page */
+.igw-options {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 16px 48px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.5;
+  color: #1f2328;
+}
+.igw-options h1 {
+  font-size: 20px;
+}
+.igw-options h2 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.igw-options section {
+  margin-top: 24px;
+}
+.igw-options code {
+  padding: 1px 4px;
+  font-size: 85%;
+  background: #eff1f3;
+  border-radius: 4px;
+}
+.igw-field {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+.igw-json {
+  min-height: 320px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.igw-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+.igw-actions button {
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+.igw-save {
+  color: #fff;
+  background: #1f883d;
+  border-color: #1f883d;
+}
+.igw-status {
+  font-size: 13px;
+  color: #656d76;
+}
+.igw-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.igw-bot-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.igw-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #656d76;
+}
+
+/* Popup */
+.igw-popup {
+  width: 280px;
+  padding: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1f2328;
+}
+.igw-popup-body {
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.igw-popup-repo {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+.igw-popup-muted {
+  color: #656d76;
+  margin: 0;
+}
+.igw-popup-error {
+  color: #cf222e;
+  margin: 0;
+  font-size: 12px;
+}
+.igw-popup-success {
+  color: #1a7f37;
+  margin: 0;
+  font-weight: 600;
+}
+.igw-popup-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  text-align: center;
+}
+.igw-popup-btn-primary {
+  color: #fff;
+  background: #1f883d;
+  border-color: #1f883d;
+}
+.igw-popup-btn-primary:hover {
+  background: #1a7f37;
+}
+.igw-popup-btn-disabled {
+  color: #8b949e;
+  background: #f6f8fa;
+  cursor: default;
+}
+.igw-popup-link {
+  display: block;
+  color: #0969da;
+  text-decoration: none;
+  font-size: 12px;
+  text-align: center;
+}
+.igw-popup-link:hover {
+  text-decoration: underline;
+}
+.igw-popup-footer {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #d0d7de;
+}
+
+/* "Tasks" repo-nav install popover (injected into GitHub, so it uses GitHub's CSS
+   variables to follow light/dark automatically). */
+.igw-tasks-panel {
+  width: 460px;
+  max-width: calc(100vw - 24px);
+  font-size: 13px;
+  color: var(--fgColor-default, var(--color-fg-default, #1f2328));
+  background: var(--overlay-bgColor, var(--color-canvas-overlay, #fff));
+  border: 1px solid var(--borderColor-default, var(--color-border-default, #d0d7de));
+  border-radius: 6px;
+  box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.2));
+  overflow: hidden;
+}
+.igw-tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 8px 8px 0;
+}
+.igw-tasks-close {
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+  background: transparent;
+  border: 0;
+}
+.igw-tasks-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+.igw-tasks-repo {
+  margin: 0;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+}
+
+/* Skills panel */
+.igw-tasks-search {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: inherit;
+  background: var(--bgColor-default, var(--color-canvas-default, #fff));
+  border: 1px solid var(--borderColor-default, var(--color-border-default, #d0d7de));
+  border-radius: 6px;
+}
+.igw-tasks-hint {
+  margin: -2px 0 0;
+  font-size: 12px;
+  color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+}
+.igw-skill-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--borderColor-muted, var(--color-border-muted, #d8dee4));
+  border-radius: 8px;
+}
+.igw-skill-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted, #d8dee4));
+}
+.igw-skill-row:last-child {
+  border-bottom: 0;
+}
+.igw-skill-row:hover {
+  background: var(--bgColor-muted, var(--color-canvas-subtle, #f6f8fa));
+}
+.igw-skill-row input[type="checkbox"] {
+  margin-top: 2px;
+}
+.igw-skill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.igw-skill-name {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 600;
+}
+.igw-skill-desc {
+  font-size: 12px;
+  color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+}
+.igw-skill-badge {
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--fgColor-accent, var(--color-accent-fg, #0969da));
+  background: var(--bgColor-accent-muted, var(--color-accent-subtle, #ddf4ff));
+  border-radius: 999px;
+}
+.igw-skill-badge-on {
+  color: var(--fgColor-success, var(--color-success-fg, #1a7f37));
+  background: var(--bgColor-success-muted, var(--color-success-subtle, #dafbe1));
+}
+.igw-tasks-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--fgColor-default, var(--color-fg-default, #1f2328));
+}
+.igw-tasks-muted {
+  margin: 0;
+  color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+}
+.igw-tasks-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fgColor-danger, var(--color-danger-fg, #cf222e));
+}
+.igw-tasks-success {
+  margin: 0;
+  font-weight: 600;
+  color: var(--fgColor-success, var(--color-success-fg, #1a7f37));
+}
+.igw-tasks-label {
+  font-size: 12px;
+  color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
+}
+.igw-tasks-select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 13px;
+  color: inherit;
+  background: var(--bgColor-default, var(--color-canvas-default, #fff));
+  border: 1px solid var(--borderColor-default, var(--color-border-default, #d0d7de));
+  border-radius: 6px;
+}
+.igw-tasks-btn {
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--button-primary-fgColor-rest, #fff);
+  background: var(--button-primary-bgColor-rest, var(--color-btn-primary-bg, #1f883d));
+  border: 1px solid var(--button-primary-borderColor-rest, rgba(31, 35, 40, 0.15));
+  border-radius: 6px;
+}
+.igw-tasks-btn:hover {
+  background: var(--button-primary-bgColor-hover, var(--color-btn-primary-hover-bg, #1a7f37));
+}
+.igw-tasks-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.igw-tasks-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: inherit;
+  background: var(--bgColor-default, var(--color-canvas-default, #fff));
+  border: 1px solid var(--borderColor-default, var(--color-border-default, #d0d7de));
+  border-radius: 6px;
+  resize: vertical;
+}
+.igw-tasks-link {
+  display: inline-block;
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--fgColor-accent, var(--color-accent-fg, #0969da));
+}
+.igw-tasks-link:hover {
+  text-decoration: underline;
+}
+/* In the header, push the re-install button to the left; the close × stays right. */
+.igw-tasks-header .igw-tasks-btn-secondary {
+  margin-right: auto;
+}
+.igw-tasks-btn-secondary {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--fgColor-default, var(--color-fg-default, #1f2328));
+  background: transparent;
+  border: 1px solid var(--borderColor-default, var(--color-border-default, #d0d7de));
+  border-radius: 6px;
+}
+.igw-tasks-btn-secondary:hover {
+  background: var(--bgColor-muted, var(--color-canvas-subtle, #f6f8fa));
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.zip
+*.sha256
+.DS_Store
+**/.env
+.infer
+
