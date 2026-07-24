@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as storage from "../shared/storage";
 import { DEFAULT_MODELS, isModelOption, type ModelOption } from "../shared/models";
-import { DEFAULT_PROMPTS, type Prompt } from "../shared/prompts";
+import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "../shared/prompts";
 import { ask } from "./ask";
 
 type State =
@@ -35,8 +35,7 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
         : DEFAULT_MODELS;
       setModels(list);
       setModel(list[0].model);
-      const p = await storage.get<Prompt[]>("prompts");
-      setPrompts(p && p.length ? p : DEFAULT_PROMPTS);
+      setPrompts(mergePrompts(await storage.get<Prompt[]>("prompts")));
     })();
     ask({ type: "check-install", owner, repo }, (resp) => {
       if (chrome.runtime?.lastError || !resp) return setState({ kind: "ready", installed: false, error: "Failed to check install status." });
