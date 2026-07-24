@@ -25,14 +25,10 @@ if (!result.success) {
   process.exit(1);
 }
 
-// Build the manifest: start from the base manifest and apply browser-specific overrides.
 const base = JSON.parse(await readFile("manifest.json", "utf-8"));
 
 if (isFirefox) {
   const overrides = JSON.parse(await readFile("manifest.firefox.json", "utf-8"));
-  // Deep-merge: Firefox overrides replace background entirely and add
-  // browser_specific_settings. A simple spread handles the top-level keys
-  // since the overrides file is intentionally flat at the top level.
   const manifest = { ...base, ...overrides };
   await writeFile("dist/manifest.json", JSON.stringify(manifest, null, 2));
 } else {
