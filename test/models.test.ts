@@ -16,7 +16,7 @@ test("workflowYaml uses block-list syntax, not inline arrays", () => {
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.34.5");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.34.6");
 });
 
 test("workflowYaml exposes model as a workflow_dispatch choice input with all options + default", () => {
@@ -67,6 +67,11 @@ test("workflowYaml with a bot mints an app token and uses it for checkout + infe
   expect(yaml).toContain("token: ${{ steps.app-token.outputs.token }}");
   expect(yaml).toContain("github-token: ${{ steps.app-token.outputs.token }}");
   expect(yaml).not.toContain("github-token: ${{ secrets.GITHUB_TOKEN }}");
+  expect(yaml).toContain("github-app-slug: ${{ steps.app-token.outputs.app-slug }}");
+});
+
+test("workflowYaml without a bot does not pass github-app-slug", () => {
+  expect(workflowYaml(models, def, noBot)).not.toContain("github-app-slug");
 });
 
 test("prBody names the provider secret and, with a bot, the private-key secret", () => {
