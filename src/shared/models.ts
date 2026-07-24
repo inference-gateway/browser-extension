@@ -120,6 +120,7 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
           token: \${{ steps.app-token.outputs.token }}`
     : `      - uses: actions/checkout@v7.0.1`;
   const githubToken = bot.enabled ? "${{ steps.app-token.outputs.token }}" : "${{ secrets.GITHUB_TOKEN }}";
+  const botSlugLine = bot.enabled ? "\n          github-app-slug: ${{ steps.app-token.outputs.app-slug }}" : "";
 
   return `name: Task
 
@@ -158,9 +159,9 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}
 
-      - uses: inference-gateway/infer-action@v0.34.5
+      - uses: inference-gateway/infer-action@v0.34.6
         with:
-          github-token: ${githubToken}
+          github-token: ${githubToken}${botSlugLine}
           model: \${{ inputs.model || '${def}' }}
           direct-prompt: \${{ inputs.prompt }}
 ${permLines}
