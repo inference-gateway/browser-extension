@@ -58,6 +58,19 @@ tasks:
       - cd dist && zip -r ../firefox-extension.zip .
       - sha256sum firefox-extension.zip > firefox-extension.zip.sha256
 
+  build:safari:
+    desc: Build the extension for Safari into dist/
+    cmds:
+      - bun run build.ts --safari
+
+  package:safari:
+    desc: Build the Safari extension and create a Safari Web Extension Xcode project
+    deps: [build:safari]
+    cmds:
+      - echo "See docs/store/safari-listing.md for the full Safari packaging guide"
+      - echo "Run the following on macOS with Xcode installed:"
+      - echo "  xcrun safari-web-extension-converter dist/ --bundle-identifier com.inferencegateway.browser-extension --project-location ../safari-extension --no-open"
+
   check:
     desc: Run all CI checks
     cmds:

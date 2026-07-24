@@ -9,6 +9,8 @@
   <img src="https://img.shields.io/badge/Manifest-V3-blue?style=flat-square" alt="Manifest V3"/>
   <!-- Built With Badge -->
   <img src="https://img.shields.io/badge/built%20with-Bun%20%2B%20React-blue?style=flat-square" alt="Built with Bun + React"/>
+  <!-- Safari Badge -->
+  <img src="https://img.shields.io/badge/Safari%20Web%20Extension-ready-brightgreen?style=flat-square" alt="Safari Web Extension ready"/>
   <!-- Chrome Web Store Badge -->
   <a href="https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID">
     <img src="https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?style=flat-square&label=Chrome%20Web%20Store" alt="Chrome Web Store"/>
@@ -141,7 +143,7 @@ The same `dist/` is the whole extension, and the only privileged API used is
 | ------------ | ------------------------------------------------------------------------ |
 | Chrome, Edge | Works as-is (`background.service_worker`). Chrome Web Store and Edge Add-ons use the same `dist/` ZIP. |
 | Firefox 109+ | Build with `task build:firefox` (applies `manifest.firefox.json` overrides: `background.scripts` + `browser_specific_settings.gecko.id`). |
-| Safari       | Wrap `dist/` with `xcrun safari-web-extension-converter` (no code change).|
+| Safari 16.4+ | Build with `task build:safari`, then wrap with `xcrun safari-web-extension-converter` on macOS. See [`docs/store/safari-listing.md`](docs/store/safari-listing.md) for the full packaging and App Store release guide. |
 
 If the API surface ever grows beyond `chrome.storage`, drop in Mozilla's single-file
 `webextension-polyfill` and alias `browser` → `chrome`.
@@ -168,6 +170,7 @@ To produce a store ZIP:
 task package:chrome    # builds, zips dist/ to browser-extension.zip, writes SHA-256
 task package:edge      # same ZIP, named edge-extension.zip for Edge Add-ons
 task package:firefox   # builds with Firefox manifest, zips to firefox-extension.zip, writes SHA-256
+task build:safari      # builds with Safari manifest; see docs/store/safari-listing.md for Xcode conversion
 ```
 
 The ZIPs are also built and attached automatically to every GitHub Release by the

@@ -1,6 +1,7 @@
 import { rm, mkdir, cp, readFile, writeFile } from "node:fs/promises";
 
 const isFirefox = process.argv.includes("--firefox");
+const isSafari = process.argv.includes("--safari");
 
 await rm("dist", { recursive: true, force: true });
 await mkdir("dist", { recursive: true });
@@ -22,6 +23,10 @@ const base = JSON.parse(await readFile("manifest.json", "utf-8"));
 
 if (isFirefox) {
   const overrides = JSON.parse(await readFile("manifest.firefox.json", "utf-8"));
+  const manifest = { ...base, ...overrides };
+  await writeFile("dist/manifest.json", JSON.stringify(manifest, null, 2));
+} else if (isSafari) {
+  const overrides = JSON.parse(await readFile("manifest.safari.json", "utf-8"));
   const manifest = { ...base, ...overrides };
   await writeFile("dist/manifest.json", JSON.stringify(manifest, null, 2));
 } else {
