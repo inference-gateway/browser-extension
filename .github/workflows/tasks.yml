@@ -1,4 +1,4 @@
-name: Infer Agent
+name: Task
 
 on:
   workflow_dispatch:
@@ -45,6 +45,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           model: ${{ inputs.model || 'ollama_cloud/deepseek-v4-flash' }}
           direct-prompt: ${{ inputs.prompt }}
+          enable-git-operations: "true"
+          bash-allow-append: "gh issue create( .*)?,gh issue comment( .*)?,gh pr comment( .*)?"
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           google-api-key: ${{ secrets.GOOGLE_API_KEY }}
