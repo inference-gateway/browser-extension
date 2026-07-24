@@ -20,6 +20,7 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Privacy](#privacy)
 - [Multi-Browser Support](#multi-browser-support)
 - [Development](#development)
 - [Roadmap](#roadmap)
@@ -81,9 +82,20 @@ bun run build      # outputs dist/
 Right-click the extension → **Options** (or the Details page → *Extension options*):
 
 - **Personal access token** - optional, only needed to list skills in **private**
-  repos. Use a fine-grained token with `Contents: read`.
+  repos. Use a fine-grained token with `Contents: read`. Click *Remove token* to
+  delete it, or save with the field blank - either way the stored key is removed.
 - **Quick prompts** - a JSON array of `{ id, label, description, insert }`, editable,
   with a *Reset to defaults* button.
+
+## Privacy
+
+Everything the extension stores (your optional token, quick prompts, and a short
+per-repo skill cache) stays in this browser's local storage - nothing is synced or
+sent to any server. The only network call is a single GitHub Contents API request to
+list a repo's skills; there is **no backend and no telemetry**. See
+[PRIVACY.md](PRIVACY.md) for the full data-flow breakdown and how to delete stored
+data; per-permission justifications for the store listing live in
+[docs/store/privacy-declarations.md](docs/store/privacy-declarations.md).
 
 ## Multi-Browser Support
 
