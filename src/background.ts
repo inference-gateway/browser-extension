@@ -93,7 +93,10 @@ async function ghFetch(owner: string, repo: string, path: string, init?: Request
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   if (pat) headers.Authorization = `Bearer ${pat}`;
   if (init?.headers) Object.assign(headers, init.headers);
-  return fetch(`https://api.github.com/repos/${owner}/${repo}/${path}`, { ...init, headers });
+  const url = path
+    ? `https://api.github.com/repos/${owner}/${repo}/${path}`
+    : `https://api.github.com/repos/${owner}/${repo}`;
+  return fetch(url, { ...init, headers });
 }
 
 async function checkInstall(owner: string, repo: string): Promise<{ installed: boolean; url?: string } | { error: string }> {
