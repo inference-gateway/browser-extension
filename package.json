@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Chrome-first MV3 browser extension: repo-skill tab-completion and quick-prompts in GitHub comments",
+  "description": "MV3 browser extension: repo-skill tab-completion and quick-prompts in GitHub comments",
   "scripts": {
     "build": "bun run build.ts",
     "test": "bun test",
