@@ -62,13 +62,35 @@ export function isBotConfig(b: unknown): b is BotConfig {
   );
 }
 
+// What the agent may do at runtime. infer-action gives the agent a read-only bash baseline;
+// these map to the two inputs that widen it: git writes + `gh pr create` are gated by
+// enable-git-operations, and other writes (issue create, comments) must be appended to the
+// allow-list via bash-allow-append. All default on; unchecking one drops that capability.
+export type Permissions = { createPRs: boolean; createIssues: boolean; comment: boolean };
+export const DEFAULT_PERMISSIONS: Permissions = { createPRs: true, createIssues: true, comment: true };
+
+export function isPermissions(p: unknown): p is Permissions {
+  return (
+    !!p &&
+    typeof p === "object" &&
+    ["createPRs", "createIssues", "comment"].every((k) => typeof (p as Record<string, unknown>)[k] === "boolean")
+  );
+}
+
 // Canonical infer-action issue-agent.yml, pinned to a release. The model is a
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
+
+  const appends: string[] = [];
+  if (perms.createIssues) appends.push("gh issue create( .*)?");
+  if (perms.comment) appends.push("gh issue comment( .*)?", "gh pr comment( .*)?");
+  const permLines =
+    `          enable-git-operations: "${perms.createPRs}"` +
+    (appends.length ? `\n          bash-allow-append: "${appends.join(",")}"` : "");
 
   // Wire every standard provider, plus any custom-model provider not already covered.
   const providers: Provider[] = [...DEFAULT_PROVIDERS];
@@ -141,6 +163,7 @@ ${appTokenStep}${checkoutStep}
           github-token: ${githubToken}
           model: \${{ inputs.model || '${def}' }}
           direct-prompt: \${{ inputs.prompt }}
+${permLines}
 ${keyLines}
 `;
 }

@@ -2,13 +2,14 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import { DEFAULT_PROMPTS, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, isModelOption, isBotConfig, type BotConfig } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, type BotConfig, type Permissions } from "./shared/models";
 
 function Options() {
   const [pat, setPat] = useState("");
   const [promptsText, setPromptsText] = useState("");
   const [modelsText, setModelsText] = useState("");
   const [bot, setBot] = useState<BotConfig>(DEFAULT_BOT);
+  const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -20,6 +21,8 @@ function Options() {
       setModelsText(JSON.stringify(m, null, 2));
       const b = await storage.get<unknown>("bot");
       setBot(isBotConfig(b) ? b : DEFAULT_BOT);
+      const pm = await storage.get<unknown>("permissions");
+      setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
     })();
   }, []);
 
@@ -49,6 +52,7 @@ function Options() {
     await storage.set("prompts", parsed);
     await storage.set("models", models);
     await storage.set("bot", bot);
+    await storage.set("permissions", perms);
     setStatus("Saved.");
   }
 
@@ -62,6 +66,7 @@ function Options() {
     setPromptsText(JSON.stringify(DEFAULT_PROMPTS, null, 2));
     setModelsText(JSON.stringify(DEFAULT_MODELS, null, 2));
     setBot(DEFAULT_BOT);
+    setPerms(DEFAULT_PERMISSIONS);
     setStatus("Reset to defaults (not yet saved).");
   }
 
@@ -112,6 +117,39 @@ function Options() {
           value={modelsText}
           onChange={(e) => setModelsText(e.target.value)}
         />
+      </section>
+
+      <section>
+        <h2>Agent permissions</h2>
+        <p>What the Infer agent may do while a task runs. These widen infer-action's read-only
+          baseline; unchecked capabilities stay blocked. <strong>Re-install the workflow</strong> after
+          changing these.</p>
+        <div className="igw-bot-fields">
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={perms.createPRs}
+              onChange={(e) => setPerms({ ...perms, createPRs: e.target.checked })}
+            />
+            Create pull requests (commit &amp; push)
+          </label>
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={perms.createIssues}
+              onChange={(e) => setPerms({ ...perms, createIssues: e.target.checked })}
+            />
+            Create GitHub issues
+          </label>
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={perms.comment}
+              onChange={(e) => setPerms({ ...perms, comment: e.target.checked })}
+            />
+            Comment on issues &amp; pull requests
+          </label>
+        </div>
       </section>
 
       <section>

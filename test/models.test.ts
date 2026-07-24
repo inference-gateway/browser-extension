@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, isModelOption, isBotConfig, prBody, workflowYaml } from "../src/shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, prBody, workflowYaml } from "../src/shared/models";
 
 const models = DEFAULT_MODELS;
 const def = "anthropic/claude-sonnet-4-6";
@@ -74,6 +74,29 @@ test("prBody names the provider secret and, with a bot, the private-key secret",
   expect(body).toContain("`ANTHROPIC_API_KEY`");
   expect(body).not.toContain("`APP_PRIVATE_KEY`");
   expect(prBody(models, def, bot)).toContain("`APP_PRIVATE_KEY`");
+});
+
+test("workflowYaml maps permissions onto infer-action allow-list inputs", () => {
+  const all = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS);
+  expect(all).toContain(`enable-git-operations: "true"`);
+  expect(all).toContain("gh issue create( .*)?");
+  expect(all).toContain("gh issue comment( .*)?");
+  expect(all).toContain("gh pr comment( .*)?");
+
+  const readonly = workflowYaml(models, def, noBot, { createPRs: false, createIssues: false, comment: false });
+  expect(readonly).toContain(`enable-git-operations: "false"`);
+  expect(readonly).not.toContain("bash-allow-append");
+
+  const issuesOnly = workflowYaml(models, def, noBot, { createPRs: false, createIssues: true, comment: false });
+  expect(issuesOnly).toContain(`bash-allow-append: "gh issue create( .*)?"`);
+  expect(issuesOnly).not.toContain("gh pr comment");
+});
+
+test("isPermissions accepts a full config and rejects malformed ones", () => {
+  expect(isPermissions(DEFAULT_PERMISSIONS)).toBe(true);
+  expect(isPermissions({ createPRs: true, createIssues: false, comment: true })).toBe(true);
+  expect(isPermissions({ createPRs: true, createIssues: false })).toBe(false);
+  expect(isPermissions(null)).toBe(false);
 });
 
 test("isModelOption accepts a full entry and rejects malformed ones", () => {
