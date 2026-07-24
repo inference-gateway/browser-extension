@@ -13,6 +13,10 @@
   <a href="https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID">
     <img src="https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?style=flat-square&label=Chrome%20Web%20Store" alt="Chrome Web Store"/>
   </a>
+  <!-- Edge Add-ons Badge -->
+  <a href="https://microsoftedge.microsoft.com/addons/detail/inference-gateway-for-git/REPLACE_WITH_EDGE_EXTENSION_ID">
+    <img src="https://img.shields.io/badge/Edge%20Add--ons-available-brightgreen?style=flat-square" alt="Edge Add-ons"/>
+  </a>
 </p>
 
 A Manifest V3 browser extension that makes the org's **repo skills** and common
@@ -75,6 +79,10 @@ GitHub's own draft/preview state stay consistent.
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?label=Install%20from%20Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID)
 
+**Microsoft Edge Add-ons**:
+
+[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Install-brightgreen?style=flat-square)](https://microsoftedge.microsoft.com/addons/detail/inference-gateway-for-git/REPLACE_WITH_EDGE_EXTENSION_ID)
+
 **Manual (unpacked)** for development or self-building:
 
 ```bash
@@ -123,7 +131,7 @@ The same `dist/` is the whole extension, and the only privileged API used is
 
 | Browser      | What's needed                                                            |
 | ------------ | ------------------------------------------------------------------------ |
-| Chrome, Edge | Works as-is (`background.service_worker`).                               |
+| Chrome, Edge | Works as-is (`background.service_worker`). Chrome Web Store and Edge Add-ons use the same `dist/` ZIP. |
 | Firefox 109+ | In `manifest.json`, swap `background.service_worker` → `background.scripts: ["background.js"]` and add a `browser_specific_settings.gecko.id`. |
 | Safari       | Wrap `dist/` with `xcrun safari-web-extension-converter` (no code change).|
 
@@ -146,10 +154,11 @@ Layout: `src/content.ts` is the imperative controller (DOM detection, caret math
 insertion, keyboard); `src/ui/*` is the React view (skill menu + palette);
 `src/background.ts` is the service worker that fetches and caches skills.
 
-To produce a Chrome Web Store ZIP:
+To produce a store ZIP:
 
 ```bash
 task package:chrome    # builds, zips dist/ to browser-extension.zip, writes SHA-256
+task package:edge      # same ZIP, named edge-extension.zip for Edge Add-ons
 ```
 
 The ZIP is also built and attached automatically to every GitHub Release by the

@@ -53,6 +53,15 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2.2.0
 
+      - name: Build Chrome and Edge packages
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+          cd dist && zip -r ../browser-extension.zip . && cd ..
+          cd dist && zip -r ../edge-extension.zip . && cd ..
+          sha256sum browser-extension.zip > browser-extension.zip.sha256
+          sha256sum edge-extension.zip > edge-extension.zip.sha256
+
       - name: Install semantic-release and plugins
         run: |
           mkdir -p "$RUNNER_TEMP/semantic-release"

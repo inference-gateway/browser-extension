@@ -1,7 +1,8 @@
-# Chrome Web Store - Privacy Declarations
+# Store Privacy Declarations
 
 Reusable, copy-paste answers for the Web Store listing's **Privacy** tab. Keep these
-in sync with `manifest.json` and [`PRIVACY.md`](../../PRIVACY.md).
+in sync with `manifest.json` and [`PRIVACY.md`](../../PRIVACY.md). These declarations
+apply identically to Chrome Web Store and Microsoft Edge Add-ons.
 
 ## Single purpose
 

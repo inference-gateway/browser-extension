@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * add permissions management for Infer Agent and update workflow generation ([5d23370](https://github.com/inference-gateway/browser-extension/commit/5d233703a13230ca10de0b20ada24d1287e1e478))
 * add skills registry and task management ([f652da6](https://github.com/inference-gateway/browser-extension/commit/f652da68b829ca7eabc5c5de4282618a5c871ff6))
 * **popup:** add toolbar popup with one-click Infer Agent install ([#19](https://github.com/inference-gateway/browser-extension/issues/19)) ([93b4634](https://github.com/inference-gateway/browser-extension/commit/93b46345d68f3dbc8f50b9493a4ee8467baa1cae))
+* **edge:** publish to Microsoft Edge Add-ons ([#8](https://github.com/inference-gateway/browser-extension/issues/8))
 
 ### 🐛 Bug Fixes
 

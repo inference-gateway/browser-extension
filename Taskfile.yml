@@ -39,6 +39,13 @@ tasks:
       - cd dist && zip -r ../browser-extension.zip .
       - sha256sum browser-extension.zip > browser-extension.zip.sha256
 
+  package:edge:
+    desc: Package dist/ into an Edge Add-ons ZIP (same bundle, different name)
+    deps: [build]
+    cmds:
+      - cd dist && zip -r ../edge-extension.zip .
+      - sha256sum edge-extension.zip > edge-extension.zip.sha256
+
   check:
     desc: Run all CI checks
     cmds:
