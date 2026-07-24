@@ -7,7 +7,7 @@ data**. This document describes every piece of data the extension touches.
 
 ## What is stored locally
 
-All data lives in your browser via `chrome.storage.local` (local to this machine —
+All data lives in your browser via `chrome.storage.local` (local to this machine -
 it is **never** synced to a cloud account and never leaves your device except as
 described under [Network requests](#network-requests)). The extension uses exactly
 three storage keys:
@@ -29,7 +29,7 @@ The extension makes **one kind of external request**, and only to GitHub:
 GET https://api.github.com/repos/{owner}/{repo}/contents/.agents/skills
 ```
 
-- `{owner}/{repo}` is derived from the GitHub page you are viewing — you never type it.
+- `{owner}/{repo}` is derived from the GitHub page you are viewing - you never type it.
 - The request has **no body**; it only reads the list of skill folders.
 - If (and only if) you have saved a personal access token, it is sent as an
   `Authorization: Bearer <token>` header so the request can see **private** repos.

@@ -1,4 +1,4 @@
-# Chrome Web Store — Privacy Declarations
+# Chrome Web Store - Privacy Declarations
 
 Reusable, copy-paste answers for the Web Store listing's **Privacy** tab. Keep these
 in sync with `manifest.json` and [`PRIVACY.md`](../../PRIVACY.md).
@@ -17,14 +17,14 @@ in sync with `manifest.json` and [`PRIVACY.md`](../../PRIVACY.md).
 > editable quick-prompts list, and a short-lived (10-minute) per-repository cache of
 > skill folder names. Nothing is synced or sent to a server.
 
-### Host permission — `https://api.github.com/*`
+### Host permission - `https://api.github.com/*`
 > The extension calls the GitHub Contents API
 > (`GET /repos/{owner}/{repo}/contents/.agents/skills`) to list a repository's skills.
 > This is the only external request the extension makes. If the user has saved a
 > personal access token, it is attached solely to authenticate this request for
 > private repositories.
 
-### Content-script host access — `https://github.com/*`
+### Content-script host access - `https://github.com/*`
 > The content script runs on github.com to detect the issue/PR comment textarea,
 > render the completion dropdown and prompts palette, and insert text at the caret.
 > It reads only the focused comment box's value/caret and the page path (to resolve

@@ -36,9 +36,8 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
 - 📜 **Open Source**: Available under the Apache 2.0 License.
 - ⚡ **Skill Tab-Completion**: Type `!` in a comment to open a caret-anchored,
   keyboard-navigable dropdown of the current repo's skills, fuzzy-filtered as you type.
-- 🎛️ **Quick Prompts Palette**: A searchable palette of the org's inline bot
-  directives (`@claude`, `@infer`, `@codex`, `[browser]`, `[effort:...]`,
-  `[model:...]`, `/subscription ...`) plus editable templates.
+- 🎛️ **Quick Prompts Palette**: A searchable palette of `@infer` directives plus
+  editable templates.
 - 🔍 **Repo-Aware**: Resolves `owner/repo` from the page and fetches
   `.agents/skills/` via the GitHub Contents API, cached per repo.
 - 🤝 **Non-Intrusive**: Never touches GitHub's native `@` / `#` / `:` completion;
@@ -50,6 +49,13 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
 - 🚀 **One-Click Infer Agent Install**: Open the toolbar popup on any GitHub repo to
   install the Infer Agent workflow via a pull request. Requires a PAT with
   `Contents: write`, `Pull requests: write`, and `Workflows: write`.
+- 🧩 **Skills Install/Uninstall**: In the repo's **Tasks** panel, the **Skills** tab is a
+  searchable, multi-select list of the [Inference Gateway skills registry](https://github.com/inference-gateway/skills).
+  Skills matching the repo's top languages are suggested first; applying opens a single PR
+  that adds/removes skill folders under `.agents/skills/`.
+- 📝 **Free-Text Tasks**: The **Task** tab sends a task to the agent. Leave **Create a
+  GitHub issue** checked to open an `@infer` issue, or uncheck it to run the task directly
+  via `workflow_dispatch` (infer-action's `direct-prompt`) with no public issue.
 
 ## Overview
 

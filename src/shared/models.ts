@@ -1,0 +1,167 @@
+// Install-workflow config, shared by the popup (model dropdown) and background
+// (generated workflow). Each ModelOption maps a provider-prefixed model id to the
+// inference-gateway/infer-action provider-key input and the repo secret it reads.
+// A BotConfig optionally makes the workflow authenticate as a GitHub App. All of
+// this is editable in the options page.
+export type ModelOption = { model: string; keyInput: string; secret: string };
+
+// Curated from infer-action's README supported-model list. First entry = default.
+export const DEFAULT_MODELS: ModelOption[] = [
+  { model: "ollama_cloud/deepseek-v4-flash", keyInput: "ollama-cloud-api-key", secret: "OLLAMA_CLOUD_API_KEY" },
+  { model: "deepseek/deepseek-v4-flash", keyInput: "deepseek-api-key", secret: "DEEPSEEK_API_KEY" },
+  { model: "anthropic/claude-sonnet-4-6", keyInput: "anthropic-api-key", secret: "ANTHROPIC_API_KEY" },
+  { model: "openai/gpt-5", keyInput: "openai-api-key", secret: "OPENAI_API_KEY" },
+  { model: "google/gemini-3-pro", keyInput: "google-api-key", secret: "GOOGLE_API_KEY" },
+  { model: "moonshot/kimi-k2", keyInput: "moonshot-api-key", secret: "MOONSHOT_API_KEY" },
+];
+
+export function isModelOption(m: unknown): m is ModelOption {
+  return (
+    !!m &&
+    typeof m === "object" &&
+    ["model", "keyInput", "secret"].every((k) => typeof (m as Record<string, unknown>)[k] === "string")
+  );
+}
+
+// Every provider infer-action accepts an api-key for, mirrored from the org's reusable
+// workflow (inference-gateway/.github -> .github/workflows/infer.yml). All are wired into
+// the generated workflow so any model authenticates once its secret exists; missing
+// secrets render blank and are ignored by the action.
+export type Provider = { keyInput: string; secret: string };
+export const DEFAULT_PROVIDERS: Provider[] = [
+  { keyInput: "anthropic-api-key", secret: "ANTHROPIC_API_KEY" },
+  { keyInput: "openai-api-key", secret: "OPENAI_API_KEY" },
+  { keyInput: "google-api-key", secret: "GOOGLE_API_KEY" },
+  { keyInput: "deepseek-api-key", secret: "DEEPSEEK_API_KEY" },
+  { keyInput: "groq-api-key", secret: "GROQ_API_KEY" },
+  { keyInput: "mistral-api-key", secret: "MISTRAL_API_KEY" },
+  { keyInput: "cloudflare-api-key", secret: "CLOUDFLARE_API_KEY" },
+  { keyInput: "cohere-api-key", secret: "COHERE_API_KEY" },
+  { keyInput: "ollama-api-key", secret: "OLLAMA_API_KEY" },
+  { keyInput: "ollama-cloud-api-key", secret: "OLLAMA_CLOUD_API_KEY" },
+  { keyInput: "moonshot-api-key", secret: "MOONSHOT_API_KEY" },
+  { keyInput: "minimax-api-key", secret: "MINIMAX_API_KEY" },
+  { keyInput: "nvidia-api-key", secret: "NVIDIA_API_KEY" },
+  { keyInput: "zai-api-key", secret: "ZAI_API_KEY" },
+];
+
+// Optional GitHub App identity. When enabled, the workflow mints an installation
+// token via actions/create-github-app-token and acts as the App, so the agent's
+// runtime comments and commits are attributed to (and signed for) the App.
+export type BotConfig = { enabled: boolean; clientId: string; privateKeySecret: string };
+
+export const DEFAULT_BOT: BotConfig = { enabled: false, clientId: "", privateKeySecret: "APP_PRIVATE_KEY" };
+
+export function isBotConfig(b: unknown): b is BotConfig {
+  return (
+    !!b &&
+    typeof b === "object" &&
+    typeof (b as Record<string, unknown>).enabled === "boolean" &&
+    typeof (b as Record<string, unknown>).clientId === "string" &&
+    typeof (b as Record<string, unknown>).privateKeySecret === "string"
+  );
+}
+
+// Canonical infer-action issue-agent.yml, pinned to a release. The model is a
+// workflow_dispatch choice input (options = the configured models, default = the
+// one picked at install); every provider's key is wired so any dropdown choice
+// authenticates. Missing secrets render blank and are ignored by the action.
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig): string {
+  const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
+  const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
+
+  // Wire every standard provider, plus any custom-model provider not already covered.
+  const providers: Provider[] = [...DEFAULT_PROVIDERS];
+  const seen = new Set(providers.map((p) => p.keyInput));
+  for (const m of models) {
+    if (!seen.has(m.keyInput)) {
+      seen.add(m.keyInput);
+      providers.push({ keyInput: m.keyInput, secret: m.secret });
+    }
+  }
+  const keyLines = providers
+    .map((p) => `          ${p.keyInput}: \${{ secrets.${p.secret} }}`)
+    .join("\n");
+
+  const appTokenStep = bot.enabled
+    ? `      - uses: actions/create-github-app-token@v3.2.0
+        id: app-token
+        with:
+          client-id: ${bot.clientId}
+          private-key: \${{ secrets.${bot.privateKeySecret} }}
+
+`
+    : "";
+  const checkoutStep = bot.enabled
+    ? `      - uses: actions/checkout@v7.0.1
+        with:
+          token: \${{ steps.app-token.outputs.token }}`
+    : `      - uses: actions/checkout@v7.0.1`;
+  const githubToken = bot.enabled ? "${{ steps.app-token.outputs.token }}" : "${{ secrets.GITHUB_TOKEN }}";
+
+  return `name: Task
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Model to use
+        type: choice
+        default: ${def}
+        options:
+${optionLines}
+      prompt:
+        description: Task for the agent (workflow_dispatch only)
+        required: false
+        default: ""
+  issues:
+    types:
+      - opened
+      - edited
+  issue_comment:
+    types:
+      - created
+  pull_request_review_comment:
+    types:
+      - created
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  infer:
+    runs-on: ubuntu-24.04
+    steps:
+${appTokenStep}${checkoutStep}
+
+      - uses: inference-gateway/infer-action@v0.34.5
+        with:
+          github-token: ${githubToken}
+          model: \${{ inputs.model || '${def}' }}
+          direct-prompt: \${{ inputs.prompt }}
+${keyLines}
+`;
+}
+
+export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig): string {
+  const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
+  const secretList = [...new Set(models.map((m) => m.secret))].map((s) => `\`${s}\``).join(", ");
+  const botStep = bot.enabled
+    ? `\n2. Add the \`${bot.privateKeySecret}\` secret with your GitHub App's private key. The workflow authenticates as your App via [actions/create-github-app-token](https://github.com/actions/create-github-app-token), so its comments and commits are attributed to the App.`
+    : "";
+
+  return `## Infer Agent workflow
+
+This PR adds the Infer Agent workflow to this repository. It uses [inference-gateway/infer-action](https://github.com/inference-gateway/infer-action) to run the Infer agent on issues and pull requests. The model is a workflow input (dropdown), defaulting to \`${def}\`.
+
+### Setup
+
+Before the workflow can run:
+
+1. Go to Settings > Secrets and variables > Actions and add the provider API key secret for the model(s) you use: ${secretList}.${botStep}
+
+The workflow triggers on new/edited issues, issue comments, and pull request review comments, and can also be run manually (Actions > Task > Run workflow) with a model chosen from the dropdown.
+`;
+}
