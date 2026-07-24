@@ -32,6 +32,13 @@ tasks:
     cmds:
       - bun run build
 
+  package:chrome:
+    desc: Package dist/ into a Chrome Web Store ZIP with SHA-256 checksum
+    deps: [build]
+    cmds:
+      - cd dist && zip -r ../browser-extension.zip .
+      - sha256sum browser-extension.zip > browser-extension.zip.sha256
+
   check:
     desc: Run all CI checks
     cmds:
