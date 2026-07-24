@@ -9,6 +9,10 @@
   <img src="https://img.shields.io/badge/Manifest-V3-blue?style=flat-square" alt="Manifest V3"/>
   <!-- Built With Badge -->
   <img src="https://img.shields.io/badge/built%20with-Bun%20%2B%20React-blue?style=flat-square" alt="Built with Bun + React"/>
+  <!-- Chrome Web Store Badge -->
+  <a href="https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID">
+    <img src="https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?style=flat-square&label=Chrome%20Web%20Store" alt="Chrome Web Store"/>
+  </a>
 </p>
 
 A Manifest V3 browser extension that makes the org's **repo skills** and common
@@ -58,7 +62,11 @@ GitHub's own draft/preview state stay consistent.
 
 ## Installation
 
-Chrome / Edge, loaded unpacked:
+**Chrome Web Store** (recommended):
+
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?label=Install%20from%20Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID)
+
+**Manual (unpacked)** for development or self-building:
 
 ```bash
 bun install
