@@ -1,4 +1,4 @@
-<h1 align="center">GitHub Comment Helper</h1>
+<h1 align="center">Inference Gateway for GitHub</h1>
 
 <p align="center">
   <!-- License Badge -->

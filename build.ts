@@ -23,5 +23,6 @@ if (!result.success) {
 await cp("manifest.json", "dist/manifest.json");
 await cp("src/styles.css", "dist/styles.css");
 await cp("src/options.html", "dist/options.html");
+await cp("src/icons", "dist/icons", { recursive: true });
 
 console.log("Built:", result.outputs.map((o) => o.path.replace(process.cwd() + "/", "")).join(", "));
