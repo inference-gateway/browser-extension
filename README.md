@@ -101,10 +101,14 @@ If the API surface ever grows beyond `chrome.storage`, drop in Mozilla's single-
 
 ## Development
 
+Activate the Flox environment, then install the repository's pre-commit hook before
+making changes:
+
 ```bash
-bun run typecheck   # tsc, extension source only
-bun test            # fuzzy matcher + trigger boundary logic
-bun run build       # rebuild dist/, then reload the unpacked extension
+flox activate
+task hooks:install  # required first-time setup
+task setup          # installs the hook and Bun dependencies
+task check          # typecheck, test, and build
 ```
 
 Layout: `src/content.ts` is the imperative controller (DOM detection, caret math,
@@ -123,7 +127,9 @@ insertion, keyboard); `src/ui/*` is the React view (skill menu + palette);
 ## Contributing
 
 Found a bug or have a feature in mind? You're more than welcome to open issues or submit
-pull requests for any fixes, improvements, or new ideas.
+pull requests for any fixes, improvements, or new ideas. Read the
+[Repository Guidelines](AGENTS.md) before contributing; they cover project structure,
+testing, style, commits, and pull-request expectations.
 
 ## License
 

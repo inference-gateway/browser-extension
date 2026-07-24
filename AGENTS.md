@@ -6,12 +6,13 @@ This is a Chrome-first Manifest V3 extension built with Bun, TypeScript, and Rea
 
 ## Build, Test, and Development Commands
 
-- `bun install`: install dependencies from `bun.lock`.
-- `bun run typecheck`: run strict TypeScript checks without emitting files.
-- `bun test`: execute the Bun test suite.
-- `bun run build`: clear and rebuild `dist/` with minified browser bundles and copied static assets.
+- `flox activate`: enter the pinned Bun and go-task environment.
+- `task hooks:install`: required first step; configure Git to use `.githooks/`.
+- `task setup`: install the hook and dependencies from `bun.lock`.
+- `task check`: run typechecking, tests, and the production build.
+- `task build`, `task test`, `task typecheck`: run an individual check.
 
-For manual testing, rebuild, reload the unpacked `dist/` directory in `chrome://extensions`, then exercise an issue or pull-request comment box on GitHub. Before submitting changes, run all three CI checks: typecheck, tests, and build.
+For manual testing, rebuild, reload the unpacked `dist/` directory in `chrome://extensions`, then exercise an issue or pull-request comment box on GitHub. Run `task check` before submitting changes.
 
 ## Coding Style & Naming Conventions
 
@@ -19,7 +20,7 @@ Use TypeScript/TSX with ES modules, two-space indentation, double quotes, and se
 
 ## Testing Guidelines
 
-Tests use `bun:test` and follow the `test/*.test.ts` naming pattern. Add focused unit tests for matching, trigger boundaries, DOM helpers, and other pure behavior. Describe observable outcomes in test names. No coverage threshold is configured; cover regressions and edge cases introduced by each change. Run `bun test` locally.
+Tests use `bun:test` and follow the `test/*.test.ts` naming pattern. Add focused unit tests for matching, trigger boundaries, DOM helpers, and other pure behavior. Describe observable outcomes in test names. No coverage threshold is configured; cover regressions and edge cases introduced by each change. Run `task test` locally.
 
 ## Commit & Pull Request Guidelines
 

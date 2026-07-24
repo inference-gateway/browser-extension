@@ -1,0 +1,40 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  hooks:install:
+    desc: Configure Git to use the repository's pre-commit hooks
+    cmds:
+      - git config core.hooksPath .githooks
+
+  setup:
+    desc: Install the pre-commit hook and project dependencies
+    cmds:
+      - task: hooks:install
+      - bun install
+
+  typecheck:
+    desc: Run strict TypeScript checks
+    cmds:
+      - bun run typecheck
+
+  test:
+    desc: Run the Bun test suite
+    cmds:
+      - bun test
+
+  build:
+    desc: Build the extension into dist/
+    cmds:
+      - bun run build
+
+  check:
+    desc: Run all CI checks
+    cmds:
+      - task: typecheck
+      - task: test
+      - task: build

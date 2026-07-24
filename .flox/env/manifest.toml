@@ -8,3 +8,10 @@ claude-code.pkg-path = "claude-code"
 claude-code.version = "2.1.201"
 codex.pkg-path = "codex"
 codex.version = "0.142.3"
+go-task.pkg-path = "go-task"
+go-task.version = "3.48.0"
+
+[hook]
+on-activate = '''
+  task setup
+'''
