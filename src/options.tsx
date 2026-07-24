@@ -1,4 +1,3 @@
-// Options page: optional PAT (private repos) and the editable quick-prompts list.
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
@@ -27,9 +26,15 @@ function Options() {
     if (!Array.isArray(parsed) || !parsed.every(isPrompt)) {
       return setStatus("Prompts must be an array of { id, label, description, insert }.");
     }
-    await storage.set("pat", pat.trim());
+    await storage.savePat(pat);
     await storage.set("prompts", parsed);
     setStatus("Saved.");
+  }
+
+  async function removeToken() {
+    setPat("");
+    await storage.savePat("");
+    setStatus("Token removed.");
   }
 
   function reset() {
@@ -49,9 +54,13 @@ function Options() {
           type="password"
           className="igw-field"
           placeholder="github_pat_..."
+          autoComplete="off"
           value={pat}
           onChange={(e) => setPat(e.target.value)}
         />
+        <div className="igw-actions">
+          <button className="igw-reset" onClick={removeToken}>Remove token</button>
+        </div>
       </section>
 
       <section>
