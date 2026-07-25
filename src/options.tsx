@@ -4,6 +4,17 @@ import * as storage from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isRefineConfig, isPluginOption, type BotConfig, type Permissions, type RefineConfig, type PluginOption } from "./shared/models";
 
+type Theme = "system" | "light" | "dark";
+
+function applyTheme(theme: Theme) {
+  const html = document.documentElement;
+  if (theme === "dark") {
+    html.setAttribute("data-theme", "dark");
+  } else {
+    html.removeAttribute("data-theme");
+  }
+}
+
 function Options() {
   const [pat, setPat] = useState("");
   const [promptsText, setPromptsText] = useState("");
@@ -12,6 +23,7 @@ function Options() {
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
   const [plugins, setPlugins] = useState<PluginOption[]>(DEFAULT_PLUGINS);
+  const [theme, setTheme] = useState<Theme>("system");
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -30,6 +42,13 @@ function Options() {
       const pl = await storage.get<unknown>("plugins");
       const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
       setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
+      const t = (await storage.get<string>("theme")) as Theme | undefined;
+      if (t === "light" || t === "dark") {
+        setTheme(t);
+        applyTheme(t);
+      } else {
+        applyTheme("system");
+      }
     })();
   }, []);
 
@@ -62,6 +81,7 @@ function Options() {
     await storage.set("permissions", perms);
     await storage.set("refine", refine);
     await storage.set("plugins", plugins);
+    await storage.set("theme", theme);
     setStatus("Saved.");
   }
 
@@ -205,6 +225,43 @@ function Options() {
               <code>{p.id}</code>
             </label>
           ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Theme</h2>
+        <p>Choose how the options page and toolbar popup are displayed.</p>
+        <div className="igw-bot-fields">
+          <label className="igw-check">
+            <input
+              type="radio"
+              name="theme"
+              value="system"
+              checked={theme === "system"}
+              onChange={() => { setTheme("system"); applyTheme("system"); }}
+            />
+            System default
+          </label>
+          <label className="igw-check">
+            <input
+              type="radio"
+              name="theme"
+              value="light"
+              checked={theme === "light"}
+              onChange={() => { setTheme("light"); applyTheme("light"); }}
+            />
+            Light
+          </label>
+          <label className="igw-check">
+            <input
+              type="radio"
+              name="theme"
+              value="dark"
+              checked={theme === "dark"}
+              onChange={() => { setTheme("dark"); applyTheme("dark"); }}
+            />
+            Dark
+          </label>
         </div>
       </section>
 
