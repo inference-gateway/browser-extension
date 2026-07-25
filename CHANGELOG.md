@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/inference-gateway/opentask/compare/v1.0.2...v1.1.0) (2026-07-25)
+
+### ✨ Features
+
+* add agents section to the extension backend ([#55](https://github.com/inference-gateway/opentask/issues/55)) ([6db0a74](https://github.com/inference-gateway/opentask/commit/6db0a746eb935cc37436c4884d7cdeae9e29a555))
+* add Infer Agent workflow ([#49](https://github.com/inference-gateway/opentask/issues/49)) ([eac5eed](https://github.com/inference-gateway/opentask/commit/eac5eeda1e5268aad52257965a136ce1114b0c6a))
+* add Infer Agent workflow ([#52](https://github.com/inference-gateway/opentask/issues/52)) ([a6ff533](https://github.com/inference-gateway/opentask/commit/a6ff533471a40da5ffd917bd4df202c6a8782426))
+* track issues on their project board via installed workflow ([#48](https://github.com/inference-gateway/opentask/issues/48)) ([d3768ca](https://github.com/inference-gateway/opentask/commit/d3768cab6b7ef3653ab1b7f248f559f887b3a6c6)), closes [#42](https://github.com/inference-gateway/opentask/issues/42)
+
+### 🐛 Bug Fixes
+
+* disable plugins by default and correct plugin repos ([#50](https://github.com/inference-gateway/opentask/issues/50)) ([#51](https://github.com/inference-gateway/opentask/issues/51)) ([97655b7](https://github.com/inference-gateway/opentask/commit/97655b743a07e1fd507f34a046ce68245d42eba2))
+* include enabled plugin skills in ! auto-complete menu ([#54](https://github.com/inference-gateway/opentask/issues/54)) ([4bf720f](https://github.com/inference-gateway/opentask/commit/4bf720fa105de79cf25e56f19be1902ac6d013de))
+* namespace plugin skills as <plugin>:<skill> in autocomplete ([5291f15](https://github.com/inference-gateway/opentask/commit/5291f1543cda38e819afef33308e733717f4fa5a))
+
 ## [1.0.2](https://github.com/inference-gateway/opentask/compare/v1.0.1...v1.0.2) (2026-07-25)
 
 ### ♻️ Improvements
