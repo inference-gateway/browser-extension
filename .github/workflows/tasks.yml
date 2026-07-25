@@ -59,7 +59,34 @@ jobs:
           model: ${{ inputs.model || 'ollama_cloud/deepseek-v4-flash' }}
           direct-prompt: ${{ inputs.prompt }}
           enable-git-operations: "true"
-          bash-allow-append: "gh issue create( .*)?,gh issue edit( .*)?,gh issue comment( .*)?,gh pr comment( .*)?"
+          bash-allow-append: "gh project list( .*)?,gh project field-list( .*)?,gh project item-add( .*)?,gh project item-edit( .*)?,gh issue create( .*)?,gh issue edit( .*)?,gh issue comment( .*)?,gh pr comment( .*)?"
+          custom-instructions: |
+            When working on a GitHub issue that belongs to a project board, keep the board's status in
+            sync as you go. This is best-effort: on any error (no board, no Status field, missing
+            Projects permission, network failure) log it and carry on - never abort the task over a
+            board update.
+            
+            Detect membership from the ISSUE side, never by scanning the board - a board can hold
+            thousands of items and `gh project item-list` only fetches 30 by default, so scanning
+            misses the issue and does not scale:
+            
+            - `gh issue view <number> --json projectItems` lists the boards this issue is on (and its
+              current Status), in one call regardless of board size. Empty list means it is on no
+              board - do nothing further.
+            - For each board it is on, resolve the project number + id and the Status single-select
+              field (with its option ids) via `gh project list --owner <owner> --format json` and
+              `gh project field-list <number> --owner <owner> --format json`. No "Status" (or close
+              equivalent) field: log a warning and skip that board.
+            - Get the item id idempotently with `gh project item-add <number> --owner <owner> --url
+              <issue-url> --format json` - it returns the existing item's id in O(1). Do NOT list
+              items to find it.
+            - Set Status with `gh project item-edit --id <item-id> --project-id <project-id>
+              --field-id <field-id> --single-select-option-id <option-id>`: the option closest to
+              "In Progress" BEFORE you start changing anything, and the option closest to "Done" when
+              your work is complete (body refined, fix pushed, or comment posted).
+          plugins: |
+            inference-gateway/caveman
+            inference-gateway/ponytail
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           google-api-key: ${{ secrets.GOOGLE_API_KEY }}
