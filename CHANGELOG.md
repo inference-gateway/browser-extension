@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0 (2026-07-25)
+
+### ✨ Features
+
+* add infer-action plugins support to generated workflow ([#43](https://github.com/inference-gateway/opentask/issues/43)) ([4fba8fb](https://github.com/inference-gateway/opentask/commit/4fba8fb9897ba865a6e0c7c74cbce9bd10e2090f))
+
+### 🔧 Miscellaneous
+
+* first commit ([6b568b8](https://github.com/inference-gateway/opentask/commit/6b568b81c01782e62a80f62770228044ec2f2aef))
+
 ## [0.4.0](https://github.com/inference-gateway/opentask/compare/v0.3.0...v0.4.0) (2026-07-25)
 
 ### ✨ Features
