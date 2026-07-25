@@ -209,7 +209,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
   if (prRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Pull requests: write." };
-  if (prRes.status === 422) return { error: "The workflow is already up to date — nothing to re-install." };
+  if (prRes.status === 422) return { error: "The workflow is already up to date - nothing to re-install." };
   if (prRes.status >= 500) {
     const detail = await prRes.text().catch(() => "");
     console.warn(`[igw] POST /pulls ${prRes.status}: ${detail.slice(0, 300)}`);
@@ -377,7 +377,7 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
     body: JSON.stringify({ message: `chore: update Infer skills (${parts})`, tree: newTree.sha, parents: [baseSha] }),
   }).then((r) => r.json());
 
-  // Fresh, unique branch per apply — a reused branch's PR history can poison GitHub's
+  // Fresh, unique branch per apply - a reused branch's PR history can poison GitHub's
   // PR-create (500s), so never reuse one. See doInstall for the same reasoning.
   const skillsBranch = `${SKILLS_BRANCH}-${Date.now().toString(36)}`;
   const mk = await ghFetch(owner, repo, "git/refs", {

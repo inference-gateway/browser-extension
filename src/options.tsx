@@ -197,7 +197,7 @@ function Options() {
         <h2>Issue refinement</h2>
         <p>Let the Infer agent rewrite an issue's description in place. Refine edits the issue
           body via <code>gh issue edit</code>, so the installed workflow needs
-          <code> Create GitHub issues</code> permission above — <strong>re-install</strong> after
+          <code> Create GitHub issues</code> permission above - <strong>re-install</strong> after
           enabling.</p>
         <div className="igw-bot-fields">
           <label className="igw-check">

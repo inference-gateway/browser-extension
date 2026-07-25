@@ -100,7 +100,7 @@ export function isPluginOption(p: unknown): p is PluginOption {
   );
 }
 
-// ids of the plugins toggled on — what actually gets baked into the workflow.
+// ids of the plugins toggled on - what actually gets baked into the workflow.
 export const enabledPlugins = (plugins: PluginOption[]): string[] =>
   plugins.filter((p) => p.enabled).map((p) => p.id);
 

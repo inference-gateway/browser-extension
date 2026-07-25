@@ -186,7 +186,7 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
         {state.kind === "success" && state.manual && (
           <>
             <p className="igw-tasks-success">Branch pushed ✓</p>
-            <p className="igw-tasks-muted">GitHub's PR API is erroring right now — open the pull request in one click:</p>
+            <p className="igw-tasks-muted">GitHub's PR API is erroring right now - open the pull request in one click:</p>
             <a className="igw-tasks-link" href={state.prUrl} target="_blank" rel="noopener noreferrer">Open pull request →</a>
           </>
         )}

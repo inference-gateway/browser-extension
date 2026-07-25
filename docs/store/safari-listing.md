@@ -4,7 +4,7 @@ This document describes how to convert the shared Chrome `dist/` bundle into a
 Safari Web Extension, configure the Xcode project, test on macOS and iOS, and
 submit to the Mac App Store and iOS App Store.
 
-The extension uses **no separate Safari implementation** — the same `dist/`
+The extension uses **no separate Safari implementation** - the same `dist/`
 bundle built by `task build:safari` is wrapped by Apple's
 `safari-web-extension-converter` into a native Xcode project. Only the manifest
 gets a Safari-specific override (`manifest.safari.json`) that adds
@@ -42,7 +42,7 @@ xcrun safari-web-extension-converter dist/ \
 | --- | --- |
 | `--bundle-identifier` | Your reverse-domain bundle ID. Must be unique across all your apps. |
 | `--project-location` | Where to write the Xcode project (outside this repo). |
-| `--no-open` | Don't open Xcode immediately — useful when scripting. Omit to open Xcode right away. |
+| `--no-open` | Don't open Xcode immediately - useful when scripting. Omit to open Xcode right away. |
 
 The converter creates:
 
@@ -69,7 +69,7 @@ safari-extension/
 └── safari-extension-SwiftUI (optional, can be deleted)
 ```
 
-> **Note:** The converter copies the files — it does not symlink. When you
+> **Note:** The converter copies the files - it does not symlink. When you
 > rebuild `dist/`, you must re-run the converter or manually copy updated files
 > into the Xcode project's `Shared (Extension)/Resources/` directory.
 
@@ -164,7 +164,7 @@ for full MV3 compatibility.
    - **SKU**: `OPENTASK_MAC_001`
    - **Review information**: See [Store listing assets](#store-listing-assets)
      below.
-7. The extension's functionality is reviewed as part of the app — there is no
+7. The extension's functionality is reviewed as part of the app - there is no
    separate Safari extension review.
 
 ### iOS App Store
@@ -215,16 +215,16 @@ Capture these screenshots at the recommended resolution for each platform:
 - **macOS**: 2880×1800 (or 1280×800 for Retina-downscaled)
 - **iOS**: iPhone 15 Pro Max (1290×2796) or iPad Pro (2048×2732)
 
-1. **Skill dropdown** — Focus a comment textarea on a GitHub issue, type `!`, and show the fuzzy-filtered skill dropdown with keyboard navigation visible.
-2. **Quick-prompts palette** — Open the palette (Ctrl+Shift+P) showing the searchable list of bot directives.
-3. **Options page** — The extension options page showing the token field and editable quick prompts list.
+1. **Skill dropdown** - Focus a comment textarea on a GitHub issue, type `!`, and show the fuzzy-filtered skill dropdown with keyboard navigation visible.
+2. **Quick-prompts palette** - Open the palette (Ctrl+Shift+P) showing the searchable list of bot directives.
+3. **Options page** - The extension options page showing the token field and editable quick prompts list.
 
 ### Reviewer instructions
 
 1. Open any GitHub issue or pull request (e.g. https://github.com/octocat/Hello-World/issues/1).
-2. Focus the comment textarea and type `!` — a dropdown of repo skills should appear below the caret. Arrow keys navigate, Tab/Enter inserts, Esc closes.
-3. Press Ctrl+Shift+P (or Cmd+Shift+P on Mac) — the quick-prompts palette should open as a centered overlay. Type to filter, Enter to insert.
-4. Click the lightning bolt button in the comment toolbar — the same palette opens.
+2. Focus the comment textarea and type `!` - a dropdown of repo skills should appear below the caret. Arrow keys navigate, Tab/Enter inserts, Esc closes.
+3. Press Ctrl+Shift+P (or Cmd+Shift+P on Mac) - the quick-prompts palette should open as a centered overlay. Type to filter, Enter to insert.
+4. Click the lightning bolt button in the comment toolbar - the same palette opens.
 5. Right-click the extension icon → Preferences (or Safari → Settings → Extensions → OpenTask → Preferences). The options page shows a token field and an editable quick-prompts JSON editor with a Reset to defaults button.
 6. Verify the extension only requests `storage` permission, `host_permissions` limited to `https://api.github.com/*`, and a content-script match on `https://github.com/*`.
 
@@ -304,7 +304,7 @@ if you are testing with a new identifier.
 
 ### "Failed to load extension" on iOS
 
-1. Ensure you are testing on a **physical device** — the iOS simulator does not
+1. Ensure you are testing on a **physical device** - the iOS simulator does not
    support Web Extensions.
 2. Verify the extension is enabled in **Settings → Safari → Extensions**.
 3. Check that the device is running iOS 16.4 or later.
