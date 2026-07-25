@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Inference Gateway for GitHub** is a browser extension that surfaces a repository's
+**OpenTask for GitHub** is a browser extension that surfaces a repository's
 skills and common bot directives inside GitHub's issue/PR comment box. It has **no
 backend server**, sends **no telemetry or analytics**, and collects **no personal
 data**. This document describes every piece of data the extension touches.
@@ -68,4 +68,4 @@ justifications are documented in
 ## Contact
 
 Questions or concerns? Open an issue at
-<https://github.com/inference-gateway/browser-extension/issues>.
+<https://github.com/inference-gateway/opentask/issues>.

@@ -33,7 +33,7 @@ Run Apple's converter tool on the `dist/` directory:
 
 ```bash
 xcrun safari-web-extension-converter dist/ \
-  --bundle-identifier com.inferencegateway.browser-extension \
+  --bundle-identifier com.inferencegateway.opentask \
   --project-location ../safari-extension \
   --no-open
 ```
@@ -81,9 +81,9 @@ safari-extension/
 
 Open the project in Xcode and verify the bundle identifier:
 
-- **macOS target**: `com.inferencegateway.browser-extension.mac`
-- **iOS target**: `com.inferencegateway.browser-extension.ios`
-- **Shared Extension target**: `com.inferencegateway.browser-extension`
+- **macOS target**: `com.inferencegateway.opentask.mac`
+- **iOS target**: `com.inferencegateway.opentask.ios`
+- **Shared Extension target**: `com.inferencegateway.opentask`
 
 These are set automatically by the converter from the `--bundle-identifier` flag.
 
@@ -160,8 +160,8 @@ for full MV3 compatibility.
 5. Sign with your distribution certificate and upload.
 6. In [App Store Connect](https://appstoreconnect.apple.com), create a new
    **macOS App** entry:
-   - **Bundle ID**: `com.inferencegateway.browser-extension.mac`
-   - **SKU**: `INFERENCE_GATEWAY_MAC_001`
+   - **Bundle ID**: `com.inferencegateway.opentask.mac`
+   - **SKU**: `OPENTASK_MAC_001`
    - **Review information**: See [Store listing assets](#store-listing-assets)
      below.
 7. The extension's functionality is reviewed as part of the app — there is no
@@ -173,8 +173,8 @@ for full MV3 compatibility.
 2. Choose **Product → Archive**.
 3. Distribute via **App Store Connect** → **Upload**.
 4. In App Store Connect, create a new **iOS App** entry:
-   - **Bundle ID**: `com.inferencegateway.browser-extension.ios`
-   - **SKU**: `INFERENCE_GATEWAY_IOS_001`
+   - **Bundle ID**: `com.inferencegateway.opentask.ios`
+   - **SKU**: `OPENTASK_IOS_001`
 
 ### Version alignment
 
@@ -198,7 +198,7 @@ Repo-skill tab-completion and quick-prompts in GitHub issue and pull-request com
 
 ### Full description
 
-Inference Gateway for GitHub adds two productivity tools to GitHub's classic textarea comment composer:
+OpenTask for GitHub adds two productivity tools to GitHub's classic textarea comment composer:
 
 **Skill tab-completion.** Type `!` in a comment box to open a keyboard-navigable dropdown of the current repository's skills (fetched from `.agents/skills/` via the GitHub Contents API). Filter as you type with fuzzy matching. Press Tab or Enter to insert `/skill-name` at the caret.
 
@@ -225,15 +225,15 @@ Capture these screenshots at the recommended resolution for each platform:
 2. Focus the comment textarea and type `!` — a dropdown of repo skills should appear below the caret. Arrow keys navigate, Tab/Enter inserts, Esc closes.
 3. Press Ctrl+Shift+P (or Cmd+Shift+P on Mac) — the quick-prompts palette should open as a centered overlay. Type to filter, Enter to insert.
 4. Click the lightning bolt button in the comment toolbar — the same palette opens.
-5. Right-click the extension icon → Preferences (or Safari → Settings → Extensions → Inference Gateway → Preferences). The options page shows a token field and an editable quick-prompts JSON editor with a Reset to defaults button.
+5. Right-click the extension icon → Preferences (or Safari → Settings → Extensions → OpenTask → Preferences). The options page shows a token field and an editable quick-prompts JSON editor with a Reset to defaults button.
 6. Verify the extension only requests `storage` permission, `host_permissions` limited to `https://api.github.com/*`, and a content-script match on `https://github.com/*`.
 
 ### URLs for the listing
 
-- **Homepage URL**: https://github.com/inference-gateway/browser-extension
-- **Privacy policy URL**: https://github.com/inference-gateway/browser-extension/blob/main/PRIVACY.md
-- **Support URL**: https://github.com/inference-gateway/browser-extension/issues
-- **Marketing URL**: https://github.com/inference-gateway/browser-extension
+- **Homepage URL**: https://github.com/inference-gateway/opentask
+- **Privacy policy URL**: https://github.com/inference-gateway/opentask/blob/main/PRIVACY.md
+- **Support URL**: https://github.com/inference-gateway/opentask/issues
+- **Marketing URL**: https://github.com/inference-gateway/opentask
 
 ---
 
@@ -247,7 +247,7 @@ task build:safari
 
 # 2. Re-run the converter (overwrites the Xcode project's Resources)
 xcrun safari-web-extension-converter dist/ \
-  --bundle-identifier com.inferencegateway.browser-extension \
+  --bundle-identifier com.inferencegateway.opentask \
   --project-location ../safari-extension \
   --no-open
 

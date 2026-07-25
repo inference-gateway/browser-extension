@@ -1,9 +1,9 @@
-<h1 align="center">Inference Gateway for GitHub</h1>
+<h1 align="center">OpenTask for GitHub</h1>
 
 <p align="center">
   <!-- License Badge -->
-  <a href="https://github.com/inference-gateway/browser-extension/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/inference-gateway/browser-extension?color=blue&style=flat-square" alt="License"/>
+  <a href="https://github.com/inference-gateway/opentask/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/inference-gateway/opentask?color=blue&style=flat-square" alt="License"/>
   </a>
   <!-- Manifest Badge -->
   <img src="https://img.shields.io/badge/Manifest-V3-blue?style=flat-square" alt="Manifest V3"/>
@@ -12,16 +12,16 @@
   <!-- Safari Badge -->
   <img src="https://img.shields.io/badge/Safari%20Web%20Extension-ready-brightgreen?style=flat-square" alt="Safari Web Extension ready"/>
   <!-- Chrome Web Store Badge -->
-  <a href="https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID">
+  <a href="https://chromewebstore.google.com/detail/opentask-for-git/REPLACE_WITH_EXTENSION_ID">
     <img src="https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?style=flat-square&label=Chrome%20Web%20Store" alt="Chrome Web Store"/>
   </a>
   <!-- Edge Add-ons Badge -->
-  <a href="https://microsoftedge.microsoft.com/addons/detail/inference-gateway-for-git/REPLACE_WITH_EDGE_EXTENSION_ID">
+  <a href="https://microsoftedge.microsoft.com/addons/detail/opentask-for-git/REPLACE_WITH_EDGE_EXTENSION_ID">
     <img src="https://img.shields.io/badge/Edge%20Add--ons-available-brightgreen?style=flat-square" alt="Edge Add-ons"/>
   </a>
   <!-- Firefox Add-ons Badge -->
-  <a href="https://addons.mozilla.org/firefox/addon/inference-gateway-for-git/REPLACE_WITH_FIREFOX_ADDON_ID">
-    <img src="https://img.shields.io/amo/v/inference-gateway-for-git?style=flat-square&label=Firefox%20Add-ons" alt="Firefox Add-ons"/>
+  <a href="https://addons.mozilla.org/firefox/addon/opentask-for-git/REPLACE_WITH_FIREFOX_ADDON_ID">
+    <img src="https://img.shields.io/amo/v/opentask-for-git?style=flat-square&label=Firefox%20Add-ons" alt="Firefox Add-ons"/>
   </a>
 </p>
 
@@ -83,15 +83,15 @@ GitHub's own draft/preview state stay consistent.
 
 **Chrome Web Store** (recommended):
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?label=Install%20from%20Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/inference-gateway-for-git/REPLACE_WITH_EXTENSION_ID)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/REPLACE_WITH_EXTENSION_ID?label=Install%20from%20Chrome%20Web%20Store)](https://chromewebstore.google.com/detail/opentask-for-git/REPLACE_WITH_EXTENSION_ID)
 
 **Microsoft Edge Add-ons**:
 
-[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Install-brightgreen?style=flat-square)](https://microsoftedge.microsoft.com/addons/detail/inference-gateway-for-git/REPLACE_WITH_EDGE_EXTENSION_ID)
+[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Install-brightgreen?style=flat-square)](https://microsoftedge.microsoft.com/addons/detail/opentask-for-git/REPLACE_WITH_EDGE_EXTENSION_ID)
 
 **Firefox Add-ons**:
 
-[![Firefox Add-ons](https://img.shields.io/amo/v/inference-gateway-for-git?label=Install%20from%20Firefox%20Add-ons)](https://addons.mozilla.org/firefox/addon/inference-gateway-for-git/REPLACE_WITH_FIREFOX_ADDON_ID)
+[![Firefox Add-ons](https://img.shields.io/amo/v/opentask-for-git?label=Install%20from%20Firefox%20Add-ons)](https://addons.mozilla.org/firefox/addon/opentask-for-git/REPLACE_WITH_FIREFOX_ADDON_ID)
 
 **Manual (unpacked)** for development or self-building:
 
@@ -172,7 +172,7 @@ insertion, keyboard); `src/ui/*` is the React view (skill menu + palette);
 To produce a store ZIP:
 
 ```bash
-task package:chrome    # builds, zips dist/ to browser-extension.zip, writes SHA-256
+task package:chrome    # builds, zips dist/ to opentask-extension.zip, writes SHA-256
 task package:edge      # same ZIP, named edge-extension.zip for Edge Add-ons
 task package:firefox   # builds with Firefox manifest, zips to firefox-extension.zip, writes SHA-256
 task build:safari      # builds with Safari manifest; see docs/store/safari-listing.md for Xcode conversion

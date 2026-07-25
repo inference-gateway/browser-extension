@@ -11,7 +11,7 @@ Repo-skill tab-completion and quick-prompts in GitHub issue and pull-request com
 
 ### Full description
 
-Inference Gateway for GitHub adds two productivity tools to GitHub's classic textarea comment composer:
+OpenTask for GitHub adds two productivity tools to GitHub's classic textarea comment composer:
 
 **Skill tab-completion.** Type `!` in a comment box to open a keyboard-navigable dropdown of the current repository's skills (fetched from `.agents/skills/` via the GitHub Contents API). Filter as you type with fuzzy matching. Press Tab or Enter to insert `/skill-name` at the caret.
 
@@ -40,6 +40,6 @@ Use the same screenshots as the Chrome Web Store listing, captured at 1280x800 o
 
 ## URLs for the listing
 
-- **Homepage URL**: https://github.com/inference-gateway/browser-extension
-- **Privacy policy URL**: https://github.com/inference-gateway/browser-extension/blob/main/PRIVACY.md
-- **Support URL**: https://github.com/inference-gateway/browser-extension/issues
+- **Homepage URL**: https://github.com/inference-gateway/opentask
+- **Privacy policy URL**: https://github.com/inference-gateway/opentask/blob/main/PRIVACY.md
+- **Support URL**: https://github.com/inference-gateway/opentask/issues
