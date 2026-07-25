@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Inference Gateway for GitHub",
+  "name": "OpenTask for GitHub",
   "description": "Repo-skill tab-completion and quick-prompts in GitHub issue/PR comments.",
   "version": "1.0.1",
   "permissions": [
@@ -33,10 +33,10 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "homepage_url": "https://github.com/inference-gateway/browser-extension",
+  "homepage_url": "https://github.com/inference-gateway/opentask",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Infer Agent"
+    "default_title": "OpenTask"
   },
   "options_ui": {
     "page": "options.html",

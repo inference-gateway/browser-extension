@@ -4,7 +4,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "inference-gateway@inference-gateway.github.io",
+      "id": "opentask@inference-gateway.github.io",
       "strict_min_version": "109.0"
     }
   }
