@@ -129,8 +129,6 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
-  // ponytail: board `gh project` commands are always appended (not gated on a perm) - board
-  // tracking is best-effort and needs no config. Add a toggle only if someone asks to disable it.
   const appends: string[] = [
     "gh project list( .*)?", "gh project field-list( .*)?",
     "gh project item-add( .*)?", "gh project item-edit( .*)?",

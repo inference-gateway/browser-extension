@@ -106,7 +106,6 @@ test("workflowYaml injects generic, board-agnostic board-tracking custom-instruc
   expect(yaml).toContain("In Progress");
   expect(yaml).toContain("Done");
   expect(yaml).toContain("gh project item-edit");
-  // Stays generic - no inference-gateway board/field/option ids leak in.
   expect(yaml).not.toContain("PVT_");
   expect(yaml).not.toContain("project #7");
   expect(yaml).not.toContain("Roadmap 2026");
