@@ -1,9 +1,10 @@
 import * as storage from "./shared/storage";
-import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse } from "./shared/messages";
+import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, workflowYaml, prBody } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt } from "./shared/task";
+import { CATALOG_URL, isAgentManifest, type AgentManifest } from "./shared/agents";
 
 const TTL = 10 * 60 * 1000;
 
@@ -51,6 +52,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === "apply-skills") {
     applySkills(msg.owner, msg.repo, msg.add, msg.remove)
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "agents-catalog") {
+    fetchAgentsCatalog()
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -287,6 +294,19 @@ async function fetchLanguages(owner: string, repo: string): Promise<string[]> {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([lang]) => lang);
+}
+
+// --- Agents catalog ---
+async function fetchAgentsCatalog(): Promise<AgentsCatalogResponse> {
+  const key = "agents-catalog";
+  const cached = await storage.get<{ ts: number; items: AgentManifest[] }>(key);
+  if (cached && Date.now() - cached.ts < TTL) return { catalog: cached.items };
+  const res = await fetch(CATALOG_URL);
+  if (!res.ok) return { error: `Failed to fetch agents catalog (HTTP ${res.status})` };
+  const json = await res.json();
+  const items: AgentManifest[] = Array.isArray(json) ? json.filter(isAgentManifest) : [];
+  await storage.set(key, { ts: Date.now(), items });
+  return { catalog: items };
 }
 
 async function applySkills(owner: string, repo: string, add: string[], remove: string[]): Promise<ApplySkillsResponse> {

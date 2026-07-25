@@ -6,6 +6,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { App } from "./ui/App";
 import { InstallPanel } from "./ui/InstallPanel";
 import { SkillsPanel } from "./ui/SkillsPanel";
+import { AgentsPanel } from "./ui/AgentsPanel";
 import type { View, SkillResult } from "./ui/types";
 import { isCommentBox, getTrigger, repoFromUrl, issueFromUrl } from "./lib/dom";
 import { DEFAULT_REFINE, isRefineConfig } from "./shared/models";
@@ -233,10 +234,13 @@ function tryInjectButton(box: HTMLTextAreaElement): void {
 // classes it currently has, and relabel it via the stable data-content attribute.
 const TASKS_NAV_ID = "igw-tasks-nav";
 const SKILLS_NAV_ID = "igw-skills-nav";
+const AGENTS_NAV_ID = "igw-agents-nav";
 // Verified octicon paths (octicon-* classes are stable, unlike CSS modules).
 const TASKS_ICON = "M5.75 2.5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 5h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5ZM2 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-6a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM2 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z";
 // octicon-package
 const SKILLS_ICON = "M8.878.392a1.75 1.75 0 0 0-1.756 0l-5.25 3.045A1.75 1.75 0 0 0 1 4.951v6.098c0 .624.332 1.2.872 1.514l5.25 3.045a1.75 1.75 0 0 0 1.756 0l5.25-3.045c.54-.313.872-.89.872-1.514V4.951a1.75 1.75 0 0 0-.872-1.514L8.878.392ZM7.875 1.69a.25.25 0 0 1 .25 0l4.63 2.685L8 7.133 3.245 4.375l4.63-2.685ZM2.5 5.677v5.372c0 .09.047.171.125.216l4.625 2.683V8.432L2.5 5.677Zm6.25 8.271 4.625-2.683a.25.25 0 0 0 .125-.216V5.677L8.75 8.432v5.516Z";
+// octicon-bot - a robot face for the Agents nav item
+const AGENTS_ICON = "M8 1.75a.75.75 0 0 1 .75.75V4.5h1.5a2.5 2.5 0 0 1 2.5 2.5v1.5h1.25a.75.75 0 0 1 0 1.5H12.75v1.5a2.5 2.5 0 0 1-2.5 2.5h-1.5v1.25a.75.75 0 0 1-1.5 0V13.5h-1.5a2.5 2.5 0 0 1-2.5-2.5V9.5H2.25a.75.75 0 0 1 0-1.5H3.25V7a2.5 2.5 0 0 1 2.5-2.5h1.5V2.5A.75.75 0 0 1 8 1.75ZM5.75 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm4.5 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z";
 
 // One popover at a time, shared by both nav buttons. openId tracks which nav opened it, so
 // clicking the same button toggles it closed.
@@ -255,7 +259,7 @@ function closePanel(): void {
 
 function onDocClick(e: MouseEvent): void {
   const t = e.target as Element | null;
-  if (panelHost && !panelHost.contains(t) && !t?.closest?.(`#${TASKS_NAV_ID}, #${SKILLS_NAV_ID}`)) closePanel();
+  if (panelHost && !panelHost.contains(t) && !t?.closest?.(`#${TASKS_NAV_ID}, #${SKILLS_NAV_ID}, #${AGENTS_NAV_ID}`)) closePanel();
 }
 
 function openPanel(id: string, anchor: HTMLElement, make: (owner: string, repo: string) => ReactElement): void {
@@ -318,6 +322,7 @@ function tryInjectNav(): void {
     const defs: { id: string; label: string; icon: string; make: (o: string, r: string) => ReactElement }[] = [
       { id: TASKS_NAV_ID, label: "Tasks", icon: TASKS_ICON, make: (o, r) => createElement(InstallPanel, { owner: o, repo: r, onClose: closePanel }) },
       { id: SKILLS_NAV_ID, label: "Skills", icon: SKILLS_ICON, make: (o, r) => createElement(SkillsPanel, { owner: o, repo: r, onClose: closePanel }) },
+      { id: AGENTS_NAV_ID, label: "Agents", icon: AGENTS_ICON, make: () => createElement(AgentsPanel, { onClose: closePanel }) },
     ];
     for (const def of defs) {
       const existing = document.getElementById(def.id);

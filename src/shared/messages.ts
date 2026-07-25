@@ -1,3 +1,4 @@
+import type { AgentManifest } from "./agents";
 import type { CatalogSkill } from "./skills";
 
 export type Skill = { name: string };
@@ -35,3 +36,9 @@ export type SkillsCatalogResponse =
 // Apply a skills selection as one PR: add each named skill's folder, delete each removed one.
 export type ApplySkillsRequest = { type: "apply-skills"; owner: string; repo: string; add: string[]; remove: string[] };
 export type ApplySkillsResponse = { prUrl: string } | { error: string };
+
+// Agents registry: the full catalog of A2A agents from the inference-gateway/agents registry.
+export type AgentsCatalogRequest = { type: "agents-catalog" };
+export type AgentsCatalogResponse =
+  | { catalog: AgentManifest[] }
+  | { error: string };
