@@ -13,6 +13,12 @@ test("workflowYaml uses block-list syntax, not inline arrays", () => {
   expect(yaml).not.toContain("[opened");
 });
 
+test("workflowYaml emits selected agents as a block list, and omits the key when none", () => {
+  const yaml = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, [], ["browser-agent", "documentation-agent"]);
+  expect(yaml).toContain("          agents: |\n            browser-agent\n            documentation-agent");
+  expect(workflowYaml(models, def, noBot)).not.toContain("agents:");
+});
+
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");

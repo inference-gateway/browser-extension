@@ -1,9 +1,10 @@
 import * as storage from "./shared/storage";
-import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse } from "./shared/messages";
+import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, workflowYaml, prBody } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt } from "./shared/task";
+import { CATALOG_URL, agentsFromCatalog, type AgentManifest } from "./shared/agents";
 
 const TTL = 10 * 60 * 1000;
 
@@ -55,6 +56,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
   }
+  if (msg?.type === "agents-catalog") {
+    fetchAgentsCatalog()
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
   if (msg?.type !== "skills") return false;
   getSkills(msg.owner, msg.repo)
     .then((items) => sendResponse({ items }))
@@ -83,6 +90,13 @@ async function loadPlugins(): Promise<PluginOption[]> {
   return Array.isArray(stored) && stored.every(isPluginOption)
     ? (stored as PluginOption[])
     : DEFAULT_PLUGINS;
+}
+
+// Agent names the user checked in the Agents panel (AgentsTab), fed to infer-action's
+// `agents:` input on (re)install.
+async function loadSelectedAgents(): Promise<string[]> {
+  const stored = await storage.get<unknown>("selected-agents");
+  return Array.isArray(stored) ? stored.filter((x): x is string => typeof x === "string") : [];
 }
 
 async function fetchPluginSkills(): Promise<Skill[]> {
@@ -143,6 +157,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const storedPerms = await storage.get<unknown>("permissions");
   const perms: Permissions = isPermissions(storedPerms) ? storedPerms : DEFAULT_PERMISSIONS;
   const plugins = await loadPlugins();
+  const agents = await loadSelectedAgents();
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
   const pat = await storage.get<string>("pat");
@@ -171,7 +186,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins)));
+  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents));
   const existing = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${branch}`);
   const sha = existing.status === 200 ? (await existing.json()).sha : undefined;
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
@@ -190,7 +205,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   }
 
   const title = "feat: add Infer Agent workflow";
-  const body = prBody(models, defaultModel, bot, enabledPlugins(plugins));
+  const body = prBody(models, defaultModel, bot, enabledPlugins(plugins), agents);
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
   if (prRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Pull requests: write." };
@@ -287,6 +302,19 @@ async function fetchLanguages(owner: string, repo: string): Promise<string[]> {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([lang]) => lang);
+}
+
+// --- Agents catalog ---
+async function fetchAgentsCatalog(): Promise<AgentsCatalogResponse> {
+  const key = "agents-catalog";
+  const cached = await storage.get<{ ts: number; items: AgentManifest[] }>(key);
+  if (cached && Date.now() - cached.ts < TTL) return { catalog: cached.items };
+  const res = await fetch(CATALOG_URL);
+  if (!res.ok) return { error: `Failed to fetch agents catalog (HTTP ${res.status})` };
+  const json = await res.json();
+  const items = agentsFromCatalog(json);
+  await storage.set(key, { ts: Date.now(), items });
+  return { catalog: items };
 }
 
 async function applySkills(owner: string, repo: string, add: string[], remove: string[]): Promise<ApplySkillsResponse> {
