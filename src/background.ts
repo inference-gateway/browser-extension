@@ -67,14 +67,10 @@ async function getSkills(owner: string, repo: string): Promise<Skill[]> {
   const cached = await storage.get<{ ts: number; items: Skill[] }>(key);
   if (cached && Date.now() - cached.ts < TTL) return cached.items;
 
-  // Fetch repo skills from .agents/skills/ in the target repo.
   const repoSkills = await fetchFromGitHub(owner, repo);
 
-  // Fetch plugin skills from enabled infer-action plugins. Plugin IDs follow the
-  // owner/repo convention; the skill name is the repo part (after the last /).
   const pluginSkills = await fetchPluginSkills();
 
-  // Merge, deduplicating by name (plugin skills supplement, not replace, repo skills).
   const seen = new Set<string>();
   const items: Skill[] = [];
   for (const s of repoSkills) { seen.add(s.name); items.push(s); }
@@ -90,8 +86,6 @@ async function fetchPluginSkills(): Promise<Skill[]> {
     ? (stored as PluginOption[])
     : DEFAULT_PLUGINS;
   return enabledPlugins(plugins).map((id) => {
-    // Plugin ID format: owner/repo (e.g., "ayghri/i-have-adhd").
-    // The skill name is the repo part (after the last /).
     const parts = id.split("/");
     return { name: parts[parts.length - 1] };
   });
