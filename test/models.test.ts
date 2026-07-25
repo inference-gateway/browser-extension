@@ -22,7 +22,7 @@ test("workflowYaml emits selected agents as a block list, and omits the key when
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.34.6");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.0");
 });
 
 test("workflowYaml exposes model as a workflow_dispatch choice input with all options + default", () => {
