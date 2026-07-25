@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, type BotConfig, type Permissions } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, isModelOption, isBotConfig, isPermissions, isRefineConfig, type BotConfig, type Permissions, type RefineConfig } from "./shared/models";
 
 function Options() {
   const [pat, setPat] = useState("");
@@ -10,6 +10,7 @@ function Options() {
   const [modelsText, setModelsText] = useState("");
   const [bot, setBot] = useState<BotConfig>(DEFAULT_BOT);
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
+  const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -23,6 +24,8 @@ function Options() {
       setBot(isBotConfig(b) ? b : DEFAULT_BOT);
       const pm = await storage.get<unknown>("permissions");
       setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
+      const rf = await storage.get<unknown>("refine");
+      setRefine(isRefineConfig(rf) ? rf : DEFAULT_REFINE);
     })();
   }, []);
 
@@ -53,6 +56,7 @@ function Options() {
     await storage.set("models", models);
     await storage.set("bot", bot);
     await storage.set("permissions", perms);
+    await storage.set("refine", refine);
     setStatus("Saved.");
   }
 
@@ -67,6 +71,7 @@ function Options() {
     setModelsText(JSON.stringify(DEFAULT_MODELS, null, 2));
     setBot(DEFAULT_BOT);
     setPerms(DEFAULT_PERMISSIONS);
+    setRefine(DEFAULT_REFINE);
     setStatus("Reset to defaults (not yet saved).");
   }
 
@@ -148,6 +153,32 @@ function Options() {
               onChange={(e) => setPerms({ ...perms, comment: e.target.checked })}
             />
             Comment on issues &amp; pull requests
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Issue refinement</h2>
+        <p>Let the Infer agent rewrite an issue's description in place. Refine edits the issue
+          body via <code>gh issue edit</code>, so the installed workflow needs
+          <code> Create GitHub issues</code> permission above — <strong>re-install</strong> after
+          enabling.</p>
+        <div className="igw-bot-fields">
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={refine.manual}
+              onChange={(e) => setRefine({ ...refine, manual: e.target.checked })}
+            />
+            Show a Refine button on issue pages
+          </label>
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={refine.auto}
+              onChange={(e) => setRefine({ ...refine, auto: e.target.checked })}
+            />
+            Auto-refine issues you create on GitHub
           </label>
         </div>
       </section>

@@ -11,3 +11,14 @@ export function taskTitle(prompt: string): string {
   const base = cleaned || "Infer task";
   return base.length > 80 ? `${base.slice(0, 79)}…` : base;
 }
+
+// Direct-prompt for a workflow_dispatch refine run: read one existing issue and rewrite its
+// body in place. Names the issue explicitly since dispatch runs have no issue event context.
+export function refinePrompt(owner: string, repo: string, issue: number): string {
+  return [
+    `Refine GitHub issue #${issue} in ${owner}/${repo}.`,
+    `Read it with \`gh issue view ${issue}\`, then improve the description: a clear summary,`,
+    `explicit acceptance criteria, and a sensible structure. Do not change the issue's intent`,
+    `or scope. Apply the result in place with \`gh issue edit ${issue}\` (edit the body only).`,
+  ].join(" ");
+}

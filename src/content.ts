@@ -7,7 +7,8 @@ import { App } from "./ui/App";
 import { InstallPanel } from "./ui/InstallPanel";
 import { SkillsPanel } from "./ui/SkillsPanel";
 import type { View, SkillResult } from "./ui/types";
-import { isCommentBox, getTrigger, repoFromUrl } from "./lib/dom";
+import { isCommentBox, getTrigger, repoFromUrl, issueFromUrl } from "./lib/dom";
+import { DEFAULT_REFINE, isRefineConfig } from "./shared/models";
 import { caretPosition } from "./lib/caret";
 import { fuzzyFilter } from "./lib/fuzzy";
 import { replaceRange } from "./lib/insert";
@@ -338,5 +339,99 @@ function tryInjectNav(): void {
   }
 }
 
-new MutationObserver(() => tryInjectNav()).observe(document.body, { childList: true, subtree: true });
+// --- Refine an issue (header button + auto-refine on native issue creation) ---
+let refineCfg = DEFAULT_REFINE;
+void storage.get<unknown>("refine").then((r) => {
+  if (isRefineConfig(r)) refineCfg = r;
+  tryInjectRefine();
+});
+// Reflect an options toggle without a page reload.
+chrome.storage?.onChanged?.addListener((changes, area) => {
+  if (area === "local" && changes.refine && isRefineConfig(changes.refine.newValue)) {
+    refineCfg = changes.refine.newValue;
+    tryInjectRefine();
+  }
+});
+
+const REFINE_BTN_ID = "igw-refine-btn";
+const REFINE_PENDING = "igw-refine-pending";
+
+// ponytail: best-effort injection like tryInjectButton - GitHub's issue-header markup is
+// hashed and churns, so anchoring off the stable kebab octicon is allowed to find nothing.
+function tryInjectRefine(): void {
+  try {
+    if (!refineCfg.manual) return void document.getElementById(REFINE_BTN_ID)?.remove();
+    const loc = issueFromUrl();
+    if (!loc || document.getElementById(REFINE_BTN_ID)) return;
+    // First "..." kebab on an issue page belongs to the issue body's header (the issue itself
+    // is the first comment) - right next to "Last edited by".
+    const kebab = document.querySelector<SVGElement>(".octicon-kebab-horizontal");
+    const anchor = kebab?.closest("button, summary, a") as HTMLElement | null;
+    if (!anchor?.parentElement) return;
+    const btn = document.createElement("button");
+    btn.id = REFINE_BTN_ID;
+    btn.type = "button";
+    btn.className = "igw-palette-btn";
+    btn.textContent = "Refine";
+    btn.title = "Refine this issue with the Infer agent";
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      refineNow(btn, loc);
+    });
+    anchor.parentElement.insertBefore(btn, anchor);
+  } catch {
+    // best-effort; GitHub markup churns
+  }
+}
+
+function refineNow(btn: HTMLButtonElement, loc: { owner: string; repo: string; issue: number }): void {
+  if (!chrome.runtime?.id) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Refining…";
+  const done = (text: string) => {
+    btn.disabled = false;
+    btn.textContent = text;
+    setTimeout(() => { btn.textContent = orig; }, 3000);
+  };
+  chrome.runtime.sendMessage({ type: "refine-issue", ...loc }, (resp) => {
+    if (chrome.runtime?.lastError || !resp || resp.error) return done("Refine failed");
+    done("Submitted ✓");
+  });
+}
+
+// ponytail: best-effort native-issue-creation detection - flag the "Create" click, then
+// dispatch once we land on the new issue. A submit that fails validation leaves a stale
+// flag; the 15s TTL + consume-once caps it. Upgrade to a real form hook only if it misfires.
+document.addEventListener("click", (e) => {
+  if (!refineCfg.auto || !location.pathname.includes("/issues/new")) return;
+  const label = (e.target as Element | null)?.closest("button")?.textContent?.trim() ?? "";
+  if (/^(Create|Submit new issue)$/i.test(label)) {
+    try { sessionStorage.setItem(REFINE_PENDING, String(Date.now())); } catch { /* ignore */ }
+  }
+}, true);
+
+function maybeAutoRefine(): void {
+  if (!refineCfg.auto) return;
+  const loc = issueFromUrl();
+  if (!loc || !chrome.runtime?.id) return;
+  let ts = 0;
+  try {
+    const raw = sessionStorage.getItem(REFINE_PENDING);
+    if (!raw) return;
+    ts = Number(raw);
+    sessionStorage.removeItem(REFINE_PENDING); // consume once
+  } catch {
+    return;
+  }
+  if (!ts || Date.now() - ts > 15000) return; // stale
+  chrome.runtime.sendMessage({ type: "refine-issue", ...loc }, () => { /* fire-and-forget */ });
+}
+
+new MutationObserver(() => {
+  tryInjectNav();
+  tryInjectRefine();
+  maybeAutoRefine();
+}).observe(document.body, { childList: true, subtree: true });
 tryInjectNav();
+maybeAutoRefine();
