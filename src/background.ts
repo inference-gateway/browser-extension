@@ -88,8 +88,8 @@ async function loadPlugins(): Promise<PluginOption[]> {
 async function fetchPluginSkills(): Promise<Skill[]> {
   const plugins = await loadPlugins();
   return enabledPlugins(plugins).map((id) => {
-    const parts = id.split("/");
-    return { name: parts[parts.length - 1] };
+    const name = id.split("/").pop()!;
+    return { name: `${name}:${name}` };
   });
 }
 
