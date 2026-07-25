@@ -66,9 +66,35 @@ async function getSkills(owner: string, repo: string): Promise<Skill[]> {
   const key = `skills:${owner}/${repo}`;
   const cached = await storage.get<{ ts: number; items: Skill[] }>(key);
   if (cached && Date.now() - cached.ts < TTL) return cached.items;
-  const items = await fetchFromGitHub(owner, repo);
+
+  // Fetch repo skills from .agents/skills/ in the target repo.
+  const repoSkills = await fetchFromGitHub(owner, repo);
+
+  // Fetch plugin skills from enabled infer-action plugins. Plugin IDs follow the
+  // owner/repo convention; the skill name is the repo part (after the last /).
+  const pluginSkills = await fetchPluginSkills();
+
+  // Merge, deduplicating by name (plugin skills supplement, not replace, repo skills).
+  const seen = new Set<string>();
+  const items: Skill[] = [];
+  for (const s of repoSkills) { seen.add(s.name); items.push(s); }
+  for (const s of pluginSkills) { if (!seen.has(s.name)) { seen.add(s.name); items.push(s); } }
+
   await storage.set(key, { ts: Date.now(), items });
   return items;
+}
+
+async function fetchPluginSkills(): Promise<Skill[]> {
+  const stored = await storage.get<unknown>("plugins");
+  const plugins: PluginOption[] = Array.isArray(stored) && stored.every(isPluginOption)
+    ? (stored as PluginOption[])
+    : DEFAULT_PLUGINS;
+  return enabledPlugins(plugins).map((id) => {
+    // Plugin ID format: owner/repo (e.g., "ayghri/i-have-adhd").
+    // The skill name is the repo part (after the last /).
+    const parts = id.split("/");
+    return { name: parts[parts.length - 1] };
+  });
 }
 
 async function fetchFromGitHub(owner: string, repo: string): Promise<Skill[]> {
