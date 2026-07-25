@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/inference-gateway/opentask/compare/v1.0.0...v1.0.1) (2026-07-25)
+
+### 🐛 Bug Fixes
+
+* **refine:** prevent multiple refine clicks, show permanent success state ([#45](https://github.com/inference-gateway/opentask/issues/45)) ([cc11d54](https://github.com/inference-gateway/opentask/commit/cc11d54882b556d3db6f4a6b057296fe7bd49ac2))
+
 ## 1.0.0 (2026-07-25)
 
 ### ✨ Features
