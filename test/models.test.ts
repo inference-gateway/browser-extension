@@ -37,7 +37,7 @@ test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", 
 test("workflowYaml wires every standard provider key", () => {
   const yaml = workflowYaml(models, def, noBot);
   for (const p of DEFAULT_PROVIDERS) expect(yaml).toContain(`${p.keyInput}: \${{ secrets.${p.secret} }}`);
-  expect(DEFAULT_PROVIDERS.length).toBeGreaterThanOrEqual(14);
+  expect(DEFAULT_PROVIDERS.length).toBeGreaterThanOrEqual(13);
 });
 
 test("workflowYaml appends a custom-model provider key, deduped", () => {

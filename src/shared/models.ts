@@ -37,7 +37,6 @@ export const DEFAULT_PROVIDERS: Provider[] = [
   { keyInput: "mistral-api-key", secret: "MISTRAL_API_KEY" },
   { keyInput: "cloudflare-api-key", secret: "CLOUDFLARE_API_KEY" },
   { keyInput: "cohere-api-key", secret: "COHERE_API_KEY" },
-  { keyInput: "ollama-api-key", secret: "OLLAMA_API_KEY" },
   { keyInput: "ollama-cloud-api-key", secret: "OLLAMA_CLOUD_API_KEY" },
   { keyInput: "moonshot-api-key", secret: "MOONSHOT_API_KEY" },
   { keyInput: "minimax-api-key", secret: "MINIMAX_API_KEY" },
