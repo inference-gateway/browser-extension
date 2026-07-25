@@ -228,7 +228,7 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}
 
-      - uses: inference-gateway/infer-action@v0.34.6
+      - uses: inference-gateway/infer-action@v0.35.0
         with:
           github-token: ${githubToken}${botSlugLine}
           model: \${{ inputs.model || '${def}' }}
