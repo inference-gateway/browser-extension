@@ -81,6 +81,10 @@ export function isPermissions(p: unknown): p is Permissions {
 export type RefineConfig = { auto: boolean; manual: boolean };
 export const DEFAULT_REFINE: RefineConfig = { auto: false, manual: true };
 
+// Plugins installed via infer plugins install --yes before the agent runs.
+// Each entry is a plugin identifier (e.g. "owner/repo" or "owner/repo@ref").
+export const DEFAULT_PLUGINS: string[] = ["inference-gateway/caveman", "inference-gateway/ponytail"];
+
 export function isRefineConfig(r: unknown): r is RefineConfig {
   return (
     !!r &&
@@ -93,7 +97,7 @@ export function isRefineConfig(r: unknown): r is RefineConfig {
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = DEFAULT_PLUGINS): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -103,6 +107,8 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
   const permLines =
     `          enable-git-operations: "${perms.createPRs}"` +
     (appends.length ? `\n          bash-allow-append: "${appends.join(",")}"` : "");
+
+  const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
 
   const providers: Provider[] = [...DEFAULT_PROVIDERS];
   const seen = new Set(providers.map((p) => p.keyInput));
@@ -175,12 +181,12 @@ ${appTokenStep}${checkoutStep}
           github-token: ${githubToken}${botSlugLine}
           model: \${{ inputs.model || '${def}' }}
           direct-prompt: \${{ inputs.prompt }}
-${permLines}
+${permLines}${pluginLines}
 ${keyLines}
 `;
 }
 
-export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig): string {
+export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig, plugins: string[] = DEFAULT_PLUGINS): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const secretList = [...new Set(models.map((m) => m.secret))].map((s) => `\`${s}\``).join(", ");
   const botStep = bot.enabled
@@ -198,5 +204,11 @@ Before the workflow can run:
 1. Go to Settings > Secrets and variables > Actions and add the provider API key secret for the model(s) you use: ${secretList}.${botStep}
 
 The workflow triggers on new/edited issues, issue comments, and pull request review comments, and can also be run manually (Actions > Task > Run workflow) with a model chosen from the dropdown.
+
+### Plugins
+
+The workflow pre-installs the following infer-action plugins to extend the agent's capabilities:
+
+${plugins.map((p) => `- \`${p}\``).join("\n")}
 `;
 }
