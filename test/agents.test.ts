@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { isAgentManifest, type AgentManifest } from "../src/shared/agents";
+import { agentsFromCatalog, isAgentManifest, type AgentManifest } from "../src/shared/agents";
 
 const agent = (over: Partial<AgentManifest>): AgentManifest => ({
   metadata: { name: "test-agent", description: "A test agent", version: "1.0.0" },
@@ -29,4 +29,11 @@ test("isAgentManifest rejects missing metadata fields", () => {
 test("isAgentManifest rejects non-object metadata", () => {
   expect(isAgentManifest({ metadata: "string" })).toBe(false);
   expect(isAgentManifest({ metadata: null })).toBe(false);
+});
+
+test("agentsFromCatalog extracts agents from the wrapper object and a bare array", () => {
+  const a = { metadata: { name: "browser-agent", description: "d", version: "0.6.4" }, spec: {} };
+  expect(agentsFromCatalog({ version: 1, agents: [a] }).map((x) => x.metadata.name)).toEqual(["browser-agent"]);
+  expect(agentsFromCatalog([a])).toHaveLength(1); // bare array fallback
+  expect(agentsFromCatalog({})).toEqual([]); // no crash on missing agents
 });

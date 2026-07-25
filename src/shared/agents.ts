@@ -24,3 +24,14 @@ export function isAgentManifest(m: unknown): m is AgentManifest {
     typeof meta.version === "string"
   );
 }
+
+// The catalog is a wrapper object { version, updated, agents: [...] }; a bare
+// array shape is tolerated for forward-compat.
+export function agentsFromCatalog(json: unknown): AgentManifest[] {
+  const arr = Array.isArray(json)
+    ? json
+    : Array.isArray((json as { agents?: unknown })?.agents)
+      ? (json as { agents: unknown[] }).agents
+      : [];
+  return arr.filter(isAgentManifest);
+}
