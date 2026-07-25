@@ -1,5 +1,5 @@
 ---
-repositoryUrl: 'https://github.com/inference-gateway/browser-extension'
+repositoryUrl: 'https://github.com/inference-gateway/opentask'
 branches:
   - { name: main, prerelease: false, channel: latest }
   - { name: 'rc/*', prerelease: rc, channel: rc }
