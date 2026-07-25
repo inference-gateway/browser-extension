@@ -36,7 +36,6 @@ export type SkillsCatalogResponse =
 export type ApplySkillsRequest = { type: "apply-skills"; owner: string; repo: string; add: string[]; remove: string[] };
 export type ApplySkillsResponse = { prUrl: string } | { error: string };
 
-// Agents registry: the full catalog of A2A agents from the inference-gateway/agents registry.
 export type AgentsCatalogRequest = { type: "agents-catalog" };
 export type AgentsCatalogResponse =
   | { catalog: AgentManifest[] }
