@@ -14,6 +14,6 @@ test("taskTitle derives from the first line, stripping the trigger", () => {
 });
 
 test("taskTitle falls back for a bare trigger and truncates long input", () => {
-  expect(taskTitle("@opentask")).toBe("Infer task");
+  expect(taskTitle("@opentask")).toBe("OpenTask task");
   expect(taskTitle("x".repeat(100)).length).toBe(80);
 });

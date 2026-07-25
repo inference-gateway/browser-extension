@@ -25,6 +25,11 @@ test("workflowYaml pins the checkout and infer-action refs", () => {
   expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.0");
 });
 
+test("workflowYaml sets the @opentask trigger-phrase", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain('trigger-phrase: "@opentask"');
+});
+
 test("workflowYaml exposes model as a workflow_dispatch choice input with all options + default", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("workflow_dispatch:");

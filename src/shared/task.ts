@@ -8,7 +8,7 @@ export function taskBody(prompt: string): string {
 export function taskTitle(prompt: string): string {
   const first = prompt.split("\n").map((l) => l.trim()).find(Boolean) ?? "";
   const cleaned = first.replace(TRIGGER, "").replace(/^[\s:\u2013\u2014-]+/, "").trim();
-  const base = cleaned || "Infer task";
+  const base = cleaned || "OpenTask task";
   return base.length > 80 ? `${base.slice(0, 79)}…` : base;
 }
 

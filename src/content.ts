@@ -375,7 +375,7 @@ function tryInjectRefine(): void {
     btn.type = "button";
     btn.className = "igw-palette-btn";
     btn.textContent = "Refine";
-    btn.title = "Refine this issue with the Infer agent";
+    btn.title = "Refine this issue with the OpenTask agent";
     if (refined) {
       btn.disabled = true;
       btn.textContent = "Submitted ✓";
