@@ -17,8 +17,9 @@ export function taskTitle(prompt: string): string {
 export function refinePrompt(owner: string, repo: string, issue: number): string {
   return [
     `Refine GitHub issue #${issue} in ${owner}/${repo}.`,
-    `Read it with \`gh issue view ${issue}\`, then improve the description: a clear summary,`,
-    `explicit acceptance criteria, and a sensible structure. Do not change the issue's intent`,
-    `or scope. Apply the result in place with \`gh issue edit ${issue}\` (edit the body only).`,
+    `Read it with \`gh issue view ${issue}\`, then improve the title and description: a clear,`,
+    `concise title, a well-structured summary, explicit acceptance criteria, and a sensible`,
+    `layout. Do not change the issue's intent or scope. Apply the result in place with`,
+    `\`gh issue edit ${issue} --title "<new title>" --body "<new body>"\`.`,
   ].join(" ");
 }
