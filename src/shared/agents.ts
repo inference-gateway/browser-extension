@@ -4,13 +4,11 @@ export type AgentManifest = {
     description: string;
     version: string;
   };
-  _source: {
+  _source?: {
     repo: string;
     ref: string;
   };
 };
-
-export const REGISTRY = { owner: "inference-gateway", repo: "agents" };
 
 export const CATALOG_URL =
   "https://cdn.jsdelivr.net/gh/inference-gateway/agents@main/catalog.json";

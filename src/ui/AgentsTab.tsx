@@ -16,7 +16,7 @@ export function AgentsTab() {
       if (chrome.runtime?.lastError || !resp)
         return setStatus({ kind: "error", message: "Failed to load agents." });
       if (resp.error)
-        return setStatus({ kind: "error", message: resp.error as string });
+        return setStatus({ kind: "error", message: resp.error });
       const catalog = (resp as { catalog: AgentManifest[] }).catalog;
       setStatus({ kind: "ready", catalog });
     });
