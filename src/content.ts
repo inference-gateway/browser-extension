@@ -355,6 +355,7 @@ chrome.storage?.onChanged?.addListener((changes, area) => {
 
 const REFINE_BTN_ID = "igw-refine-btn";
 const REFINE_PENDING = "igw-refine-pending";
+let refined = false;
 
 // ponytail: best-effort injection like tryInjectButton - GitHub's issue-header markup is
 // hashed and churns, so anchoring off the stable kebab octicon is allowed to find nothing.
@@ -372,6 +373,10 @@ function tryInjectRefine(): void {
     btn.className = "igw-palette-btn";
     btn.textContent = "Refine";
     btn.title = "Refine this issue with the Infer agent";
+    if (refined) {
+      btn.disabled = true;
+      btn.textContent = "Submitted ✓";
+    }
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       refineNow(btn, loc);
@@ -383,18 +388,18 @@ function tryInjectRefine(): void {
 }
 
 function refineNow(btn: HTMLButtonElement, loc: { owner: string; repo: string; issue: number }): void {
-  if (!chrome.runtime?.id) return;
-  const orig = btn.textContent;
+  if (!chrome.runtime?.id || refined) return;
   btn.disabled = true;
   btn.textContent = "Refining…";
-  const done = (text: string) => {
-    btn.disabled = false;
-    btn.textContent = text;
-    setTimeout(() => { btn.textContent = orig; }, 3000);
-  };
   chrome.runtime.sendMessage({ type: "refine-issue", ...loc }, (resp) => {
-    if (chrome.runtime?.lastError || !resp || resp.error) return done("Refine failed");
-    done("Submitted ✓");
+    if (chrome.runtime?.lastError || !resp || resp.error) {
+      btn.disabled = false;
+      btn.textContent = "Refine failed";
+      setTimeout(() => { btn.textContent = "Refine"; }, 3000);
+      return;
+    }
+    refined = true;
+    btn.textContent = "Submitted ✓";
   });
 }
 
