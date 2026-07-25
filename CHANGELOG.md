@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/inference-gateway/opentask/compare/v0.3.0...v0.4.0) (2026-07-25)
+
+### ✨ Features
+
+* add Infer Agent workflow ([#35](https://github.com/inference-gateway/opentask/issues/35)) ([74ad7e5](https://github.com/inference-gateway/opentask/commit/74ad7e5af6c9a093cf42522c06b4d1dc69ab500f))
+* add mergePrompts and new default prompt ([5b738f9](https://github.com/inference-gateway/opentask/commit/5b738f960bb1648b2dc0d09ab66a672049b9a43f))
+* **edge:** publish to Microsoft Edge Add-ons ([#30](https://github.com/inference-gateway/opentask/issues/30)) ([25a7675](https://github.com/inference-gateway/opentask/commit/25a7675eea83ee3ad245e47a49d67d2ab7f6a6e1))
+* **firefox:** add Firefox-compatible build with shared manifest overrides ([#32](https://github.com/inference-gateway/opentask/issues/32)) ([4ca737d](https://github.com/inference-gateway/opentask/commit/4ca737d6b071707427a2a260e1b69823351b3e6c))
+* **safari:** add Safari Web Extension packaging and release docs ([#33](https://github.com/inference-gateway/opentask/issues/33)) ([9e6a80f](https://github.com/inference-gateway/opentask/commit/9e6a80f7e03d68f4817fbdd7aaad39d160c4c334))
+
+### 🐛 Bug Fixes
+
+* **workflow:** attribute generated-workflow commits to the App bot ([#34](https://github.com/inference-gateway/opentask/issues/34)) ([301ffd4](https://github.com/inference-gateway/opentask/commit/301ffd49a6ae29a26e135a3cae889fc263160df4))
+
+### 👷 CI
+
+* **tasks:** install task CLI in tasks.yml workflow ([#31](https://github.com/inference-gateway/opentask/issues/31)) ([970e628](https://github.com/inference-gateway/opentask/commit/970e628b22850a90636af5ab02ce0dc74c4fe094))
+
+### 🔧 Miscellaneous
+
+* update repository URL in .releaserc.yaml ([80ee5eb](https://github.com/inference-gateway/opentask/commit/80ee5eb86c4b46effb8ef2a2b9e113ee17b0db52))
+
 ## [0.3.0](https://github.com/inference-gateway/browser-extension/compare/v0.2.0...v0.3.0) (2026-07-24)
 
 ### ✨ Features
