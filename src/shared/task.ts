@@ -1,8 +1,8 @@
-const TRIGGER = /@infer\b/i;
+const TRIGGER = /@opentask\b/i;
 
 export function taskBody(prompt: string): string {
   const text = prompt.trim();
-  return TRIGGER.test(text) ? text : `@infer\n\n${text}`;
+  return TRIGGER.test(text) ? text : `@opentask\n\n${text}`;
 }
 
 export function taskTitle(prompt: string): string {

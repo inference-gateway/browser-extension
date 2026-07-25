@@ -231,6 +231,7 @@ ${appTokenStep}${checkoutStep}
       - uses: inference-gateway/infer-action@v0.35.0
         with:
           github-token: ${githubToken}${botSlugLine}
+          trigger-phrase: "@opentask"
           model: \${{ inputs.model || '${def}' }}
           direct-prompt: \${{ inputs.prompt }}
 ${permLines}${pluginLines}${agentLines}

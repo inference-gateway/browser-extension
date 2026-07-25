@@ -17,7 +17,7 @@ OpenTask for GitHub adds two productivity tools to GitHub's classic textarea com
 
 **Skill tab-completion.** Type `!` in a comment box to open a keyboard-navigable dropdown of the current repository's skills (fetched from `.agents/skills/` via the GitHub Contents API). Filter as you type with fuzzy matching. Press Tab or Enter to insert `/skill-name` at the caret.
 
-**Quick-prompts palette.** Press Ctrl+Shift+P (or Cmd+Shift+P on Mac) or click the lightning bolt button injected into the comment toolbar to open a searchable palette of common bot directives (`@claude`, `@infer`, `@codex`, `[browser]`, `[effort:...]`, `[model:...]`, `/subscription ...`) plus editable templates. Select one to insert it at the caret.
+**Quick-prompts palette.** Press Ctrl+Shift+P (or Cmd+Shift+P on Mac) or click the lightning bolt button injected into the comment toolbar to open a searchable palette of `@opentask` directives plus editable templates. Select one to insert it at the caret.
 
 **Private-repo support.** Optionally configure a fine-grained GitHub personal access token (Contents: read) on the Options page to list skills in private repositories.
 

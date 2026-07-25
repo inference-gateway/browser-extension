@@ -46,7 +46,7 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
 - 📜 **Open Source**: Available under the Apache 2.0 License.
 - ⚡ **Skill Tab-Completion**: Type `!` in a comment to open a caret-anchored,
   keyboard-navigable dropdown of the current repo's skills, fuzzy-filtered as you type.
-- 🎛️ **Quick Prompts Palette**: A searchable palette of `@infer` directives plus
+- 🎛️ **Quick Prompts Palette**: A searchable palette of `@opentask` directives plus
   editable templates.
 - 🔍 **Repo-Aware**: Resolves `owner/repo` from the page and fetches
   `.agents/skills/` via the GitHub Contents API, cached per repo.
@@ -64,7 +64,7 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
   Skills matching the repo's top languages are suggested first; applying opens a single PR
   that adds/removes skill folders under `.agents/skills/`.
 - 📝 **Free-Text Tasks**: The **Task** tab sends a task to the agent. Leave **Create a
-  GitHub issue** checked to open an `@infer` issue, or uncheck it to run the task directly
+  GitHub issue** checked to open an `@opentask` issue, or uncheck it to run the task directly
   via `workflow_dispatch` (infer-action's `direct-prompt`) with no public issue.
 - 📋 **Project Board Tracking**: The installed workflow tells the agent to keep an issue's
   project-board Status in sync (In Progress on start, Done on completion), best-effort and

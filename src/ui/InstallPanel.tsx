@@ -54,9 +54,9 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
   }
 
   function insertTemplate(raw: string) {
-    // The composer never wants the "@infer" trigger phrase - the issue path adds it, and the
+    // The composer never wants the "@opentask" trigger phrase - the issue path adds it, and the
     // dispatch path uses direct-prompt. (The comment-box palette keeps it, in content.ts.)
-    const text = raw.replace(/^@infer\b[ \t]*/i, "");
+    const text = raw.replace(/^@opentask\b[ \t]*/i, "");
     const ta = taRef.current;
     if (!ta) return setTask((t) => t + text);
     const start = ta.selectionStart ?? task.length;
@@ -170,7 +170,7 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
             >
               {models.map((m) => <option key={m.model} value={m.model}>{m.model}</option>)}
             </select>
-            <button className="igw-tasks-btn" onClick={doInstall}>Install Infer Agent</button>
+            <button className="igw-tasks-btn" onClick={doInstall}>Install OpenTask</button>
           </>
         )}
 

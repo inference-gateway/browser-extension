@@ -219,7 +219,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   throw new Error(`GitHub ${prRes.status}`);
 }
 
-// Send a free-text task: open an issue whose body carries the "@infer" trigger, so
+// Send a free-text task: open an issue whose body carries the "@opentask" trigger, so
 // the installed workflow fires on issues.opened and the agent picks it up.
 async function createTask(owner: string, repo: string, prompt: string): Promise<{ url: string } | { error: string }> {
   if (!prompt || !prompt.trim()) return { error: "Task is empty." };
