@@ -135,6 +135,19 @@ export function isRefineConfig(r: unknown): r is RefineConfig {
   );
 }
 
+// Project init: what the Init button asks the agent to scaffold. AGENTS.md is always
+// generated; the toggles add optional extras. All default off. Stored under "init".
+export type InitConfig = { githooks: boolean; claudeSymlink: boolean; skillsSymlink: boolean };
+export const DEFAULT_INIT: InitConfig = { githooks: false, claudeSymlink: false, skillsSymlink: false };
+
+export function isInitConfig(x: unknown): x is InitConfig {
+  return (
+    !!x &&
+    typeof x === "object" &&
+    ["githooks", "claudeSymlink", "skillsSymlink"].every((k) => typeof (x as Record<string, unknown>)[k] === "boolean")
+  );
+}
+
 // Generic, board-agnostic project-board tracking, appended to the agent's instructions.
 // No hardcoded project/field/option ids: the agent discovers the board and its Status
 // field at runtime, so this works on any repo/org, not just one specific board. Best-effort

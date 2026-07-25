@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import type { PatEntry, BotEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, isModelOption, isPermissions, isRefineConfig, isPluginOption, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig } from "./shared/models";
 
 type Theme = "system" | "light" | "dark";
 
@@ -43,6 +43,7 @@ function Options() {
   const [modelsText, setModelsText] = useState("");
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
+  const [init, setInit] = useState<InitConfig>(DEFAULT_INIT);
   const [plugins, setPlugins] = useState<PluginOption[]>(DEFAULT_PLUGINS);
   const [theme, setTheme] = useState<Theme>("system");
   const [showToken, setShowToken] = useState(false);
@@ -63,6 +64,8 @@ function Options() {
       setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
       const rf = await storage.get<unknown>("refine");
       setRefine(isRefineConfig(rf) ? rf : DEFAULT_REFINE);
+      const it = await storage.get<unknown>("init");
+      setInit(isInitConfig(it) ? it : DEFAULT_INIT);
       const pl = await storage.get<unknown>("plugins");
       const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
       setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
@@ -118,6 +121,7 @@ function Options() {
     await storage.set("models", models);
     await storage.set("permissions", perms);
     await storage.set("refine", refine);
+    await storage.set("init", init);
     await storage.set("plugins", plugins);
     await storage.set("theme", theme);
     setStatus("Saved.");
@@ -152,6 +156,7 @@ function Options() {
     updateAccount({ bot: DEFAULT_BOT });
     setPerms(DEFAULT_PERMISSIONS);
     setRefine(DEFAULT_REFINE);
+    setInit(DEFAULT_INIT);
     setPlugins(DEFAULT_PLUGINS);
     setStatus("Reset to defaults (not yet saved).");
   }
@@ -305,6 +310,39 @@ function Options() {
               onChange={(e) => setRefine({ ...refine, auto: e.target.checked })}
             />
             Auto-refine issues you create on GitHub
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Project init</h2>
+        <p>What the <strong>Init</strong> button (in a repo's nav) asks the agent to scaffold. It always
+          generates an <code>AGENTS.md</code> and opens a PR; these add optional extras. Requires the
+          OpenTask Agent workflow to be installed on the repo.</p>
+        <div className="igw-bot-fields">
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={init.githooks}
+              onChange={(e) => setInit({ ...init, githooks: e.target.checked })}
+            />
+            Add a <code>.githooks/pre-commit</code> hook
+          </label>
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={init.claudeSymlink}
+              onChange={(e) => setInit({ ...init, claudeSymlink: e.target.checked })}
+            />
+            Symlink <code>CLAUDE.md</code> &rarr; <code>AGENTS.md</code>
+          </label>
+          <label className="igw-check">
+            <input
+              type="checkbox"
+              checked={init.skillsSymlink}
+              onChange={(e) => setInit({ ...init, skillsSymlink: e.target.checked })}
+            />
+            Symlink <code>.claude/skills</code> &rarr; <code>.agents/skills</code>
           </label>
         </div>
       </section>

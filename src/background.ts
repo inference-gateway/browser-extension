@@ -1,9 +1,9 @@
 import * as storage from "./shared/storage";
 import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
-import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isPermissions, isPluginOption, enabledPlugins, workflowYaml, prBody } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, isModelOption, isPermissions, isPluginOption, isInitConfig, enabledPlugins, workflowYaml, prBody } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
-import { taskBody, taskTitle, refinePrompt } from "./shared/task";
+import { taskBody, taskTitle, refinePrompt, initPrompt } from "./shared/task";
 import { CATALOG_URL, agentsFromCatalog, type AgentManifest } from "./shared/agents";
 
 const TTL = 10 * 60 * 1000;
@@ -40,6 +40,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === "refine-issue") {
     refineIssue(msg.owner, msg.repo, msg.issue)
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "init-project") {
+    initProject(msg.owner, msg.repo)
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -299,6 +305,19 @@ async function refineIssue(owner: string, repo: string, issue: number): Promise<
     ? (stored as ModelOption[])
     : DEFAULT_MODELS;
   return dispatchTask(owner, repo, models[0].model, refinePrompt(owner, repo, issue));
+}
+
+// Scaffold a repo: read the global init config, then dispatch the installed workflow with
+// an init prompt. Like refineIssue, delegates to dispatchTask for dispatch + error handling
+// (including "workflow not found - merge the install PR first" when it isn't installed yet).
+async function initProject(owner: string, repo: string): Promise<DispatchTaskResponse> {
+  const storedModels = await storage.get<unknown[]>("models");
+  const models: ModelOption[] = Array.isArray(storedModels) && storedModels.length && storedModels.every(isModelOption)
+    ? (storedModels as ModelOption[])
+    : DEFAULT_MODELS;
+  const storedInit = await storage.get<unknown>("init");
+  const init = isInitConfig(storedInit) ? storedInit : DEFAULT_INIT;
+  return dispatchTask(owner, repo, models[0].model, initPrompt(owner, repo, init));
 }
 
 // --- Skills registry ---

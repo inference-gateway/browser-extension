@@ -26,6 +26,11 @@ export type DispatchTaskResponse = { url: string } | { error: string };
 export type RefineIssueRequest = { type: "refine-issue"; owner: string; repo: string; issue: number };
 export type RefineIssueResponse = { url: string } | { error: string };
 
+// Scaffold a repo: dispatch the installed workflow to generate AGENTS.md (+ optional
+// githooks/symlinks per the global "init" config) and open a PR.
+export type InitProjectRequest = { type: "init-project"; owner: string; repo: string };
+export type InitProjectResponse = { url: string } | { error: string };
+
 // Skills registry: the full catalog, the names already installed in the repo's
 // .agents/skills/, and the repo's top languages (for suggestion ordering).
 export type SkillsCatalogRequest = { type: "skills-catalog"; owner: string; repo: string };

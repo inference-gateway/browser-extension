@@ -747,6 +747,11 @@
   font-size: 12px;
   color: var(--fgColor-muted, var(--color-fg-muted, #656d76));
 }
+.igw-tasks-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
 .igw-tasks-select {
   box-sizing: border-box;
   width: 100%;
