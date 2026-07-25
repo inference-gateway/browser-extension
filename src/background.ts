@@ -66,9 +66,31 @@ async function getSkills(owner: string, repo: string): Promise<Skill[]> {
   const key = `skills:${owner}/${repo}`;
   const cached = await storage.get<{ ts: number; items: Skill[] }>(key);
   if (cached && Date.now() - cached.ts < TTL) return cached.items;
-  const items = await fetchFromGitHub(owner, repo);
+
+  const repoSkills = await fetchFromGitHub(owner, repo);
+
+  const pluginSkills = await fetchPluginSkills();
+
+  const names = new Set(repoSkills.map((s) => s.name));
+  const items = [...repoSkills, ...pluginSkills.filter((s) => !names.has(s.name))];
+
   await storage.set(key, { ts: Date.now(), items });
   return items;
+}
+
+async function loadPlugins(): Promise<PluginOption[]> {
+  const stored = await storage.get<unknown>("plugins");
+  return Array.isArray(stored) && stored.every(isPluginOption)
+    ? (stored as PluginOption[])
+    : DEFAULT_PLUGINS;
+}
+
+async function fetchPluginSkills(): Promise<Skill[]> {
+  const plugins = await loadPlugins();
+  return enabledPlugins(plugins).map((id) => {
+    const parts = id.split("/");
+    return { name: parts[parts.length - 1] };
+  });
 }
 
 async function fetchFromGitHub(owner: string, repo: string): Promise<Skill[]> {
@@ -120,8 +142,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const bot: BotConfig = isBotConfig(storedBot) ? storedBot : DEFAULT_BOT;
   const storedPerms = await storage.get<unknown>("permissions");
   const perms: Permissions = isPermissions(storedPerms) ? storedPerms : DEFAULT_PERMISSIONS;
-  const storedPlugins = await storage.get<unknown>("plugins");
-  const plugins: PluginOption[] = Array.isArray(storedPlugins) && storedPlugins.every(isPluginOption) ? storedPlugins : DEFAULT_PLUGINS;
+  const plugins = await loadPlugins();
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
   const pat = await storage.get<string>("pat");
