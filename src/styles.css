@@ -146,12 +146,14 @@
   align-items: center;
   margin-top: 10px;
 }
-.igw-actions button {
+.igw-actions button,
+.igw-actions a {
   padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
   border: 1px solid #d0d7de;
   border-radius: 6px;
+  text-decoration: none;
 }
 .igw-save {
   color: #fff;

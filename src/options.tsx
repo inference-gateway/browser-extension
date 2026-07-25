@@ -112,8 +112,8 @@ function Options() {
         <p>Required to install the Infer Agent workflow and send tasks. Also used to list
           skills in <strong>private</strong> repos. Fine-grained token with
           <code> Contents: write</code>, <code> Pull requests: write</code>,
-          <code> Workflows: write</code>, and <code> Issues: write</code>. Stored in this
-          browser's extension storage.</p>
+          <code> Workflows: write</code>, <code> Issues: write</code>, and
+          <code> Actions: write</code>. Stored in this browser's extension storage.</p>
         <input
           type="password"
           className="igw-field"
@@ -123,6 +123,14 @@ function Options() {
           onChange={(e) => setPat(e.target.value)}
         />
         <div className="igw-actions">
+          <a
+            className="igw-save"
+            href="https://github.com/settings/personal-access-tokens/new?name=OpenTask&description=OpenTask+browser+extension&contents=write&pull_requests=write&workflows=write&issues=write&actions=write"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Create token
+          </a>
           <button className="igw-reset" onClick={removeToken}>Remove token</button>
         </div>
       </section>
