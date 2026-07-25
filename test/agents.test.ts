@@ -34,6 +34,6 @@ test("isAgentManifest rejects non-object metadata", () => {
 test("agentsFromCatalog extracts agents from the wrapper object and a bare array", () => {
   const a = { metadata: { name: "browser-agent", description: "d", version: "0.6.4" }, spec: {} };
   expect(agentsFromCatalog({ version: 1, agents: [a] }).map((x) => x.metadata.name)).toEqual(["browser-agent"]);
-  expect(agentsFromCatalog([a])).toHaveLength(1); // bare array fallback
-  expect(agentsFromCatalog({})).toEqual([]); // no crash on missing agents
+  expect(agentsFromCatalog([a])).toHaveLength(1);
+  expect(agentsFromCatalog({})).toEqual([]);
 });
