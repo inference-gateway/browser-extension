@@ -457,6 +457,13 @@
    Explicit light overrides so [data-theme="light"] beats the
    @media (prefers-color-scheme: dark) block above.  */
 
+/* On :root so the body's default background follows the theme, not the OS. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
 [data-theme="light"] .igw-options,
 [data-theme="light"] .igw-popup {
   color-scheme: light;
