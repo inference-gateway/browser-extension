@@ -1,10 +1,23 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, prBody, workflowYaml } from "../src/shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, githubAppUrl, prBody, workflowYaml } from "../src/shared/models";
 
 const models = DEFAULT_MODELS;
 const def = "anthropic/claude-sonnet-4-6";
 const noBot = DEFAULT_BOT;
-const bot = { enabled: true, clientId: "Iv23liABC", privateKeySecret: "APP_PRIVATE_KEY" };
+const bot = { enabled: true, clientId: "Iv23liABC", privateKeySecret: "OPENTASK_APP_PRIVATE_KEY" };
+
+test("githubAppUrl uses the org path only for an org owner, personal path otherwise", () => {
+  expect(githubAppUrl("acme", true).startsWith("https://github.com/organizations/acme/settings/apps/new?")).toBe(true);
+  expect(githubAppUrl("edenreich", false).startsWith("https://github.com/settings/apps/new?")).toBe(true);
+  expect(githubAppUrl("", false).startsWith("https://github.com/settings/apps/new?")).toBe(true);
+});
+
+test("githubAppUrl disables the webhook and sets a Homepage url", () => {
+  const p = new URL(githubAppUrl("acme", true)).searchParams;
+  expect(p.get("webhook_active")).toBe("false");
+  expect(p.get("url")).toBe("https://github.com/acme");
+  expect(new URL(githubAppUrl("", false)).searchParams.get("url")).toBeTruthy();
+});
 
 test("workflowYaml uses block-list syntax, not inline arrays", () => {
   const yaml = workflowYaml(models, def, noBot);
@@ -88,8 +101,8 @@ test("workflowYaml without a bot does not pass github-app-slug", () => {
 test("prBody names the provider secret and, with a bot, the private-key secret", () => {
   const body = prBody(models, def, noBot);
   expect(body).toContain("`ANTHROPIC_API_KEY`");
-  expect(body).not.toContain("`APP_PRIVATE_KEY`");
-  expect(prBody(models, def, bot)).toContain("`APP_PRIVATE_KEY`");
+  expect(body).not.toContain("`OPENTASK_APP_PRIVATE_KEY`");
+  expect(prBody(models, def, bot)).toContain("`OPENTASK_APP_PRIVATE_KEY`");
 });
 
 test("workflowYaml maps permissions onto infer-action allow-list inputs", () => {

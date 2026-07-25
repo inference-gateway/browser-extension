@@ -111,6 +111,14 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   line-height: 1.5;
   color: #1f2328;
+  /* Button palette - overridden per theme; every button reads these. */
+  --igw-btn-border: #d0d7de;
+  --igw-btn-fg: #24292f;
+  --igw-btn-bg: #f6f8fa;
+  --igw-btn-bg-hover: #eaeef2;
+  --igw-btn-primary-fg: #fff;
+  --igw-btn-primary-bg: #1f883d;
+  --igw-btn-primary-bg-hover: #2c974b;
 }
 .igw-options h1 {
   font-size: 20px;
@@ -140,19 +148,24 @@
   min-height: 320px;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
-.igw-token-row {
+.igw-account-bar {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
-.igw-token-row .igw-field {
+.igw-account-bar .igw-field {
   flex: 1;
+  min-width: 0;
 }
-.igw-token-row button {
-  padding: 6px 12px;
-  font-size: 13px;
-  white-space: nowrap;
+.igw-options select.igw-field {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23656d76' d='M3 4.5 6 8l3-3.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
 }
 .igw-actions {
   display: flex;
@@ -160,19 +173,31 @@
   align-items: center;
   margin-top: 10px;
 }
-.igw-actions button,
-.igw-actions a {
-  padding: 6px 14px;
+/* The single button. .igw-btn = neutral, add .igw-btn--primary for the green one. */
+.igw-btn {
+  padding: 8px 14px;
+  font: inherit;
   font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
   text-decoration: none;
+  border: 1px solid var(--igw-btn-border);
+  border-radius: 6px;
+  color: var(--igw-btn-fg);
+  background: var(--igw-btn-bg);
 }
-.igw-save {
-  color: #fff;
-  background: #1f883d;
-  border-color: #1f883d;
+.igw-btn:hover {
+  background: var(--igw-btn-bg-hover);
+}
+.igw-btn--primary {
+  color: var(--igw-btn-primary-fg);
+  background: var(--igw-btn-primary-bg);
+  border-color: var(--igw-btn-primary-bg);
+}
+.igw-btn--primary:hover {
+  background: var(--igw-btn-primary-bg-hover);
 }
 .igw-status {
   font-size: 13px;
@@ -321,6 +346,12 @@
 @media (prefers-color-scheme: dark) {
   .igw-options {
     color: #c9d1d9;
+    --igw-btn-border: #30363d;
+    --igw-btn-fg: #c9d1d9;
+    --igw-btn-bg: #21262d;
+    --igw-btn-bg-hover: #30363d;
+    --igw-btn-primary-bg: #238636;
+    --igw-btn-primary-bg-hover: #2ea043;
   }
   .igw-options code {
     background: #161b22;
@@ -332,22 +363,6 @@
   }
   .igw-options .igw-field::placeholder {
     color: #484f58;
-  }
-  .igw-options .igw-actions button {
-    color: #c9d1d9;
-    background: #21262d;
-    border-color: #30363d;
-  }
-  .igw-options .igw-actions button:hover {
-    background: #30363d;
-  }
-  .igw-options .igw-save {
-    color: #fff;
-    background: #238636;
-    border-color: #238636;
-  }
-  .igw-options .igw-save:hover {
-    background: #2ea043;
   }
   .igw-options .igw-status {
     color: #8b949e;
@@ -371,6 +386,12 @@
 
 [data-theme="dark"] .igw-options {
   color: #c9d1d9;
+  --igw-btn-border: #30363d;
+  --igw-btn-fg: #c9d1d9;
+  --igw-btn-bg: #21262d;
+  --igw-btn-bg-hover: #30363d;
+  --igw-btn-primary-bg: #238636;
+  --igw-btn-primary-bg-hover: #2ea043;
 }
 [data-theme="dark"] .igw-options code {
   background: #161b22;
@@ -382,22 +403,6 @@
 }
 [data-theme="dark"] .igw-options .igw-field::placeholder {
   color: #484f58;
-}
-[data-theme="dark"] .igw-options .igw-actions button {
-  color: #c9d1d9;
-  background: #21262d;
-  border-color: #30363d;
-}
-[data-theme="dark"] .igw-options .igw-actions button:hover {
-  background: #30363d;
-}
-[data-theme="dark"] .igw-options .igw-save {
-  color: #fff;
-  background: #238636;
-  border-color: #238636;
-}
-[data-theme="dark"] .igw-options .igw-save:hover {
-  background: #2ea043;
 }
 [data-theme="dark"] .igw-options .igw-status {
   color: #8b949e;
@@ -524,6 +529,12 @@
 /* Options page – light overrides */
 [data-theme="light"] .igw-options {
   color: #1f2328;
+  --igw-btn-border: #d0d7de;
+  --igw-btn-fg: #1f2328;
+  --igw-btn-bg: #f6f8fa;
+  --igw-btn-bg-hover: #eaeef2;
+  --igw-btn-primary-bg: #1f883d;
+  --igw-btn-primary-bg-hover: #1a7f37;
 }
 [data-theme="light"] .igw-options code {
   background: #eff1f3;
@@ -535,22 +546,6 @@
 }
 [data-theme="light"] .igw-options .igw-field::placeholder {
   color: #6e7681;
-}
-[data-theme="light"] .igw-options .igw-actions button {
-  color: #1f2328;
-  background: #f6f8fa;
-  border-color: #d0d7de;
-}
-[data-theme="light"] .igw-options .igw-actions button:hover {
-  background: #eaeef2;
-}
-[data-theme="light"] .igw-options .igw-save {
-  color: #fff;
-  background: #1f883d;
-  border-color: #1f883d;
-}
-[data-theme="light"] .igw-options .igw-save:hover {
-  background: #1a7f37;
 }
 [data-theme="light"] .igw-options .igw-status {
   color: #656d76;

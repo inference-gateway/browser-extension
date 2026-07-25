@@ -49,7 +49,7 @@ export const DEFAULT_PROVIDERS: Provider[] = [
 // runtime comments and commits are attributed to (and signed for) the App.
 export type BotConfig = { enabled: boolean; clientId: string; privateKeySecret: string };
 
-export const DEFAULT_BOT: BotConfig = { enabled: false, clientId: "", privateKeySecret: "APP_PRIVATE_KEY" };
+export const DEFAULT_BOT: BotConfig = { enabled: false, clientId: "", privateKeySecret: "OPENTASK_APP_PRIVATE_KEY" };
 
 export function isBotConfig(b: unknown): b is BotConfig {
   return (
@@ -59,6 +59,29 @@ export function isBotConfig(b: unknown): b is BotConfig {
     typeof (b as Record<string, unknown>).clientId === "string" &&
     typeof (b as Record<string, unknown>).privateKeySecret === "string"
   );
+}
+
+// Prefills GitHub's App-creation form for an owner via query params on the plain GET
+// flow (settings/apps/new). This reliably sets the required Homepage (url) and unchecks
+// the webhook (webhook_active=false) - the manifest POST flow can't be submitted from an
+// extension origin. A non-blank owner targets that org's settings; blank = personal.
+export function githubAppUrl(owner: string, isOrg: boolean): string {
+  const base = owner && isOrg
+    ? `https://github.com/organizations/${owner}/settings/apps/new`
+    : "https://github.com/settings/apps/new";
+  const params = new URLSearchParams({
+    name: owner ? `OpenTask ${owner}` : "OpenTask Agent",
+    description: "OpenTask agent bot",
+    url: owner ? `https://github.com/${owner}` : "https://github.com/inference-gateway/opentask",
+    public: "false",
+    webhook_active: "false",
+    contents: "write",
+    issues: "write",
+    pull_requests: "write",
+    actions: "write",
+    workflows: "write",
+  });
+  return `${base}?${params}`;
 }
 
 // What the agent may do at runtime. infer-action gives the agent a read-only bash baseline;

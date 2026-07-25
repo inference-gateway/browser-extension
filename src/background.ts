@@ -1,6 +1,6 @@
 import * as storage from "./shared/storage";
 import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, workflowYaml, prBody } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isPermissions, isPluginOption, enabledPlugins, workflowYaml, prBody } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt } from "./shared/task";
@@ -52,6 +52,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === "apply-skills") {
     applySkills(msg.owner, msg.repo, msg.add, msg.remove)
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "list-owners") {
+    listOwners(msg.token)
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -112,6 +118,26 @@ async function patFor(owner: string): Promise<string | undefined> {
   return storage.tokenFor(owner, await storage.loadTokens());
 }
 
+// Resolves the GitHub App config for a repo owner (owner-specific, else the default).
+async function botFor(owner: string): Promise<BotConfig> {
+  return storage.botFor(owner, await storage.loadBots());
+}
+
+// The owners a token can act as: the authenticated user plus their orgs. Powers the
+// options-page account dropdown so owners are picked from GitHub, never hand-typed.
+async function listOwners(token: string): Promise<{ owners: string[]; orgs: string[] } | { error: string }> {
+  if (!token) return { owners: [], orgs: [] };
+  const headers = { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}` };
+  const [user, orgs] = await Promise.all([
+    fetch("https://api.github.com/user", { headers }),
+    fetch("https://api.github.com/user/orgs?per_page=100", { headers }),
+  ]);
+  if (!user.ok) return { error: `GitHub ${user.status}` };
+  const login = (await user.json()).login as string;
+  const orgList = orgs.ok ? ((await orgs.json()) as { login: string }[]).map((o) => o.login) : [];
+  return { owners: [...new Set([login, ...orgList].filter(Boolean))], orgs: orgList };
+}
+
 async function fetchFromGitHub(owner: string, repo: string): Promise<Skill[]> {
   const pat = await patFor(owner);
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
@@ -157,8 +183,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const models: ModelOption[] = Array.isArray(storedModels) && storedModels.length && storedModels.every(isModelOption)
     ? (storedModels as ModelOption[])
     : DEFAULT_MODELS;
-  const storedBot = await storage.get<unknown>("bot");
-  const bot: BotConfig = isBotConfig(storedBot) ? storedBot : DEFAULT_BOT;
+  const bot: BotConfig = await botFor(owner);
   const storedPerms = await storage.get<unknown>("permissions");
   const perms: Permissions = isPermissions(storedPerms) ? storedPerms : DEFAULT_PERMISSIONS;
   const plugins = await loadPlugins();

@@ -1,11 +1,29 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
-import type { PatEntry } from "./shared/storage";
+import type { PatEntry, BotEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isRefineConfig, isPluginOption, type BotConfig, type Permissions, type RefineConfig, type PluginOption } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, isModelOption, isPermissions, isRefineConfig, isPluginOption, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption } from "./shared/models";
 
 type Theme = "system" | "light" | "dark";
+
+// One editable account = an owner plus its token and bot. Backed by the two owner-keyed
+// storage lists ("pats" + "bots"), merged for editing and split again on save.
+type Account = { owner: string; token: string; bot: BotConfig };
+
+// Merges the two owner-keyed lists into accounts. Empty -> one blank starter row.
+function mergeAccounts(toks: PatEntry[], bots: BotEntry[]): Account[] {
+  const owners = [...new Set([...toks.map((t) => t.owner), ...bots.map((b) => b.owner)])].filter(Boolean);
+  const accounts = owners.map((owner) => {
+    const be = bots.find((b) => b.owner === owner);
+    return {
+      owner,
+      token: toks.find((t) => t.owner === owner)?.token ?? "",
+      bot: be ? { enabled: be.enabled, clientId: be.clientId, privateKeySecret: be.privateKeySecret } : DEFAULT_BOT,
+    };
+  });
+  return accounts.length ? accounts : [{ owner: "", token: "", bot: DEFAULT_BOT }];
+}
 
 function applyTheme(theme: Theme) {
   const html = document.documentElement;
@@ -19,26 +37,28 @@ function applyTheme(theme: Theme) {
 }
 
 function Options() {
-  const [tokens, setTokens] = useState<PatEntry[]>([{ owner: "", token: "" }]);
+  const [accounts, setAccounts] = useState<Account[]>([{ owner: "", token: "", bot: DEFAULT_BOT }]);
+  const [selected, setSelected] = useState(0);
   const [promptsText, setPromptsText] = useState("");
   const [modelsText, setModelsText] = useState("");
-  const [bot, setBot] = useState<BotConfig>(DEFAULT_BOT);
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
   const [plugins, setPlugins] = useState<PluginOption[]>(DEFAULT_PLUGINS);
   const [theme, setTheme] = useState<Theme>("system");
+  const [showToken, setShowToken] = useState(false);
+  const [ownerOptions, setOwnerOptions] = useState<string[]>([]);
+  const [orgOwners, setOrgOwners] = useState<string[]>([]);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
     void (async () => {
       const toks = await storage.loadTokens();
-      setTokens(toks.length ? toks : [{ owner: "", token: "" }]);
+      const bots = await storage.loadBots();
+      setAccounts(mergeAccounts(toks, bots));
       const p = mergePrompts(await storage.get<Prompt[]>("prompts"));
       setPromptsText(JSON.stringify(p, null, 2));
       const m = (await storage.get<unknown[]>("models")) ?? DEFAULT_MODELS;
       setModelsText(JSON.stringify(m, null, 2));
-      const b = await storage.get<unknown>("bot");
-      setBot(isBotConfig(b) ? b : DEFAULT_BOT);
       const pm = await storage.get<unknown>("permissions");
       setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
       const rf = await storage.get<unknown>("refine");
@@ -55,6 +75,20 @@ function Options() {
       }
     })();
   }, []);
+
+  // Fetch the selected token's owners (user + orgs) so the account dropdown is populated
+  // from GitHub, not hand-typed. Re-runs when you switch account or edit its token.
+  const activeToken = (accounts[selected] ?? accounts[0]).token.trim();
+  useEffect(() => {
+    if (!activeToken) { setOwnerOptions([]); setOrgOwners([]); return; }
+    let cancelled = false;
+    void chrome.runtime.sendMessage({ type: "list-owners", token: activeToken }).then((r) => {
+      if (cancelled || !r || !Array.isArray(r.owners)) return;
+      setOwnerOptions(r.owners);
+      setOrgOwners(Array.isArray(r.orgs) ? r.orgs : []);
+    });
+    return () => { cancelled = true; };
+  }, [activeToken]);
 
   async function save() {
     let parsed: unknown;
@@ -75,13 +109,13 @@ function Options() {
     if (!Array.isArray(models) || !models.length || !models.every(isModelOption)) {
       return setStatus("Models must be a non-empty array of { model, keyInput, secret }.");
     }
-    if (bot.enabled && (!bot.clientId.trim() || !bot.privateKeySecret.trim())) {
+    if (accounts.some((a) => a.bot.enabled && (!a.bot.clientId.trim() || !a.bot.privateKeySecret.trim()))) {
       return setStatus("Custom Bot needs a Client ID and a private-key secret name.");
     }
-    await storage.saveTokens(tokens);
+    await storage.saveTokens(accounts.map((a) => ({ owner: a.owner, token: a.token })));
+    await storage.saveBots(accounts.map((a) => ({ owner: a.owner, ...a.bot })));
     await storage.set("prompts", parsed);
     await storage.set("models", models);
-    await storage.set("bot", bot);
     await storage.set("permissions", perms);
     await storage.set("refine", refine);
     await storage.set("plugins", plugins);
@@ -89,69 +123,99 @@ function Options() {
     setStatus("Saved.");
   }
 
-  function updateToken(i: number, patch: Partial<PatEntry>) {
-    setTokens((prev) => prev.map((e, j) => (j === i ? { ...e, ...patch } : e)));
+  function updateAccount(patch: Partial<Account>) {
+    setAccounts((prev) => prev.map((a, j) => (j === selected ? { ...a, ...patch } : a)));
   }
 
-  function addToken() {
-    setTokens((prev) => [...prev, { owner: "", token: "" }]);
+  function updateBot(patch: Partial<BotConfig>) {
+    updateAccount({ bot: { ...account.bot, ...patch } });
   }
 
-  function removeTokenRow(i: number) {
-    setTokens((prev) => {
-      const next = prev.filter((_, j) => j !== i);
-      return next.length ? next : [{ owner: "", token: "" }];
+  function addAccount() {
+    // ponytail: two accounts can share an owner; last wins at read time (tokenFor/botFor
+    // find first). No dedupe UI - the dropdown makes duplicates obvious enough.
+    setAccounts((prev) => [...prev, { owner: "", token: "", bot: DEFAULT_BOT }]);
+    setSelected(accounts.length);
+  }
+
+  function removeAccount() {
+    setAccounts((prev) => {
+      const next = prev.filter((_, j) => j !== selected);
+      return next.length ? next : [{ owner: "", token: "", bot: DEFAULT_BOT }];
     });
+    setSelected(0);
   }
 
   function reset() {
     setPromptsText(JSON.stringify(DEFAULT_PROMPTS, null, 2));
     setModelsText(JSON.stringify(DEFAULT_MODELS, null, 2));
-    setBot(DEFAULT_BOT);
+    updateAccount({ bot: DEFAULT_BOT });
     setPerms(DEFAULT_PERMISSIONS);
     setRefine(DEFAULT_REFINE);
     setPlugins(DEFAULT_PLUGINS);
     setStatus("Reset to defaults (not yet saved).");
   }
 
+  const account = accounts[selected] ?? accounts[0];
+  const appUrl = githubAppUrl(account.owner, orgOwners.includes(account.owner));
+
   return (
     <div className="igw-options">
       <h1>OpenTask settings</h1>
 
       <section>
-        <h2>Personal access tokens</h2>
+        <h2>Accounts</h2>
+        <p>Pick a GitHub account or org to configure its token and bot below. On a repo,
+          the account whose <strong>owner</strong> matches its owner is used.</p>
+        <div className="igw-account-bar">
+          <select className="igw-field" value={selected} onChange={(e) => setSelected(Number(e.target.value))}>
+            {accounts.map((a, i) => (
+              <option key={i} value={i}>{a.owner || "(unnamed)"}</option>
+            ))}
+          </select>
+          <button className="igw-btn igw-btn--primary" onClick={addAccount}>Add account</button>
+          <button className="igw-btn" onClick={removeAccount}>Remove</button>
+        </div>
+        <label className="igw-label" htmlFor="igw-owner">Owner (your GitHub user or an org)</label>
+        <select
+          id="igw-owner"
+          className="igw-field"
+          value={account.owner}
+          onChange={(e) => updateAccount({ owner: e.target.value })}
+        >
+          <option value="">{activeToken ? "Select an owner…" : "Enter a token below to load owners"}</option>
+          {account.owner && !ownerOptions.includes(account.owner) && (
+            <option value={account.owner}>{account.owner}</option>
+          )}
+          {ownerOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+      </section>
+
+      <section>
+        <h2>Personal access token</h2>
         <p>Required to install the OpenTask Agent workflow and send tasks. Also used to list
           skills in <strong>private</strong> repos. Fine-grained token with
           <code> Contents: write</code>, <code> Pull requests: write</code>,
           <code> Workflows: write</code>, <code> Issues: write</code>, and
           <code> Actions: write</code>. Stored in this browser's extension storage.</p>
-        <p>Add one token per GitHub account/org. On a repo, the token whose <strong>owner</strong>
-          matches its owner is used; leave the owner blank for a default token used everywhere else.</p>
-        {tokens.map((entry, i) => (
-          <div key={i} className="igw-token-row">
-            <input
-              type="text"
-              className="igw-field"
-              placeholder="owner (org or user, blank = default)"
-              autoComplete="off"
-              value={entry.owner}
-              onChange={(e) => updateToken(i, { owner: e.target.value })}
-            />
-            <input
-              type="password"
-              className="igw-field"
-              placeholder="github_pat_..."
-              autoComplete="off"
-              value={entry.token}
-              onChange={(e) => updateToken(i, { token: e.target.value })}
-            />
-            <button className="igw-reset" onClick={() => removeTokenRow(i)}>Remove</button>
-          </div>
-        ))}
+        <div className="igw-account-bar">
+          <input
+            type={showToken ? "text" : "password"}
+            className="igw-field"
+            placeholder="github_pat_..."
+            autoComplete="off"
+            value={account.token}
+            onChange={(e) => updateAccount({ token: e.target.value })}
+          />
+          <button className="igw-btn" onClick={() => setShowToken((v) => !v)}>
+            {showToken ? "Hide" : "Show"}
+          </button>
+        </div>
         <div className="igw-actions">
-          <button className="igw-save" onClick={addToken}>Add token</button>
           <a
-            className="igw-reset"
+            className="igw-btn"
             href="https://github.com/settings/personal-access-tokens/new?name=OpenTask&description=OpenTask+browser+extension&contents=write&pull_requests=write&workflows=write&issues=write&actions=write"
             target="_blank"
             rel="noreferrer"
@@ -303,29 +367,22 @@ function Options() {
 
       <section>
         <h2>Custom bot</h2>
-        <p>Run the agent as a GitHub App instead of <code>github-actions[bot]</code>. When
-          enabled, the generated workflow mints a token with
+        <p>Run the agent as a GitHub App for <strong>{account.owner || "this account"}</strong> instead of
+          <code> github-actions[bot]</code>. When enabled, the generated workflow mints a token with
           <code> actions/create-github-app-token@v3</code> and checks out + comments as your
           App, so its comments and commits are attributed to (and verified for) the App.</p>
         <div className="igw-actions" style={{ marginBottom: 12 }}>
-          <a
-            className="igw-save"
-            href="https://github.com/settings/apps/new?name=OpenTask+Agent&description=OpenTask+agent+bot&contents=write&pull_requests=write&issues=write&actions=write&workflows=write"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Create GitHub App
-          </a>
+          <a className="igw-btn igw-btn--primary" href={appUrl} target="_blank" rel="noreferrer">Create GitHub App</a>
         </div>
         <label className="igw-check">
           <input
             type="checkbox"
-            checked={bot.enabled}
-            onChange={(e) => setBot({ ...bot, enabled: e.target.checked })}
+            checked={account.bot.enabled}
+            onChange={(e) => updateBot({ enabled: e.target.checked })}
           />
           Use a custom bot (GitHub App)
         </label>
-        {bot.enabled && (
+        {account.bot.enabled && (
           <div className="igw-bot-fields">
             <label className="igw-label" htmlFor="igw-bot-client-id">App Client ID</label>
             <input
@@ -333,24 +390,24 @@ function Options() {
               className="igw-field"
               placeholder="Iv23li..."
               autoComplete="off"
-              value={bot.clientId}
-              onChange={(e) => setBot({ ...bot, clientId: e.target.value })}
+              value={account.bot.clientId}
+              onChange={(e) => updateBot({ clientId: e.target.value })}
             />
             <label className="igw-label" htmlFor="igw-bot-secret">Private-key secret name</label>
             <input
               id="igw-bot-secret"
               className="igw-field"
-              placeholder="APP_PRIVATE_KEY"
+              placeholder="OPENTASK_APP_PRIVATE_KEY"
               autoComplete="off"
-              value={bot.privateKeySecret}
-              onChange={(e) => setBot({ ...bot, privateKeySecret: e.target.value })}
+              value={account.bot.privateKeySecret}
+              onChange={(e) => updateBot({ privateKeySecret: e.target.value })}
             />
             <p className="igw-status">Add this repo secret with your App's private key. The Client ID is inlined into the workflow (it isn't sensitive).</p>
           </div>
         )}
         <div className="igw-actions">
-          <button className="igw-save" onClick={save}>Save</button>
-          <button className="igw-reset" onClick={reset}>Reset to defaults</button>
+          <button className="igw-btn igw-btn--primary" onClick={save}>Save</button>
+          <button className="igw-btn" onClick={reset}>Reset to defaults</button>
           <span className="igw-status">{status}</span>
         </div>
       </section>
