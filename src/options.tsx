@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, isModelOption, isBotConfig, isPermissions, isRefineConfig, type BotConfig, type Permissions, type RefineConfig } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isRefineConfig, isPluginOption, type BotConfig, type Permissions, type RefineConfig, type PluginOption } from "./shared/models";
 
 function Options() {
   const [pat, setPat] = useState("");
@@ -11,6 +11,7 @@ function Options() {
   const [bot, setBot] = useState<BotConfig>(DEFAULT_BOT);
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
+  const [plugins, setPlugins] = useState<PluginOption[]>(DEFAULT_PLUGINS);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -26,6 +27,11 @@ function Options() {
       setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
       const rf = await storage.get<unknown>("refine");
       setRefine(isRefineConfig(rf) ? rf : DEFAULT_REFINE);
+      const pl = await storage.get<unknown>("plugins");
+      const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
+      // Catalog is the source of truth; carry over stored enabled state by id so a
+      // newly-added plugin shows up (off) even if storage holds an older subset.
+      setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
     })();
   }, []);
 
@@ -57,6 +63,7 @@ function Options() {
     await storage.set("bot", bot);
     await storage.set("permissions", perms);
     await storage.set("refine", refine);
+    await storage.set("plugins", plugins);
     setStatus("Saved.");
   }
 
@@ -72,6 +79,7 @@ function Options() {
     setBot(DEFAULT_BOT);
     setPerms(DEFAULT_PERMISSIONS);
     setRefine(DEFAULT_REFINE);
+    setPlugins(DEFAULT_PLUGINS);
     setStatus("Reset to defaults (not yet saved).");
   }
 
@@ -180,6 +188,25 @@ function Options() {
             />
             Auto-refine issues you create on GitHub
           </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Plugins</h2>
+        <p>Optional <a href="https://github.com/inference-gateway/infer-action">infer-action</a> plugins
+          the installed workflow pre-installs to extend the agent. All off by default; check the ones you
+          want. <strong>Re-install the workflow</strong> after changing these.</p>
+        <div className="igw-bot-fields">
+          {plugins.map((p) => (
+            <label key={p.id} className="igw-check">
+              <input
+                type="checkbox"
+                checked={p.enabled}
+                onChange={(e) => setPlugins(plugins.map((x) => (x.id === p.id ? { ...x, enabled: e.target.checked } : x)))}
+              />
+              <code>{p.id}</code>
+            </label>
+          ))}
         </div>
       </section>
 

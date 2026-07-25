@@ -81,9 +81,28 @@ export function isPermissions(p: unknown): p is Permissions {
 export type RefineConfig = { auto: boolean; manual: boolean };
 export const DEFAULT_REFINE: RefineConfig = { auto: false, manual: true };
 
-// Plugins installed via infer plugins install --yes before the agent runs.
-// Each entry is a plugin identifier (e.g. "owner/repo" or "owner/repo@ref").
-export const DEFAULT_PLUGINS: string[] = ["inference-gateway/caveman", "inference-gateway/ponytail"];
+// The infer-action plugins the extension knows about. Each is installed via
+// `infer plugins install --yes` before the agent runs. Disabled by default; a user opts
+// in per-plugin in options, and only enabled ids get baked into the generated workflow.
+export type PluginOption = { id: string; enabled: boolean };
+export const DEFAULT_PLUGINS: PluginOption[] = [
+  { id: "juliusbrussee/caveman", enabled: false },
+  { id: "DietrichGebert/ponytail", enabled: false },
+  { id: "ayghri/i-have-adhd", enabled: false },
+];
+
+export function isPluginOption(p: unknown): p is PluginOption {
+  return (
+    !!p &&
+    typeof p === "object" &&
+    typeof (p as Record<string, unknown>).id === "string" &&
+    typeof (p as Record<string, unknown>).enabled === "boolean"
+  );
+}
+
+// ids of the plugins toggled on — what actually gets baked into the workflow.
+export const enabledPlugins = (plugins: PluginOption[]): string[] =>
+  plugins.filter((p) => p.enabled).map((p) => p.id);
 
 export function isRefineConfig(r: unknown): r is RefineConfig {
   return (
@@ -125,7 +144,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = DEFAULT_PLUGINS): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS)): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -218,11 +237,19 @@ ${keyLines}
 `;
 }
 
-export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig, plugins: string[] = DEFAULT_PLUGINS): string {
+export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS)): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const secretList = [...new Set(models.map((m) => m.secret))].map((s) => `\`${s}\``).join(", ");
   const botStep = bot.enabled
     ? `\n2. Add the \`${bot.privateKeySecret}\` secret with your GitHub App's private key. The workflow authenticates as your App via [actions/create-github-app-token](https://github.com/actions/create-github-app-token), so its comments and commits are attributed to the App.`
+    : "";
+
+  const pluginSection = plugins.length
+    ? `\n\n### Plugins
+
+The workflow pre-installs the following infer-action plugins to extend the agent's capabilities:
+
+${plugins.map((p) => `- \`${p}\``).join("\n")}`
     : "";
 
   return `## Infer Agent workflow
@@ -239,12 +266,6 @@ The workflow triggers on new/edited issues, issue comments, and pull request rev
 
 ### Project board tracking
 
-When an issue it works on is on a GitHub project board, the agent keeps the board's Status in sync (In Progress on start, Done on completion), best-effort. Board writes require a token with **Projects** permission: the default \`GITHUB_TOKEN\` cannot access Projects v2, so enable the GitHub App option (with Projects: read and write) for this to take effect${bot.enabled ? " - your App must grant it" : ""}. Without it the agent skips board updates silently and does the rest of its work normally.
-
-### Plugins
-
-The workflow pre-installs the following infer-action plugins to extend the agent's capabilities:
-
-${plugins.map((p) => `- \`${p}\``).join("\n")}
+When an issue it works on is on a GitHub project board, the agent keeps the board's Status in sync (In Progress on start, Done on completion), best-effort. Board writes require a token with **Projects** permission: the default \`GITHUB_TOKEN\` cannot access Projects v2, so enable the GitHub App option (with Projects: read and write) for this to take effect${bot.enabled ? " - your App must grant it" : ""}. Without it the agent skips board updates silently and does the rest of its work normally.${pluginSection}
 `;
 }

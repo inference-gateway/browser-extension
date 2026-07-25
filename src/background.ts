@@ -1,7 +1,7 @@
 import * as storage from "./shared/storage";
 import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse } from "./shared/messages";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, workflowYaml, prBody } from "./shared/models";
-import type { ModelOption, BotConfig, Permissions } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, workflowYaml, prBody } from "./shared/models";
+import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt } from "./shared/task";
 
@@ -120,6 +120,8 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const bot: BotConfig = isBotConfig(storedBot) ? storedBot : DEFAULT_BOT;
   const storedPerms = await storage.get<unknown>("permissions");
   const perms: Permissions = isPermissions(storedPerms) ? storedPerms : DEFAULT_PERMISSIONS;
+  const storedPlugins = await storage.get<unknown>("plugins");
+  const plugins: PluginOption[] = Array.isArray(storedPlugins) && storedPlugins.every(isPluginOption) ? storedPlugins : DEFAULT_PLUGINS;
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
   const pat = await storage.get<string>("pat");
@@ -148,7 +150,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  const content = btoa(workflowYaml(models, defaultModel, bot, perms));
+  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins)));
   const existing = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${branch}`);
   const sha = existing.status === 200 ? (await existing.json()).sha : undefined;
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
@@ -167,7 +169,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   }
 
   const title = "feat: add Infer Agent workflow";
-  const body = prBody(models, defaultModel, bot);
+  const body = prBody(models, defaultModel, bot, enabledPlugins(plugins));
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
   if (prRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Pull requests: write." };

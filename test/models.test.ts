@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, prBody, workflowYaml } from "../src/shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, prBody, workflowYaml } from "../src/shared/models";
 
 const models = DEFAULT_MODELS;
 const def = "anthropic/claude-sonnet-4-6";
@@ -132,12 +132,36 @@ test("isBotConfig accepts a full config and rejects malformed ones", () => {
   expect(isBotConfig(null)).toBe(false);
 });
 
-test("workflowYaml includes default plugins in the YAML", () => {
+test("DEFAULT_PLUGINS are the three known plugins, all disabled by default", () => {
+  expect(DEFAULT_PLUGINS.map((p) => p.id)).toEqual([
+    "juliusbrussee/caveman",
+    "DietrichGebert/ponytail",
+    "ayghri/i-have-adhd",
+  ]);
+  expect(DEFAULT_PLUGINS.every((p) => p.enabled === false)).toBe(true);
+});
+
+test("enabledPlugins returns only toggled-on ids", () => {
+  expect(enabledPlugins(DEFAULT_PLUGINS)).toEqual([]);
+  expect(
+    enabledPlugins([
+      { id: "a/b", enabled: true },
+      { id: "c/d", enabled: false },
+      { id: "e/f", enabled: true },
+    ]),
+  ).toEqual(["a/b", "e/f"]);
+});
+
+test("isPluginOption accepts a valid option and rejects bad shapes", () => {
+  expect(isPluginOption({ id: "a/b", enabled: true })).toBe(true);
+  expect(isPluginOption({ id: "a/b", enabled: "yes" })).toBe(false);
+  expect(isPluginOption({ id: 1, enabled: true })).toBe(false);
+  expect(isPluginOption(null)).toBe(false);
+});
+
+test("workflowYaml omits the plugins block by default (disabled by default)", () => {
   const yaml = workflowYaml(models, def, noBot);
-  expect(yaml).toContain("plugins: |");
-  for (const p of DEFAULT_PLUGINS) {
-    expect(yaml).toContain(`            ${p}`);
-  }
+  expect(yaml).not.toContain("plugins:");
 });
 
 test("workflowYaml omits plugins block when plugins list is empty", () => {
@@ -154,19 +178,31 @@ test("workflowYaml accepts custom plugins", () => {
   expect(yaml).not.toContain("inference-gateway/caveman");
 });
 
+test("workflowYaml bakes in only the enabled plugins", () => {
+  const yaml = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, enabledPlugins([
+    { id: "juliusbrussee/caveman", enabled: true },
+    { id: "DietrichGebert/ponytail", enabled: false },
+  ]));
+  expect(yaml).toContain("            juliusbrussee/caveman");
+  expect(yaml).not.toContain("DietrichGebert/ponytail");
+});
+
 test("workflowYaml with plugins is backward compatible when called without plugins arg", () => {
   const withDefault = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS);
-  const withExplicit = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS);
+  const withExplicit = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, enabledPlugins(DEFAULT_PLUGINS));
   expect(withDefault).toBe(withExplicit);
 });
 
-test("prBody includes plugins section with default plugins", () => {
+test("prBody omits the Plugins section by default (none enabled)", () => {
   const body = prBody(models, def, noBot);
+  expect(body).not.toContain("### Plugins");
+});
+
+test("prBody includes a Plugins section when plugins are given", () => {
+  const body = prBody(models, def, noBot, ["DietrichGebert/ponytail"]);
   expect(body).toContain("### Plugins");
   expect(body).toContain("The workflow pre-installs the following infer-action plugins");
-  for (const p of DEFAULT_PLUGINS) {
-    expect(body).toContain(`\`${p}\``);
-  }
+  expect(body).toContain("`DietrichGebert/ponytail`");
 });
 
 test("prBody accepts custom plugins", () => {
