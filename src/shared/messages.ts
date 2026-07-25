@@ -33,7 +33,6 @@ export type SkillsCatalogResponse =
   | { catalog: CatalogSkill[]; installed: string[]; languages: string[] }
   | { error: string };
 
-// Apply a skills selection as one PR: add each named skill's folder, delete each removed one.
 export type ApplySkillsRequest = { type: "apply-skills"; owner: string; repo: string; add: string[]; remove: string[] };
 export type ApplySkillsResponse = { prUrl: string } | { error: string };
 

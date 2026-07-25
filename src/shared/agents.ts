@@ -1,7 +1,3 @@
-// The Inference Gateway agents registry (inference-gateway/agents) and types for the
-// Agents panel. The registry publishes a catalog.json at the jsdelivr CDN endpoint
-// containing an array of ADL agent documents, each with metadata and a _source block.
-
 export type AgentManifest = {
   metadata: {
     name: string;
