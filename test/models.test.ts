@@ -90,11 +90,26 @@ test("workflowYaml maps permissions onto infer-action allow-list inputs", () => 
 
   const readonly = workflowYaml(models, def, noBot, { createPRs: false, createIssues: false, comment: false });
   expect(readonly).toContain(`enable-git-operations: "false"`);
-  expect(readonly).not.toContain("bash-allow-append");
+  expect(readonly).toContain("gh project item-edit( .*)?");
+  expect(readonly).not.toContain("gh issue create");
+  expect(readonly).not.toContain("gh pr comment");
 
   const issuesOnly = workflowYaml(models, def, noBot, { createPRs: false, createIssues: true, comment: false });
-  expect(issuesOnly).toContain(`bash-allow-append: "gh issue create( .*)?,gh issue edit( .*)?"`);
+  expect(issuesOnly).toContain("gh project list( .*)?,gh project field-list( .*)?,gh project item-add( .*)?,gh project item-edit( .*)?,gh issue create( .*)?,gh issue edit( .*)?");
   expect(issuesOnly).not.toContain("gh pr comment");
+});
+
+test("workflowYaml injects generic, board-agnostic board-tracking custom-instructions", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain("custom-instructions: |");
+  expect(yaml).toContain("project board");
+  expect(yaml).toContain("In Progress");
+  expect(yaml).toContain("Done");
+  expect(yaml).toContain("gh project item-edit");
+  // Stays generic - no inference-gateway board/field/option ids leak in.
+  expect(yaml).not.toContain("PVT_");
+  expect(yaml).not.toContain("project #7");
+  expect(yaml).not.toContain("Roadmap 2026");
 });
 
 test("isPermissions accepts a full config and rejects malformed ones", () => {
