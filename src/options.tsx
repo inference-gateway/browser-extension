@@ -281,6 +281,16 @@ function Options() {
           enabled, the generated workflow mints a token with
           <code> actions/create-github-app-token@v3</code> and checks out + comments as your
           App, so its comments and commits are attributed to (and verified for) the App.</p>
+        <div className="igw-actions" style={{ marginBottom: 12 }}>
+          <a
+            className="igw-save"
+            href="https://github.com/settings/apps/new?name=OpenTask+Agent&description=OpenTask+agent+bot&contents=write&pull_requests=write&issues=write&actions=write&workflows=write"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Create GitHub App
+          </a>
+        </div>
         <label className="igw-check">
           <input
             type="checkbox"
