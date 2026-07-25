@@ -10,6 +10,8 @@ function applyTheme(theme: Theme) {
   const html = document.documentElement;
   if (theme === "dark") {
     html.setAttribute("data-theme", "dark");
+  } else if (theme === "light") {
+    html.setAttribute("data-theme", "light");
   } else {
     html.removeAttribute("data-theme");
   }

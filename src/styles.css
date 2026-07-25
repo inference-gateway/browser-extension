@@ -453,6 +453,105 @@
   border-top-color: #21262d;
 }
 
+/* ── Light theme (options + popup) ─────────────────────────────────────────
+   Explicit light overrides so [data-theme="light"] beats the
+   @media (prefers-color-scheme: dark) block above.  */
+
+[data-theme="light"] .igw-options,
+[data-theme="light"] .igw-popup {
+  color-scheme: light;
+}
+
+/* Options page – light overrides */
+[data-theme="light"] .igw-options {
+  color: #1f2328;
+}
+[data-theme="light"] .igw-options code {
+  background: #eff1f3;
+}
+[data-theme="light"] .igw-options .igw-field {
+  color: #1f2328;
+  background: #fff;
+  border-color: #d0d7de;
+}
+[data-theme="light"] .igw-options .igw-field::placeholder {
+  color: #6e7681;
+}
+[data-theme="light"] .igw-options .igw-actions button {
+  color: #1f2328;
+  background: #f6f8fa;
+  border-color: #d0d7de;
+}
+[data-theme="light"] .igw-options .igw-actions button:hover {
+  background: #eaeef2;
+}
+[data-theme="light"] .igw-options .igw-save {
+  color: #fff;
+  background: #1f883d;
+  border-color: #1f883d;
+}
+[data-theme="light"] .igw-options .igw-save:hover {
+  background: #1a7f37;
+}
+[data-theme="light"] .igw-options .igw-status {
+  color: #656d76;
+}
+[data-theme="light"] .igw-options .igw-label {
+  color: #656d76;
+}
+[data-theme="light"] .igw-options a {
+  color: #0969da;
+}
+[data-theme="light"] .igw-options a:hover {
+  color: #0550ae;
+}
+[data-theme="light"] .igw-options .igw-check input[type="checkbox"] {
+  accent-color: #0969da;
+}
+
+/* Popup – light overrides */
+[data-theme="light"] .igw-popup {
+  color: #1f2328;
+}
+[data-theme="light"] .igw-popup .igw-popup-muted {
+  color: #656d76;
+}
+[data-theme="light"] .igw-popup .igw-popup-error {
+  color: #cf222e;
+}
+[data-theme="light"] .igw-popup .igw-popup-success {
+  color: #1a7f37;
+}
+[data-theme="light"] .igw-popup .igw-popup-btn {
+  color: #1f2328;
+  background: #f6f8fa;
+  border-color: #d0d7de;
+}
+[data-theme="light"] .igw-popup .igw-popup-btn:hover {
+  background: #eaeef2;
+}
+[data-theme="light"] .igw-popup .igw-popup-btn-primary {
+  color: #fff;
+  background: #1f883d;
+  border-color: #1f883d;
+}
+[data-theme="light"] .igw-popup .igw-popup-btn-primary:hover {
+  background: #1a7f37;
+}
+[data-theme="light"] .igw-popup .igw-popup-btn-disabled {
+  color: #8b949e;
+  background: #f6f8fa;
+}
+[data-theme="light"] .igw-popup .igw-popup-link {
+  color: #0969da;
+}
+[data-theme="light"] .igw-popup .igw-popup-link:hover {
+  color: #0550ae;
+}
+[data-theme="light"] .igw-popup .igw-popup-footer {
+  border-top-color: #d0d7de;
+}
+
 /* "Tasks" repo-nav install popover (injected into GitHub, so it uses GitHub's CSS
    variables to follow light/dark automatically). */
 .igw-tasks-panel {
