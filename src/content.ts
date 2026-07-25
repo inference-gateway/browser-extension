@@ -131,6 +131,7 @@ async function openPalette(box: HTMLTextAreaElement): Promise<void> {
   view = {
     kind: "palette",
     prompts,
+    pos: caretPosition(box, box.selectionStart ?? box.value.length),
     onPick: (p) => {
       const el = lastBox;
       if (el) replaceRange(el, el.selectionStart ?? el.value.length, el.selectionEnd ?? el.value.length, p.insert);

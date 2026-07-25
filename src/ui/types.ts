@@ -19,6 +19,7 @@ export type SkillView = {
 export type PaletteView = {
   kind: "palette";
   prompts: Prompt[];
+  pos: CaretPos;
   onPick: (p: Prompt) => void;
   onClose: () => void;
 };

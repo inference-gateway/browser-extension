@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { fuzzyFilter } from "../lib/fuzzy";
 import type { PaletteView } from "./types";
 
-export function Palette({ prompts, onPick, onClose }: PaletteView) {
+export function Palette({ prompts, pos, onPick, onClose }: PaletteView) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -31,9 +31,13 @@ export function Palette({ prompts, onPick, onClose }: PaletteView) {
     }
   }
 
+  const width = Math.min(420, window.innerWidth * 0.92);
+  const left = Math.min(Math.max(8, pos.left), window.innerWidth - width - 8);
+  const top = pos.top + pos.height + 4;
+
   return (
     <div className="igw-palette-backdrop" onMouseDown={onClose}>
-      <div className="igw-palette" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="igw-palette" style={{ left, top }} onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           className="igw-palette-input"
