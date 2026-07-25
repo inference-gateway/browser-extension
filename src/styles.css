@@ -140,6 +140,20 @@
   min-height: 320px;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
+.igw-token-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.igw-token-row .igw-field {
+  flex: 1;
+}
+.igw-token-row button {
+  padding: 6px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
 .igw-actions {
   display: flex;
   gap: 10px;

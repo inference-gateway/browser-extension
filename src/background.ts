@@ -107,8 +107,13 @@ async function fetchPluginSkills(): Promise<Skill[]> {
   });
 }
 
+// Resolves the token for a repo owner (owner-specific, else the blank-owner default).
+async function patFor(owner: string): Promise<string | undefined> {
+  return storage.tokenFor(owner, await storage.loadTokens());
+}
+
 async function fetchFromGitHub(owner: string, repo: string): Promise<Skill[]> {
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   if (pat) headers.Authorization = `Bearer ${pat}`;
   const res = await fetch(
@@ -123,7 +128,7 @@ async function fetchFromGitHub(owner: string, repo: string): Promise<Skill[]> {
 }
 
 async function ghFetch(owner: string, repo: string, path: string, init?: RequestInit): Promise<Response> {
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   if (pat) headers.Authorization = `Bearer ${pat}`;
   if (init?.headers) Object.assign(headers, init.headers);
@@ -134,7 +139,7 @@ async function ghFetch(owner: string, repo: string, path: string, init?: Request
 }
 
 async function checkInstall(owner: string, repo: string): Promise<{ installed: boolean; url?: string } | { error: string }> {
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Contents: write, Pull requests: write, and Workflows: write in the extension options." };
 
   const res = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`);
@@ -160,7 +165,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const agents = await loadSelectedAgents();
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Contents: write, Pull requests: write, and Workflows: write in the extension options." };
 
   const repoRes = await ghFetch(owner, repo, "");
@@ -223,7 +228,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
 // the installed workflow fires on issues.opened and the agent picks it up.
 async function createTask(owner: string, repo: string, prompt: string): Promise<{ url: string } | { error: string }> {
   if (!prompt || !prompt.trim()) return { error: "Task is empty." };
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Issues: write in the extension options." };
 
   const res = await ghFetch(owner, repo, "issues", {
@@ -242,7 +247,7 @@ async function createTask(owner: string, repo: string, prompt: string): Promise<
 // which infer-action picks up via its direct-prompt input.
 async function dispatchTask(owner: string, repo: string, model: string, prompt: string): Promise<DispatchTaskResponse> {
   if (!prompt || !prompt.trim()) return { error: "Task is empty." };
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Actions: write in the extension options." };
 
   const repoRes = await ghFetch(owner, repo, "");
@@ -319,7 +324,7 @@ async function fetchAgentsCatalog(): Promise<AgentsCatalogResponse> {
 
 async function applySkills(owner: string, repo: string, add: string[], remove: string[]): Promise<ApplySkillsResponse> {
   if (!add.length && !remove.length) return { error: "No changes selected." };
-  const pat = await storage.get<string>("pat");
+  const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Contents: write and Pull requests: write in the extension options." };
 
   const repoRes = await ghFetch(owner, repo, "");

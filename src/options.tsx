@@ -1,6 +1,7 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
+import type { PatEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isRefineConfig, isPluginOption, type BotConfig, type Permissions, type RefineConfig, type PluginOption } from "./shared/models";
 
@@ -18,7 +19,7 @@ function applyTheme(theme: Theme) {
 }
 
 function Options() {
-  const [pat, setPat] = useState("");
+  const [tokens, setTokens] = useState<PatEntry[]>([{ owner: "", token: "" }]);
   const [promptsText, setPromptsText] = useState("");
   const [modelsText, setModelsText] = useState("");
   const [bot, setBot] = useState<BotConfig>(DEFAULT_BOT);
@@ -30,7 +31,8 @@ function Options() {
 
   useEffect(() => {
     void (async () => {
-      setPat((await storage.get<string>("pat")) ?? "");
+      const toks = await storage.loadTokens();
+      setTokens(toks.length ? toks : [{ owner: "", token: "" }]);
       const p = mergePrompts(await storage.get<Prompt[]>("prompts"));
       setPromptsText(JSON.stringify(p, null, 2));
       const m = (await storage.get<unknown[]>("models")) ?? DEFAULT_MODELS;
@@ -76,7 +78,7 @@ function Options() {
     if (bot.enabled && (!bot.clientId.trim() || !bot.privateKeySecret.trim())) {
       return setStatus("Custom Bot needs a Client ID and a private-key secret name.");
     }
-    await storage.savePat(pat);
+    await storage.saveTokens(tokens);
     await storage.set("prompts", parsed);
     await storage.set("models", models);
     await storage.set("bot", bot);
@@ -87,10 +89,19 @@ function Options() {
     setStatus("Saved.");
   }
 
-  async function removeToken() {
-    setPat("");
-    await storage.savePat("");
-    setStatus("Token removed.");
+  function updateToken(i: number, patch: Partial<PatEntry>) {
+    setTokens((prev) => prev.map((e, j) => (j === i ? { ...e, ...patch } : e)));
+  }
+
+  function addToken() {
+    setTokens((prev) => [...prev, { owner: "", token: "" }]);
+  }
+
+  function removeTokenRow(i: number) {
+    setTokens((prev) => {
+      const next = prev.filter((_, j) => j !== i);
+      return next.length ? next : [{ owner: "", token: "" }];
+    });
   }
 
   function reset() {
@@ -108,30 +119,45 @@ function Options() {
       <h1>OpenTask settings</h1>
 
       <section>
-        <h2>Personal access token</h2>
+        <h2>Personal access tokens</h2>
         <p>Required to install the Infer Agent workflow and send tasks. Also used to list
           skills in <strong>private</strong> repos. Fine-grained token with
           <code> Contents: write</code>, <code> Pull requests: write</code>,
           <code> Workflows: write</code>, <code> Issues: write</code>, and
           <code> Actions: write</code>. Stored in this browser's extension storage.</p>
-        <input
-          type="password"
-          className="igw-field"
-          placeholder="github_pat_..."
-          autoComplete="off"
-          value={pat}
-          onChange={(e) => setPat(e.target.value)}
-        />
+        <p>Add one token per GitHub account/org. On a repo, the token whose <strong>owner</strong>
+          matches its owner is used; leave the owner blank for a default token used everywhere else.</p>
+        {tokens.map((entry, i) => (
+          <div key={i} className="igw-token-row">
+            <input
+              type="text"
+              className="igw-field"
+              placeholder="owner (org or user, blank = default)"
+              autoComplete="off"
+              value={entry.owner}
+              onChange={(e) => updateToken(i, { owner: e.target.value })}
+            />
+            <input
+              type="password"
+              className="igw-field"
+              placeholder="github_pat_..."
+              autoComplete="off"
+              value={entry.token}
+              onChange={(e) => updateToken(i, { token: e.target.value })}
+            />
+            <button className="igw-reset" onClick={() => removeTokenRow(i)}>Remove</button>
+          </div>
+        ))}
         <div className="igw-actions">
+          <button className="igw-save" onClick={addToken}>Add token</button>
           <a
-            className="igw-save"
+            className="igw-reset"
             href="https://github.com/settings/personal-access-tokens/new?name=OpenTask&description=OpenTask+browser+extension&contents=write&pull_requests=write&workflows=write&issues=write&actions=write"
             target="_blank"
             rel="noreferrer"
           >
             Create token
           </a>
-          <button className="igw-reset" onClick={removeToken}>Remove token</button>
         </div>
       </section>
 

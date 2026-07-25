@@ -31,19 +31,37 @@ test("remove deletes the key", async () => {
   expect(await storage.get<string>("pat")).toBeUndefined();
 });
 
-test("savePat stores the trimmed token", async () => {
-  await storage.savePat("  github_pat_abc  ");
-  expect(await storage.get<string>("pat")).toBe("github_pat_abc");
+test("tokenFor picks the exact owner match, else the blank-owner default", () => {
+  const entries = [
+    { owner: "", token: "default" },
+    { owner: "acme", token: "acme-tok" },
+  ];
+  expect(storage.tokenFor("acme", entries)).toBe("acme-tok");
+  expect(storage.tokenFor("other", entries)).toBe("default");
 });
 
-test("savePat with an empty string removes the key", async () => {
-  await storage.set("pat", "github_pat_abc");
-  await storage.savePat("");
+test("tokenFor returns undefined when no owner match and no default", () => {
+  expect(storage.tokenFor("acme", [{ owner: "beta", token: "t" }])).toBeUndefined();
+  expect(storage.tokenFor("acme", [])).toBeUndefined();
+});
+
+test("saveTokens trims, drops blank tokens, and clears the legacy pat key", async () => {
+  await storage.set("pat", "legacy");
+  await storage.saveTokens([
+    { owner: "  acme ", token: "  tok  " },
+    { owner: "empty", token: "  " },
+  ]);
+  expect(await storage.get("pats")).toEqual([{ owner: "acme", token: "tok" }]);
   expect(await storage.get<string>("pat")).toBeUndefined();
 });
 
-test("savePat with only whitespace removes the key", async () => {
+test("loadTokens migrates a legacy pat into a blank-owner default entry", async () => {
   await storage.set("pat", "github_pat_abc");
-  await storage.savePat("   ");
-  expect(await storage.get<string>("pat")).toBeUndefined();
+  expect(await storage.loadTokens()).toEqual([{ owner: "", token: "github_pat_abc" }]);
+});
+
+test("loadTokens prefers the pats list over the legacy pat", async () => {
+  await storage.set("pat", "legacy");
+  await storage.set("pats", [{ owner: "acme", token: "tok" }]);
+  expect(await storage.loadTokens()).toEqual([{ owner: "acme", token: "tok" }]);
 });
