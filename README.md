@@ -123,6 +123,11 @@ Right-click the extension → **Options** (or the Details page → *Extension op
   stored key is removed.
 - **Quick prompts** - a JSON array of `{ id, label, description, insert }`, editable,
   with a *Reset to defaults* button.
+- **Issue refinement** - two toggles. *Show a Refine button on issue pages* (default on)
+  adds a **Refine** button to the issue header that dispatches a run asking the agent to
+  rewrite the issue's description in place. *Auto-refine issues you create* (default off)
+  does the same automatically when you open a new issue via GitHub's native form. Refine
+  edits the body via `gh issue edit`, so re-install the workflow after enabling.
 
 ## Privacy
 

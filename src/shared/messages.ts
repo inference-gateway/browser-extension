@@ -20,6 +20,11 @@ export type CreateTaskResponse = { url: string } | { error: string };
 export type DispatchTaskRequest = { type: "dispatch-task"; owner: string; repo: string; model: string; prompt: string };
 export type DispatchTaskResponse = { url: string } | { error: string };
 
+// Refine one existing issue: dispatch the workflow with a refine prompt for issue #N. Uses
+// the first configured model as default (no model picker at the call sites).
+export type RefineIssueRequest = { type: "refine-issue"; owner: string; repo: string; issue: number };
+export type RefineIssueResponse = { url: string } | { error: string };
+
 // Skills registry: the full catalog, the names already installed in the repo's
 // .agents/skills/, and the repo's top languages (for suggestion ordering).
 export type SkillsCatalogRequest = { type: "skills-catalog"; owner: string; repo: string };

@@ -43,3 +43,13 @@ export function repoFromUrl(): { owner: string; repo: string } | null {
   if (NON_REPO.has(owner)) return null;
   return { owner, repo };
 }
+
+// The specific issue we're viewing, if any. Matches /owner/repo/issues/123 only - PRs
+// (/pull/123) and repo pages return null. NON_REPO still excludes /issues/... at the root.
+export function issueFromUrl(): { owner: string; repo: string; issue: number } | null {
+  const m = location.pathname.match(/^\/([^/]+)\/([^/]+)\/issues\/(\d+)/);
+  if (!m) return null;
+  const [, owner, repo, n] = m;
+  if (NON_REPO.has(owner)) return null;
+  return { owner, repo, issue: Number(n) };
+}

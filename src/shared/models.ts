@@ -77,6 +77,19 @@ export function isPermissions(p: unknown): p is Permissions {
   );
 }
 
+// Issue refinement: `manual` shows a Refine button in the issue header; `auto` dispatches a
+// refine run when the user creates a new issue via GitHub's native form. Stored under "refine".
+export type RefineConfig = { auto: boolean; manual: boolean };
+export const DEFAULT_REFINE: RefineConfig = { auto: false, manual: true };
+
+export function isRefineConfig(r: unknown): r is RefineConfig {
+  return (
+    !!r &&
+    typeof r === "object" &&
+    ["auto", "manual"].every((k) => typeof (r as Record<string, unknown>)[k] === "boolean")
+  );
+}
+
 // Canonical infer-action issue-agent.yml, pinned to a release. The model is a
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
@@ -86,13 +99,12 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
   const appends: string[] = [];
-  if (perms.createIssues) appends.push("gh issue create( .*)?");
+  if (perms.createIssues) appends.push("gh issue create( .*)?", "gh issue edit( .*)?");
   if (perms.comment) appends.push("gh issue comment( .*)?", "gh pr comment( .*)?");
   const permLines =
     `          enable-git-operations: "${perms.createPRs}"` +
     (appends.length ? `\n          bash-allow-append: "${appends.join(",")}"` : "");
 
-  // Wire every standard provider, plus any custom-model provider not already covered.
   const providers: Provider[] = [...DEFAULT_PROVIDERS];
   const seen = new Set(providers.map((p) => p.keyInput));
   for (const m of models) {

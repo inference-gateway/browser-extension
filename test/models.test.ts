@@ -93,7 +93,7 @@ test("workflowYaml maps permissions onto infer-action allow-list inputs", () => 
   expect(readonly).not.toContain("bash-allow-append");
 
   const issuesOnly = workflowYaml(models, def, noBot, { createPRs: false, createIssues: true, comment: false });
-  expect(issuesOnly).toContain(`bash-allow-append: "gh issue create( .*)?"`);
+  expect(issuesOnly).toContain(`bash-allow-append: "gh issue create( .*)?,gh issue edit( .*)?"`);
   expect(issuesOnly).not.toContain("gh pr comment");
 });
 

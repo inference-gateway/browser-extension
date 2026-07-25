@@ -3,7 +3,7 @@ import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskRes
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, workflowYaml, prBody } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
-import { taskBody, taskTitle } from "./shared/task";
+import { taskBody, taskTitle, refinePrompt } from "./shared/task";
 
 const TTL = 10 * 60 * 1000;
 
@@ -33,6 +33,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === "dispatch-task") {
     dispatchTask(msg.owner, msg.repo, msg.model, msg.prompt)
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "refine-issue") {
+    refineIssue(msg.owner, msg.repo, msg.issue)
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -215,6 +221,16 @@ async function dispatchTask(owner: string, repo: string, model: string, prompt: 
   if (res.status === 403) return { error: "PAT lacks Actions: write. Grant it in the extension options." };
   if (res.status === 422) return { error: "Dispatch rejected - the installed workflow may predate the prompt input. Re-install the Infer Agent workflow." };
   throw new Error(`GitHub ${res.status}`);
+}
+
+// Refine one existing issue: pick the default model and dispatch the workflow with a
+// refine prompt. Delegates to dispatchTask for the actual dispatch + error handling.
+async function refineIssue(owner: string, repo: string, issue: number): Promise<DispatchTaskResponse> {
+  const stored = await storage.get<unknown[]>("models");
+  const models: ModelOption[] = Array.isArray(stored) && stored.length && stored.every(isModelOption)
+    ? (stored as ModelOption[])
+    : DEFAULT_MODELS;
+  return dispatchTask(owner, repo, models[0].model, refinePrompt(owner, repo, issue));
 }
 
 // --- Skills registry ---
