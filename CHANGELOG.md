@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2](https://github.com/inference-gateway/opentask/compare/v1.0.1...v1.0.2) (2026-07-25)
+
+### ♻️ Improvements
+
+* rename extension from 'Inference Gateway for GitHub' to 'OpenTask for GitHub' ([#47](https://github.com/inference-gateway/opentask/issues/47)) ([42c2a4e](https://github.com/inference-gateway/opentask/commit/42c2a4e133f71000324fa343a8aad4742d5dd714))
+
 ## [1.0.1](https://github.com/inference-gateway/opentask/compare/v1.0.0...v1.0.1) (2026-07-25)
 
 ### 🐛 Bug Fixes
