@@ -400,7 +400,6 @@ function refineNow(btn: HTMLButtonElement, loc: { owner: string; repo: string; i
     }
     refined = true;
     btn.textContent = "Submitted ✓";
-    // btn.disabled stays true permanently
   });
 }
 
