@@ -66,6 +66,11 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
 - 📝 **Free-Text Tasks**: The **Task** tab sends a task to the agent. Leave **Create a
   GitHub issue** checked to open an `@infer` issue, or uncheck it to run the task directly
   via `workflow_dispatch` (infer-action's `direct-prompt`) with no public issue.
+- 📋 **Project Board Tracking**: The installed workflow tells the agent to keep an issue's
+  project-board Status in sync (In Progress on start, Done on completion), best-effort and
+  board-agnostic. Board writes need a token with `Projects: read and write` - enable the
+  GitHub App option, since the default `GITHUB_TOKEN` can't reach Projects v2; without it
+  the agent skips board updates silently.
 
 ## Overview
 

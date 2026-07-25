@@ -93,6 +93,34 @@ export function isRefineConfig(r: unknown): r is RefineConfig {
   );
 }
 
+// Generic, board-agnostic project-board tracking, appended to the agent's instructions.
+// No hardcoded project/field/option ids: the agent discovers the board and its Status
+// field at runtime, so this works on any repo/org, not just one specific board. Best-effort
+// throughout - a missing Status field or a Projects-permission failure is logged, never fatal.
+export const BOARD_INSTRUCTIONS = `When working on a GitHub issue that belongs to a project board, keep the board's status in
+sync as you go. This is best-effort: on any error (no board, no Status field, missing
+Projects permission, network failure) log it and carry on - never abort the task over a
+board update.
+
+Detect membership from the ISSUE side, never by scanning the board - a board can hold
+thousands of items and \`gh project item-list\` only fetches 30 by default, so scanning
+misses the issue and does not scale:
+
+- \`gh issue view <number> --json projectItems\` lists the boards this issue is on (and its
+  current Status), in one call regardless of board size. Empty list means it is on no
+  board - do nothing further.
+- For each board it is on, resolve the project number + id and the Status single-select
+  field (with its option ids) via \`gh project list --owner <owner> --format json\` and
+  \`gh project field-list <number> --owner <owner> --format json\`. No "Status" (or close
+  equivalent) field: log a warning and skip that board.
+- Get the item id idempotently with \`gh project item-add <number> --owner <owner> --url
+  <issue-url> --format json\` - it returns the existing item's id in O(1). Do NOT list
+  items to find it.
+- Set Status with \`gh project item-edit --id <item-id> --project-id <project-id>
+  --field-id <field-id> --single-select-option-id <option-id>\`: the option closest to
+  "In Progress" BEFORE you start changing anything, and the option closest to "Done" when
+  your work is complete (body refined, fix pushed, or comment posted).`;
+
 // Canonical infer-action issue-agent.yml, pinned to a release. The model is a
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
@@ -101,12 +129,16 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
-  const appends: string[] = [];
+  const appends: string[] = [
+    "gh project list( .*)?", "gh project field-list( .*)?",
+    "gh project item-add( .*)?", "gh project item-edit( .*)?",
+  ];
   if (perms.createIssues) appends.push("gh issue create( .*)?", "gh issue edit( .*)?");
   if (perms.comment) appends.push("gh issue comment( .*)?", "gh pr comment( .*)?");
   const permLines =
     `          enable-git-operations: "${perms.createPRs}"` +
-    (appends.length ? `\n          bash-allow-append: "${appends.join(",")}"` : "");
+    `\n          bash-allow-append: "${appends.join(",")}"` +
+    `\n          custom-instructions: |\n${BOARD_INSTRUCTIONS.split("\n").map((l) => `            ${l}`).join("\n")}`;
 
   const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
 
@@ -204,6 +236,10 @@ Before the workflow can run:
 1. Go to Settings > Secrets and variables > Actions and add the provider API key secret for the model(s) you use: ${secretList}.${botStep}
 
 The workflow triggers on new/edited issues, issue comments, and pull request review comments, and can also be run manually (Actions > Task > Run workflow) with a model chosen from the dropdown.
+
+### Project board tracking
+
+When an issue it works on is on a GitHub project board, the agent keeps the board's Status in sync (In Progress on start, Done on completion), best-effort. Board writes require a token with **Projects** permission: the default \`GITHUB_TOKEN\` cannot access Projects v2, so enable the GitHub App option (with Projects: read and write) for this to take effect${bot.enabled ? " - your App must grant it" : ""}. Without it the agent skips board updates silently and does the rest of its work normally.
 
 ### Plugins
 
