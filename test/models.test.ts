@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, isModelOption, isBotConfig, isPermissions, prBody, workflowYaml } from "../src/shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, prBody, workflowYaml } from "../src/shared/models";
 
 const models = DEFAULT_MODELS;
 const def = "anthropic/claude-sonnet-4-6";
@@ -116,4 +116,48 @@ test("isBotConfig accepts a full config and rejects malformed ones", () => {
   expect(isBotConfig({ enabled: true, clientId: "a", privateKeySecret: "b" })).toBe(true);
   expect(isBotConfig({ enabled: "yes", clientId: "a", privateKeySecret: "b" })).toBe(false);
   expect(isBotConfig(null)).toBe(false);
+});
+
+test("workflowYaml includes default plugins in the YAML", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain("plugins: |");
+  for (const p of DEFAULT_PLUGINS) {
+    expect(yaml).toContain(`            ${p}`);
+  }
+});
+
+test("workflowYaml omits plugins block when plugins list is empty", () => {
+  const yaml = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, []);
+  expect(yaml).not.toContain("plugins:");
+});
+
+test("workflowYaml accepts custom plugins", () => {
+  const custom = ["custom/plugin-a", "custom/plugin-b@v1"];
+  const yaml = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, custom);
+  expect(yaml).toContain("plugins: |");
+  expect(yaml).toContain("            custom/plugin-a");
+  expect(yaml).toContain("            custom/plugin-b@v1");
+  expect(yaml).not.toContain("inference-gateway/caveman");
+});
+
+test("workflowYaml with plugins is backward compatible when called without plugins arg", () => {
+  const withDefault = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS);
+  const withExplicit = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS);
+  expect(withDefault).toBe(withExplicit);
+});
+
+test("prBody includes plugins section with default plugins", () => {
+  const body = prBody(models, def, noBot);
+  expect(body).toContain("### Plugins");
+  expect(body).toContain("The workflow pre-installs the following infer-action plugins");
+  for (const p of DEFAULT_PLUGINS) {
+    expect(body).toContain(`\`${p}\``);
+  }
+});
+
+test("prBody accepts custom plugins", () => {
+  const custom = ["custom/plugin-a"];
+  const body = prBody(models, def, noBot, custom);
+  expect(body).toContain("`custom/plugin-a`");
+  expect(body).not.toContain("inference-gateway/caveman");
 });
