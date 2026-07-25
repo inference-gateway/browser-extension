@@ -144,7 +144,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS)): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = []): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -160,6 +160,7 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     `\n          custom-instructions: |\n${BOARD_INSTRUCTIONS.split("\n").map((l) => `            ${l}`).join("\n")}`;
 
   const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
+  const agentLines = agents.length ? `\n          agents: |\n${agents.map((a) => `            ${a}`).join("\n")}` : "";
 
   const providers: Provider[] = [...DEFAULT_PROVIDERS];
   const seen = new Set(providers.map((p) => p.keyInput));
@@ -232,12 +233,12 @@ ${appTokenStep}${checkoutStep}
           github-token: ${githubToken}${botSlugLine}
           model: \${{ inputs.model || '${def}' }}
           direct-prompt: \${{ inputs.prompt }}
-${permLines}${pluginLines}
+${permLines}${pluginLines}${agentLines}
 ${keyLines}
 `;
 }
 
-export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS)): string {
+export function prBody(models: ModelOption[], defaultModel: string, bot: BotConfig, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = []): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const secretList = [...new Set(models.map((m) => m.secret))].map((s) => `\`${s}\``).join(", ");
   const botStep = bot.enabled
@@ -250,6 +251,14 @@ export function prBody(models: ModelOption[], defaultModel: string, bot: BotConf
 The workflow pre-installs the following infer-action plugins to extend the agent's capabilities:
 
 ${plugins.map((p) => `- \`${p}\``).join("\n")}`
+    : "";
+
+  const agentSection = agents.length
+    ? `\n\n### Agents
+
+The workflow spins up the following A2A agents from the [agents registry](https://github.com/inference-gateway/agents) and exposes them to the Infer agent:
+
+${agents.map((a) => `- \`${a}\``).join("\n")}`
     : "";
 
   return `## Infer Agent workflow
@@ -266,6 +275,6 @@ The workflow triggers on new/edited issues, issue comments, and pull request rev
 
 ### Project board tracking
 
-When an issue it works on is on a GitHub project board, the agent keeps the board's Status in sync (In Progress on start, Done on completion), best-effort. Board writes require a token with **Projects** permission: the default \`GITHUB_TOKEN\` cannot access Projects v2, so enable the GitHub App option (with Projects: read and write) for this to take effect${bot.enabled ? " - your App must grant it" : ""}. Without it the agent skips board updates silently and does the rest of its work normally.${pluginSection}
+When an issue it works on is on a GitHub project board, the agent keeps the board's Status in sync (In Progress on start, Done on completion), best-effort. Board writes require a token with **Projects** permission: the default \`GITHUB_TOKEN\` cannot access Projects v2, so enable the GitHub App option (with Projects: read and write) for this to take effect${bot.enabled ? " - your App must grant it" : ""}. Without it the agent skips board updates silently and does the rest of its work normally.${pluginSection}${agentSection}
 `;
 }

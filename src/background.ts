@@ -4,7 +4,7 @@ import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isMo
 import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt } from "./shared/task";
-import { CATALOG_URL, isAgentManifest, type AgentManifest } from "./shared/agents";
+import { CATALOG_URL, agentsFromCatalog, type AgentManifest } from "./shared/agents";
 
 const TTL = 10 * 60 * 1000;
 
@@ -92,6 +92,13 @@ async function loadPlugins(): Promise<PluginOption[]> {
     : DEFAULT_PLUGINS;
 }
 
+// Agent names the user checked in the Agents panel (AgentsTab), fed to infer-action's
+// `agents:` input on (re)install.
+async function loadSelectedAgents(): Promise<string[]> {
+  const stored = await storage.get<unknown>("selected-agents");
+  return Array.isArray(stored) ? stored.filter((x): x is string => typeof x === "string") : [];
+}
+
 async function fetchPluginSkills(): Promise<Skill[]> {
   const plugins = await loadPlugins();
   return enabledPlugins(plugins).map((id) => {
@@ -150,6 +157,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const storedPerms = await storage.get<unknown>("permissions");
   const perms: Permissions = isPermissions(storedPerms) ? storedPerms : DEFAULT_PERMISSIONS;
   const plugins = await loadPlugins();
+  const agents = await loadSelectedAgents();
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
   const pat = await storage.get<string>("pat");
@@ -178,7 +186,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins)));
+  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents));
   const existing = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${branch}`);
   const sha = existing.status === 200 ? (await existing.json()).sha : undefined;
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
@@ -197,7 +205,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   }
 
   const title = "feat: add Infer Agent workflow";
-  const body = prBody(models, defaultModel, bot, enabledPlugins(plugins));
+  const body = prBody(models, defaultModel, bot, enabledPlugins(plugins), agents);
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
   if (prRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Pull requests: write." };
@@ -304,7 +312,7 @@ async function fetchAgentsCatalog(): Promise<AgentsCatalogResponse> {
   const res = await fetch(CATALOG_URL);
   if (!res.ok) return { error: `Failed to fetch agents catalog (HTTP ${res.status})` };
   const json = await res.json();
-  const items: AgentManifest[] = Array.isArray(json) ? json.filter(isAgentManifest) : [];
+  const items = agentsFromCatalog(json);
   await storage.set(key, { ts: Date.now(), items });
   return { catalog: items };
 }

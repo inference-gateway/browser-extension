@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AgentManifest } from "../shared/agents";
+import * as storage from "../shared/storage";
 import { ask } from "./ask";
 
 type Status =
@@ -10,8 +11,12 @@ type Status =
 export function AgentsTab() {
   const [status, setStatus] = useState<Status>({ kind: "loading" });
   const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    void storage.get<string[]>("selected-agents").then((names) => {
+      if (Array.isArray(names)) setSelected(new Set(names));
+    });
     ask({ type: "agents-catalog" }, (resp) => {
       if (chrome.runtime?.lastError || !resp)
         return setStatus({ kind: "error", message: "Failed to load agents." });
@@ -21,6 +26,18 @@ export function AgentsTab() {
       setStatus({ kind: "ready", catalog });
     });
   }, []);
+
+  // Checking an agent persists it to storage; the Install panel's "Re-install
+  // workflow" button feeds these names to infer-action's `agents:` input.
+  function toggle(name: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      void storage.set("selected-agents", [...next]);
+      return next;
+    });
+  }
 
   const filtered = useMemo(() => {
     if (status.kind !== "ready") return [];
@@ -45,6 +62,7 @@ export function AgentsTab() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
+      <p className="igw-tasks-hint">Checked agents are added to the Infer workflow when you (re)install it.</p>
       <div className="igw-skill-list">
         {filtered.length === 0 && (
           <p className="igw-tasks-muted" style={{ padding: "10px 12px" }}>
@@ -52,7 +70,12 @@ export function AgentsTab() {
           </p>
         )}
         {filtered.map((agent) => (
-          <div key={agent.metadata.name} className="igw-skill-row">
+          <label key={agent.metadata.name} className="igw-skill-row">
+            <input
+              type="checkbox"
+              checked={selected.has(agent.metadata.name)}
+              onChange={() => toggle(agent.metadata.name)}
+            />
             <span className="igw-skill-text">
               <span className="igw-skill-name">
                 {agent.metadata.name}
@@ -64,7 +87,7 @@ export function AgentsTab() {
                 {agent.metadata.description}
               </span>
             </span>
-          </div>
+          </label>
         ))}
       </div>
     </>
