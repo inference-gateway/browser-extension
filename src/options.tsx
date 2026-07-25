@@ -29,8 +29,6 @@ function Options() {
       setRefine(isRefineConfig(rf) ? rf : DEFAULT_REFINE);
       const pl = await storage.get<unknown>("plugins");
       const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
-      // Catalog is the source of truth; carry over stored enabled state by id so a
-      // newly-added plugin shows up (off) even if storage holds an older subset.
       setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
     })();
   }, []);
