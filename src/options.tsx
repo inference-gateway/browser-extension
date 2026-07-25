@@ -105,7 +105,7 @@ function Options() {
 
   return (
     <div className="igw-options">
-      <h1>GitHub Comment Helper</h1>
+      <h1>OpenTask settings</h1>
 
       <section>
         <h2>Personal access token</h2>
