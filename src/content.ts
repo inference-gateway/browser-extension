@@ -363,8 +363,6 @@ function tryInjectRefine(): void {
     if (!refineCfg.manual) return void document.getElementById(REFINE_BTN_ID)?.remove();
     const loc = issueFromUrl();
     if (!loc || document.getElementById(REFINE_BTN_ID)) return;
-    // First "..." kebab on an issue page belongs to the issue body's header (the issue itself
-    // is the first comment) - right next to "Last edited by".
     const kebab = document.querySelector<SVGElement>(".octicon-kebab-horizontal");
     const anchor = kebab?.closest("button, summary, a") as HTMLElement | null;
     if (!anchor?.parentElement) return;
@@ -420,11 +418,11 @@ function maybeAutoRefine(): void {
     const raw = sessionStorage.getItem(REFINE_PENDING);
     if (!raw) return;
     ts = Number(raw);
-    sessionStorage.removeItem(REFINE_PENDING); // consume once
+    sessionStorage.removeItem(REFINE_PENDING);
   } catch {
     return;
   }
-  if (!ts || Date.now() - ts > 15000) return; // stale
+  if (!ts || Date.now() - ts > 15000) return;
   chrome.runtime.sendMessage({ type: "refine-issue", ...loc }, () => { /* fire-and-forget */ });
 }
 
