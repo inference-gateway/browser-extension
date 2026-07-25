@@ -257,14 +257,14 @@ ${plugins.map((p) => `- \`${p}\``).join("\n")}`
   const agentSection = agents.length
     ? `\n\n### Agents
 
-The workflow spins up the following A2A agents from the [agents registry](https://github.com/inference-gateway/agents) and exposes them to the Infer agent:
+The workflow spins up the following A2A agents from the [agents registry](https://github.com/inference-gateway/agents) and exposes them to the OpenTask agent:
 
 ${agents.map((a) => `- \`${a}\``).join("\n")}`
     : "";
 
-  return `## Infer Agent workflow
+  return `## OpenTask Agent workflow
 
-This PR adds the Infer Agent workflow to this repository. It uses [inference-gateway/infer-action](https://github.com/inference-gateway/infer-action) to run the Infer agent on issues and pull requests. The model is a workflow input (dropdown), defaulting to \`${def}\`.
+This PR adds the OpenTask Agent workflow to this repository. It uses [inference-gateway/infer-action](https://github.com/inference-gateway/infer-action) to run the OpenTask agent on issues and pull requests. The model is a workflow input (dropdown), defaulting to \`${def}\`.
 
 ### Setup
 

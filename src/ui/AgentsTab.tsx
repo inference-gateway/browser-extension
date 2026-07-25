@@ -62,7 +62,7 @@ export function AgentsTab() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <p className="igw-tasks-hint">Checked agents are added to the Infer workflow when you (re)install it.</p>
+      <p className="igw-tasks-hint">Checked agents are added to the OpenTask workflow when you (re)install it.</p>
       <div className="igw-skill-list">
         {filtered.length === 0 && (
           <p className="igw-tasks-muted" style={{ padding: "10px 12px" }}>

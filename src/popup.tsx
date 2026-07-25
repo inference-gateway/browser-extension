@@ -34,7 +34,7 @@ function Popup() {
       <div className="igw-popup-body">
         <p className="igw-popup-muted">
           Open a repository on GitHub and use the <strong>Tasks</strong> tab in the repo
-          navigation to install the Infer Agent.
+          navigation to install the OpenTask Agent.
         </p>
       </div>
       <div className="igw-popup-footer">

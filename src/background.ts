@@ -198,7 +198,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: "feat: add Infer Agent workflow",
+      message: "feat: add OpenTask Agent workflow",
       content,
       branch,
       ...(sha ? { sha } : {}),
@@ -209,7 +209,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${putRes.status}`);
   }
 
-  const title = "feat: add Infer Agent workflow";
+  const title = "feat: add OpenTask Agent workflow";
   const body = prBody(models, defaultModel, bot, enabledPlugins(plugins), agents);
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
@@ -260,9 +260,9 @@ async function dispatchTask(owner: string, repo: string, model: string, prompt: 
     body: JSON.stringify({ ref: base, inputs: { model, prompt } }),
   });
   if (res.status === 204) return { url: `https://github.com/${owner}/${repo}/actions` };
-  if (res.status === 404) return { error: "Workflow not found on the default branch. Merge the Infer Agent install PR first." };
+  if (res.status === 404) return { error: "Workflow not found on the default branch. Merge the OpenTask Agent install PR first." };
   if (res.status === 403) return { error: "PAT lacks Actions: write. Grant it in the extension options." };
-  if (res.status === 422) return { error: "Dispatch rejected - the installed workflow may predate the prompt input. Re-install the Infer Agent workflow." };
+  if (res.status === 422) return { error: "Dispatch rejected - the installed workflow may predate the prompt input. Re-install the OpenTask Agent workflow." };
   throw new Error(`GitHub ${res.status}`);
 }
 
@@ -379,7 +379,7 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
   const commit = await ghFetch(owner, repo, "git/commits", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: `chore: update Infer skills (${parts})`, tree: newTree.sha, parents: [baseSha] }),
+    body: JSON.stringify({ message: `chore: update OpenTask skills (${parts})`, tree: newTree.sha, parents: [baseSha] }),
   }).then((r) => r.json());
 
   // Fresh, unique branch per apply - a reused branch's PR history can poison GitHub's
@@ -392,7 +392,7 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
   });
   if (!mk.ok) return ghError(mk.status);
 
-  const title = "chore: update Infer skills";
+  const title = "chore: update OpenTask skills";
   const body = skillsPrBody(add, remove);
   const prRes = await openPull(owner, repo, { title, head: skillsBranch, base, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
@@ -424,7 +424,7 @@ async function openPull(owner: string, repo: string, payload: Record<string, unk
 
 function skillsPrBody(add: string[], remove: string[]): string {
   const lines = [
-    "## Update Infer skills",
+    "## Update OpenTask skills",
     "",
     "Applied from the [Inference Gateway skills registry](https://github.com/inference-gateway/skills) via the browser extension. Skills live under `.agents/skills/`.",
   ];

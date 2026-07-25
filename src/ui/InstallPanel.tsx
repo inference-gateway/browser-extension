@@ -106,7 +106,7 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
               ref={taRef}
               className="igw-tasks-textarea"
               rows={4}
-              placeholder="Describe a task for the Infer agent…"
+              placeholder="Describe a task for the OpenTask agent…"
               value={task}
               onChange={(e) => setTask(e.target.value)}
             />

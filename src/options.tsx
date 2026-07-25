@@ -120,7 +120,7 @@ function Options() {
 
       <section>
         <h2>Personal access tokens</h2>
-        <p>Required to install the Infer Agent workflow and send tasks. Also used to list
+        <p>Required to install the OpenTask Agent workflow and send tasks. Also used to list
           skills in <strong>private</strong> repos. Fine-grained token with
           <code> Contents: write</code>, <code> Pull requests: write</code>,
           <code> Workflows: write</code>, <code> Issues: write</code>, and
@@ -188,7 +188,7 @@ function Options() {
 
       <section>
         <h2>Agent permissions</h2>
-        <p>What the Infer agent may do while a task runs. These widen infer-action's read-only
+        <p>What the OpenTask agent may do while a task runs. These widen infer-action's read-only
           baseline; unchecked capabilities stay blocked. <strong>Re-install the workflow</strong> after
           changing these.</p>
         <div className="igw-bot-fields">
@@ -221,7 +221,7 @@ function Options() {
 
       <section>
         <h2>Issue refinement</h2>
-        <p>Let the Infer agent rewrite an issue's description in place. Refine edits the issue
+        <p>Let the OpenTask agent rewrite an issue's description in place. Refine edits the issue
           body via <code>gh issue edit</code>, so the installed workflow needs
           <code> Create GitHub issues</code> permission above - <strong>re-install</strong> after
           enabling.</p>
