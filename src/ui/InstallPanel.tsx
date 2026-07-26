@@ -39,8 +39,6 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
       setModel(list[0].model);
       setPrompts(mergePrompts(await storage.get<Prompt[]>("prompts")));
     })();
-    // Offer the running llama.cpp GPU as a model option (routed via the DEFAULT_MODEL/
-    // LLAMACPP_API_URL repo config the workflow reads).
     ask({ type: "gpu-status" }, (resp) => {
       const state = (resp as { state?: GpuState }).state;
       const hf = state?.hf ?? state?.modelId;

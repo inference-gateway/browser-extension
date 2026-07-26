@@ -572,7 +572,6 @@ async function provisionGPU(gpuTypeId: string, modelId: string, hf: string, clou
   }
   if (!isValidHf(hf)) return { error: `Invalid HF model ref: ${hf} (expected owner/repo:quant).` };
 
-  // Client-generated bearer token: RunPod can't return it later, so persist it in state.
   const apiKey = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, "0")).join("");
   const body = podRequestBody(gpuTypeId, { id: modelId, label: modelId, hf: hf.trim() }, apiKey, cloudType);
   const res = await runpodFetch("/pods", { method: "POST", body: JSON.stringify(body) });
