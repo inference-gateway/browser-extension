@@ -53,23 +53,44 @@ export type GpuState = {
   status: "idle" | "provisioning" | "running" | "failed";
   createdAt?: number;
   podId?: string;
+  modelId?: string;
 };
 
 export type GpuType = {
   id: string;
   name: string;
-  memoryInGb: number;
   displayName: string;
   securePrice: number;
-  communityPrice: number;
-  communitySpotPrice: number;
-  regions: string[];
 };
+
+// Popular GGUF models deployable via llama.cpp's -hf flag ("repo:quant").
+export type LlamaModel = { id: string; label: string; hf: string };
+export const LLAMA_MODELS: LlamaModel[] = [
+  { id: "llama-3.1-8b", label: "Llama 3.1 8B Instruct", hf: "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q4_K_M" },
+  { id: "qwen-2.5-7b", label: "Qwen 2.5 7B Instruct", hf: "bartowski/Qwen2.5-7B-Instruct-GGUF:Q4_K_M" },
+  { id: "mistral-7b", label: "Mistral 7B Instruct v0.3", hf: "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M" },
+  { id: "phi-4", label: "Phi-4 14B", hf: "bartowski/phi-4-GGUF:Q4_K_M" },
+  { id: "gemma-2-9b", label: "Gemma 2 9B Instruct", hf: "bartowski/gemma-2-9b-it-GGUF:Q4_K_M" },
+];
+
+// Pod create body for RunPod's REST API, running llama.cpp server with the chosen model.
+export function podRequestBody(gpuTypeId: string, model: LlamaModel, cloudType?: string) {
+  return {
+    name: `opentask-${model.id}`,
+    imageName: "ghcr.io/ggml-org/llama.cpp:server-cuda",
+    dockerStartCmd: ["-hf", model.hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99"],
+    gpuTypeIds: [gpuTypeId],
+    cloudType: cloudType ?? "SECURE",
+    ports: ["8080/http"],
+    containerDiskInGb: 30,
+    volumeInGb: 0,
+  };
+}
 
 export type ListGPUsRequest = { type: "list-gpus" };
 export type ListGPUsResponse = { gpus: GpuType[] } | { error: string };
 
-export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; cloudType?: string };
+export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; modelId: string; cloudType?: string };
 export type ProvisionGPUResponse = { state: GpuState } | { error: string };
 
 export type DeprovisionGPURequest = { type: "deprovision-gpu" };

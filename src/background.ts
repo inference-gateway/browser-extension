@@ -1,5 +1,5 @@
 import * as storage from "./shared/storage";
-import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse, GpuState, GpuType } from "./shared/messages";
+import { LLAMA_MODELS, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState, type GpuType } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
@@ -81,7 +81,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
   if (msg?.type === "provision-gpu") {
-    provisionGPU(msg.gpuTypeId, msg.cloudType)
+    provisionGPU(msg.gpuTypeId, msg.modelId, msg.cloudType)
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -549,7 +549,7 @@ function ghError(status: number): { error: string } {
 async function runpodFetch(path: string, init?: RequestInit): Promise<Response> {
   const key = await storage.get<string>("runpod-key");
   if (!key) throw new Error("No RunPod API key configured. Add one in Settings > Orchestrator.");
-  return fetch(`https://api.runpod.io/v2${path}`, {
+  return fetch(`https://rest.runpod.io/v1${path}`, {
     ...init,
     headers: { ...init?.headers as Record<string, string>, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
   });
@@ -564,44 +564,37 @@ async function saveGpuState(state: GpuState): Promise<void> {
 }
 
 async function listGPUs(): Promise<{ gpus: GpuType[] } | { error: string }> {
-  const res = await runpodFetch("/gpu-types");
+  const res = await runpodFetch("/gputypes");
   if (!res.ok) return { error: `RunPod ${res.status}: ${res.statusText}` };
-  const data = await res.json() as { data: GpuType[] };
-  return { gpus: data.data ?? [] };
+  const data = await res.json() as GpuType[] | { data: GpuType[] };
+  return { gpus: Array.isArray(data) ? data : data.data ?? [] };
 }
 
-async function provisionGPU(gpuTypeId: string, cloudType?: string): Promise<{ state: GpuState } | { error: string }> {
+async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: string): Promise<{ state: GpuState } | { error: string }> {
   const existing = await loadGpuState();
   if (existing.status === "running" || existing.status === "provisioning") {
     return { error: `GPU is already ${existing.status}. Deprovision it first.` };
   }
-  const state: GpuState = { status: "provisioning", createdAt: Date.now() };
-  await saveGpuState(state);
+  const model = LLAMA_MODELS.find((m) => m.id === modelId);
+  if (!model) return { error: `Unknown model: ${modelId}` };
 
-  const body = {
-    name: "opentask-gpu",
-    imageName: "runpod/pytorch:2.4.0-py3.11-cuda12.4.0-devel-ubuntu22.04",
-    gpuTypeId,
-    cloudType: cloudType ?? "SECURE",
-    containerDiskSizeGb: 10,
-    volumeInGb: 0,
-  };
+  const body = podRequestBody(gpuTypeId, model, cloudType);
   const res = await runpodFetch("/pods", { method: "POST", body: JSON.stringify(body) });
   if (!res.ok) {
-    const err = `RunPod ${res.status}: ${res.statusText}`;
     await saveGpuState({ status: "failed" });
-    return { error: err };
+    return { error: `RunPod ${res.status}: ${res.statusText}` };
   }
   const pod = await res.json() as { id: string; podId?: string };
   const podId = pod.id ?? pod.podId;
-  const running: GpuState = {
-    status: "running",
+  const state: GpuState = {
+    status: "provisioning",
     podId,
+    modelId,
     endpointUrl: `https://${podId}-8080.proxy.runpod.net`,
     createdAt: Date.now(),
   };
-  await saveGpuState(running);
-  return { state: running };
+  await saveGpuState(state);
+  return { state };
 }
 
 async function deprovisionGPU(): Promise<{ state: GpuState } | { error: string }> {
@@ -626,8 +619,10 @@ async function gpuStatus(): Promise<{ state: GpuState } | { error: string }> {
   if (!res.ok) return { error: `RunPod ${res.status}: ${res.statusText}` };
   const pod = await res.json() as { desiredStatus?: string; status?: string };
   const status = pod.desiredStatus ?? pod.status ?? "unknown";
-  if (status === "RUNNING" || status === "ready") {
-    return { state: { ...state, status: "running" } };
+  if (status === "RUNNING") {
+    const running: GpuState = { ...state, status: "running" };
+    await saveGpuState(running);
+    return { state: running };
   }
   if (status === "TERMINATED" || status === "STOPPED") {
     const idle: GpuState = { status: "idle" };

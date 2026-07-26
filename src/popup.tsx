@@ -1,8 +1,8 @@
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import { applyTheme, type Theme } from "./shared/theme";
-import type { GpuState, GpuType } from "./shared/messages";
+import { LLAMA_MODELS, type GpuState, type GpuType, type ListGPUsResponse, type ProvisionGPUResponse, type GPUStatusResponse, type DeprovisionGPUResponse } from "./shared/messages";
 import { ask } from "./ui/ask";
 import { Button } from "@/ui/components/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/select";
@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 function Popup() {
   const [gpu, setGpu] = useState<GpuState>({ status: "idle" });
   const [gpuTypes, setGpuTypes] = useState<GpuType[]>([]);
-  const [selectedGpu, setSelectedGpu] = useState("NVIDIA-GeForce-RTX-4090");
+  const [selectedGpu, setSelectedGpu] = useState("");
+  const [selectedModel, setSelectedModel] = useState(LLAMA_MODELS[0].id);
   const [error, setError] = useState("");
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -21,41 +21,48 @@ function Popup() {
     })();
   }, []);
 
-  // Fetch GPU types on mount
+  // Fetch GPU types and last known GPU state on mount
   useEffect(() => {
     ask({ type: "list-gpus" }, (resp) => {
-      if (!resp.error && (resp as { gpus: GpuType[] }).gpus) {
-        setGpuTypes((resp as { gpus: GpuType[] }).gpus);
+      const r = resp as ListGPUsResponse;
+      if ("gpus" in r) {
+        setGpuTypes(r.gpus);
+        setSelectedGpu((s) => s || r.gpus[0]?.id || "");
       }
+    });
+    ask({ type: "gpu-status" }, (resp) => {
+      const r = resp as GPUStatusResponse;
+      if ("state" in r) setGpu(r.state);
     });
   }, []);
 
   // Poll for status while provisioning
   useEffect(() => {
-    if (gpu.status === "provisioning") {
-      pollRef.current = setInterval(() => {
-        ask({ type: "gpu-status" }, (resp) => {
-          if (resp.error) return;
-          setGpu((resp as { state: GpuState }).state);
-        });
-      }, 3000);
-    }
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    if (gpu.status !== "provisioning") return;
+    const id = setInterval(() => {
+      ask({ type: "gpu-status" }, (resp) => {
+        const r = resp as GPUStatusResponse;
+        if ("state" in r) setGpu(r.state);
+      });
+    }, 3000);
+    return () => clearInterval(id);
   }, [gpu.status]);
 
   function provision() {
     setError("");
-    ask({ type: "provision-gpu", gpuTypeId: selectedGpu }, (resp) => {
-      if (resp.error) return setError(resp.error);
-      setGpu((resp as { state: GpuState }).state);
+    ask({ type: "provision-gpu", gpuTypeId: selectedGpu, modelId: selectedModel }, (resp) => {
+      const r = resp as ProvisionGPUResponse;
+      if ("error" in r) return setError(r.error);
+      setGpu(r.state);
     });
   }
 
   function deprovision() {
     setError("");
     ask({ type: "deprovision-gpu" }, (resp) => {
-      if (resp.error) return setError(resp.error);
-      setGpu((resp as { state: GpuState }).state);
+      const r = resp as DeprovisionGPUResponse;
+      if ("error" in r) return setError(r.error);
+      setGpu(r.state);
     });
   }
 
@@ -77,30 +84,49 @@ function Popup() {
             gpu.status === "failed" ? "bg-red-500" :
             "bg-gray-400"
           }`} />
-          <span className="text-muted-foreground capitalize">{gpu.status}</span>
+          <span className="text-muted-foreground capitalize">
+            {gpu.status}
+            {gpu.modelId && gpu.status !== "idle" && (
+              <> &mdash; {LLAMA_MODELS.find((m) => m.id === gpu.modelId)?.label ?? gpu.modelId}</>
+            )}
+          </span>
         </div>
         {gpu.endpointUrl && (
           <p className="text-xs text-muted-foreground mb-2 truncate" title={gpu.endpointUrl}>{gpu.endpointUrl}</p>
         )}
         {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
         <div className="flex flex-col gap-2">
-          {(gpu.status === "idle" || gpu.status === "failed") && gpuTypes.length > 0 && (
-            <Select value={selectedGpu} onValueChange={setSelectedGpu}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {gpuTypes.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.displayName || t.name} &mdash; ${t.securePrice}/hr
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {(gpu.status === "idle" || gpu.status === "failed") && (
+            <>
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LLAMA_MODELS.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {gpuTypes.length > 0 && (
+                <Select value={selectedGpu} onValueChange={setSelectedGpu}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gpuTypes.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.displayName || t.name} &mdash; ${t.securePrice}/hr
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </>
           )}
           <div className="flex gap-2">
             {gpu.status === "idle" || gpu.status === "failed" ? (
-              <Button size="xs" onClick={provision}>Provision GPU</Button>
+              <Button size="xs" onClick={provision} disabled={!selectedGpu}>Deploy</Button>
             ) : (
               <Button size="xs" variant="destructive" onClick={deprovision}>Deprovision</Button>
             )}

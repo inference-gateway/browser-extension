@@ -9,7 +9,7 @@
   ],
   "host_permissions": [
     "https://api.github.com/*",
-    "https://api.runpod.io/*"
+    "https://rest.runpod.io/*"
   ],
   "background": {
     "service_worker": "background.js"

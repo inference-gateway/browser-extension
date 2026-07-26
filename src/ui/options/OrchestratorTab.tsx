@@ -28,10 +28,6 @@ export function OrchestratorTab({
     void storage.get<string>("runpod-key").then((k) => setRunpodKey(k ?? ""));
   }, []);
 
-  useEffect(() => {
-    void storage.set("runpod-key", runpodKey);
-  }, [runpodKey]);
-
   return (
     <>
       <Section
@@ -112,7 +108,10 @@ export function OrchestratorTab({
             placeholder="rpk_..."
             autoComplete="off"
             value={runpodKey}
-            onChange={(e) => setRunpodKey(e.target.value)}
+            onChange={(e) => {
+              setRunpodKey(e.target.value);
+              void storage.set("runpod-key", e.target.value);
+            }}
           />
           <Button variant="outline" onClick={() => setShowKey((v) => !v)}>
             {showKey ? "Hide" : "Show"}
