@@ -56,12 +56,17 @@ export type GpuState = {
   modelId?: string;
 };
 
-export type GpuType = {
-  id: string;
-  name: string;
-  displayName: string;
-  securePrice: number;
-};
+// RunPod's REST API has no GPU-types list endpoint; the ids below are the enum
+// values it accepts for gpuTypeIds. Enough spread to fit a 7-14B GGUF at Q4.
+// ponytail: static list, revisit if RunPod ships a catalog endpoint.
+export type GpuType = { id: string; label: string };
+export const GPU_TYPES: GpuType[] = [
+  { id: "NVIDIA GeForce RTX 4090", label: "RTX 4090 (24 GB)" },
+  { id: "NVIDIA RTX A5000", label: "RTX A5000 (24 GB)" },
+  { id: "NVIDIA RTX A6000", label: "RTX A6000 (48 GB)" },
+  { id: "NVIDIA L40S", label: "L40S (48 GB)" },
+  { id: "NVIDIA A100 80GB PCIe", label: "A100 (80 GB)" },
+];
 
 // Popular GGUF models deployable via llama.cpp's -hf flag ("repo:quant").
 export type LlamaModel = { id: string; label: string; hf: string };
@@ -86,9 +91,6 @@ export function podRequestBody(gpuTypeId: string, model: LlamaModel, cloudType?:
     volumeInGb: 0,
   };
 }
-
-export type ListGPUsRequest = { type: "list-gpus" };
-export type ListGPUsResponse = { gpus: GpuType[] } | { error: string };
 
 export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; modelId: string; cloudType?: string };
 export type ProvisionGPUResponse = { state: GpuState } | { error: string };

@@ -2,15 +2,14 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import { applyTheme, type Theme } from "./shared/theme";
-import { LLAMA_MODELS, type GpuState, type GpuType, type ListGPUsResponse, type ProvisionGPUResponse, type GPUStatusResponse, type DeprovisionGPUResponse } from "./shared/messages";
+import { GPU_TYPES, LLAMA_MODELS, type GpuState, type ProvisionGPUResponse, type GPUStatusResponse, type DeprovisionGPUResponse } from "./shared/messages";
 import { ask } from "./ui/ask";
 import { Button } from "@/ui/components/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/select";
 
 function Popup() {
   const [gpu, setGpu] = useState<GpuState>({ status: "idle" });
-  const [gpuTypes, setGpuTypes] = useState<GpuType[]>([]);
-  const [selectedGpu, setSelectedGpu] = useState("");
+  const [selectedGpu, setSelectedGpu] = useState(GPU_TYPES[0].id);
   const [selectedModel, setSelectedModel] = useState(LLAMA_MODELS[0].id);
   const [error, setError] = useState("");
 
@@ -21,14 +20,8 @@ function Popup() {
     })();
   }, []);
 
+  // Load last known GPU state on mount
   useEffect(() => {
-    ask({ type: "list-gpus" }, (resp) => {
-      const r = resp as ListGPUsResponse;
-      if ("gpus" in r) {
-        setGpuTypes(r.gpus);
-        setSelectedGpu((s) => s || r.gpus[0]?.id || "");
-      }
-    });
     ask({ type: "gpu-status" }, (resp) => {
       const r = resp as GPUStatusResponse;
       if ("state" in r) setGpu(r.state);
@@ -106,25 +99,21 @@ function Popup() {
                   ))}
                 </SelectContent>
               </Select>
-              {gpuTypes.length > 0 && (
-                <Select value={selectedGpu} onValueChange={setSelectedGpu}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {gpuTypes.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
-                        {t.displayName || t.name} &mdash; ${t.securePrice}/hr
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={selectedGpu} onValueChange={setSelectedGpu}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GPU_TYPES.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </>
           )}
           <div className="flex gap-2">
             {gpu.status === "idle" || gpu.status === "failed" ? (
-              <Button size="xs" onClick={provision} disabled={!selectedGpu}>Deploy</Button>
+              <Button size="xs" onClick={provision}>Deploy</Button>
             ) : (
               <Button size="xs" variant="destructive" onClick={deprovision}>Deprovision</Button>
             )}

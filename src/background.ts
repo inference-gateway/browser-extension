@@ -1,5 +1,5 @@
 import * as storage from "./shared/storage";
-import { LLAMA_MODELS, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState, type GpuType } from "./shared/messages";
+import { LLAMA_MODELS, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
@@ -70,12 +70,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === "agents-catalog") {
     fetchAgentsCatalog()
-      .then((r) => sendResponse(r))
-      .catch((err) => sendResponse({ error: String(err) }));
-    return true;
-  }
-  if (msg?.type === "list-gpus") {
-    listGPUs()
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -561,13 +555,6 @@ async function loadGpuState(): Promise<GpuState> {
 
 async function saveGpuState(state: GpuState): Promise<void> {
   await storage.set("gpu-state", state);
-}
-
-async function listGPUs(): Promise<{ gpus: GpuType[] } | { error: string }> {
-  const res = await runpodFetch("/gputypes");
-  if (!res.ok) return { error: `RunPod ${res.status}: ${res.statusText}` };
-  const data = await res.json() as GpuType[] | { data: GpuType[] };
-  return { gpus: Array.isArray(data) ? data : data.data ?? [] };
 }
 
 async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: string): Promise<{ state: GpuState } | { error: string }> {
