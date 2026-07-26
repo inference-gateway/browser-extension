@@ -77,6 +77,10 @@ built Chrome-first but deliberately portable to Edge, Firefox, and Safari.
   `github-actions[bot]`. When configured, the workflow mints an installation token via
   `actions/create-github-app-token` and checks out + comments as the App, so its
   comments and commits are attributed to (and verified for) the App.
+- 🖥️ **Self-Hosted GPU Models**: From the extension popup, provision a [RunPod](https://runpod.io)
+  GPU that serves a llama.cpp OpenAI-compatible endpoint. Pick a catalog GGUF (or any custom
+  Hugging Face `repo:quant`), choose a GPU, and deploy; the popup then hands you the repo
+  secrets/variable to route tasks at `llamacpp/<model>`. See [Self-hosted GPU models](#self-hosted-gpu-models-runpod).
 - 🧩 **Plugin Support**: Optional [infer-action plugins](https://github.com/inference-gateway/infer-action)
   extend the agent's capabilities. Toggle them on in Settings and re-install the workflow
   to bake them in.
@@ -181,6 +185,48 @@ A JSON array of `{ model, keyInput, secret }` objects offered in the Tasks tab's
 model dropdown. The first entry is the default. `keyInput` is the infer-action
 provider-key input (e.g. `anthropic-api-key`) and `secret` is the repo secret it
 reads. Add custom models here.
+
+### Self-hosted GPU models (RunPod)
+
+Instead of a hosted provider, you can run a model yourself on an on-demand GPU and
+point tasks at it. OpenTask provisions a [RunPod](https://runpod.io) pod running
+[`llama.cpp`](https://github.com/ggml-org/llama.cpp)'s server (image
+`ghcr.io/ggml-org/llama.cpp:server-cuda`), which exposes an OpenAI-compatible
+endpoint the [Inference Gateway](https://github.com/inference-gateway) reaches via the
+`llamacpp` provider.
+
+**1. Add your RunPod key.** Options → **Orchestrator** → *RunPod API key* (from
+[RunPod settings](https://www.runpod.io/console/user/settings)). Stored in this
+browser's extension storage. The **GPU** section in the popup only appears once a key
+is set.
+
+**2. Deploy.** Open the extension popup:
+
+- Pick a catalog GGUF (Ornith 1.0 9B, Llama 3.1 8B, Qwen 2.5 7B, Mistral 7B, Phi-4,
+  Gemma 2 9B) **or** type any Hugging Face ref in *custom HF repo:quant* (e.g.
+  `unsloth/Qwen2.5-32B-Instruct-GGUF:Q4_K_M`). Ornith 1.0 9B is the default - it's a
+  small model tuned for agentic tool-calling, unlike general chat GGUFs.
+- Choose a GPU (RTX 4090 → A100 80GB). The pod is pinned to hosts with CUDA ≥ 12.8
+  (the image's requirement) and secured with a generated `--api-key` bearer token.
+- Hit **Deploy**. Status goes *provisioning → running*; the model's GGUF downloads and
+  loads on the pod first (watch the pod's logs for `server is listening`).
+
+**3. Wire it into the repo.** Once running, the popup shows copy-to-clipboard rows -
+add them under the repo's **Settings → Secrets and variables → Actions**:
+
+| Kind | Name | Value |
+| --- | --- | --- |
+| Secret | `LLAMACPP_API_URL` | the pod endpoint + `/v1` |
+| Secret | `LLAMACPP_API_KEY` | the generated bearer token (masked; **Copy** copies the real value) |
+| Variable | `DEFAULT_MODEL` | `llamacpp/<repo:quant>` (the model the gateway registers) |
+
+`DEFAULT_MODEL` is the model used for **issue-triggered** runs. For **Run task**
+dispatches, the running llama.cpp model also appears in the Tasks-tab model dropdown.
+Then **re-install the workflow** so it wires the `LLAMACPP_*` secrets onto infer-action.
+
+> **Each redeploy is a new pod** with a new URL and token - update `LLAMACPP_API_URL`
+> and `LLAMACPP_API_KEY` again from the popup. **Deprovision** from the popup terminates
+> the pod so it stops billing.
 
 ### Permissions
 
