@@ -158,7 +158,7 @@ export function normalizeTimeout(x: unknown): number {
 // No hardcoded project/field/option ids: the agent discovers the board and its Status
 // field at runtime, so this works on any repo/org, not just one specific board. Best-effort
 // throughout - a missing Status field or a Projects-permission failure is logged, never fatal.
-export const BOARD_INSTRUCTIONS = `When working on a GitHub issue that belongs to a project board, keep the board's status in
+export const DEFAULT_INSTRUCTIONS = `When working on a GitHub issue that belongs to a project board, keep the board's status in
 sync as you go. This is best-effort: on any error (no board, no Status field, missing
 Projects permission, network failure) log it and carry on - never abort the task over a
 board update.
@@ -186,7 +186,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -196,10 +196,13 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
   ];
   if (perms.createIssues) appends.push("gh issue create( .*)?", "gh issue edit( .*)?");
   if (perms.comment) appends.push("gh issue comment( .*)?", "gh pr comment( .*)?");
+  const instrBlock = instructions.trim()
+    ? `\n          custom-instructions: |\n${instructions.split("\n").map((l) => `            ${l}`).join("\n")}`
+    : "";
   const permLines =
     `          enable-git-operations: "${perms.createPRs}"` +
     `\n          bash-allow-append: "${appends.join(",")}"` +
-    `\n          custom-instructions: |\n${BOARD_INSTRUCTIONS.split("\n").map((l) => `            ${l}`).join("\n")}`;
+    instrBlock;
 
   const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
   const agentLines = agents.length ? `\n          agents: |\n${agents.map((a) => `            ${a}`).join("\n")}` : "";

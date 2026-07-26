@@ -3,14 +3,18 @@ import { Textarea } from "@/ui/components/textarea";
 
 const JSON_CLASS = "font-mono text-xs min-h-48";
 
-export function ContentTab({
+export function PromptsTab({
   promptsText,
   setPromptsText,
+  instructions,
+  setInstructions,
   modelsText,
   setModelsText,
 }: {
   promptsText: string;
   setPromptsText: (v: string) => void;
+  instructions: string;
+  setInstructions: (v: string) => void;
   modelsText: string;
   setModelsText: (v: string) => void;
 }) {
@@ -29,6 +33,25 @@ export function ContentTab({
           spellCheck={false}
           value={promptsText}
           onChange={(e) => setPromptsText(e.target.value)}
+        />
+      </Section>
+
+      <Section
+        title="System instructions"
+        description={
+          <>
+            Extra guidance baked into the workflow's <code>custom-instructions</code> when you install
+            or re-install it. Use it to steer agent behavior (e.g. "post the full review in a single
+            comment covering every changed file"). <strong>Re-install the workflow</strong> after
+            editing; leave blank to omit the block.
+          </>
+        }
+      >
+        <Textarea
+          className="text-xs min-h-48"
+          spellCheck={false}
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
         />
       </Section>
 
