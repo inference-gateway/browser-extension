@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0](https://github.com/inference-gateway/opentask/compare/v1.2.1...v1.3.0) (2026-07-26)
+
+### ✨ Features
+
+* add Dependencies tab for common CI tool/runtime setup ([#71](https://github.com/inference-gateway/opentask/issues/71)) ([3a975e6](https://github.com/inference-gateway/opentask/commit/3a975e60a85282a804f53049fc7812fa8e05fca7))
+* make workflow system-instructions prompt editable ([#69](https://github.com/inference-gateway/opentask/issues/69)) ([e4fcdcd](https://github.com/inference-gateway/opentask/commit/e4fcdcdf5b4a5577ee8fece7669271823fe89d99))
+* rebuild options and popup UI on shadcn components ([#67](https://github.com/inference-gateway/opentask/issues/67)) ([6acc3a8](https://github.com/inference-gateway/opentask/commit/6acc3a8293ec32ddc513c9c28c99f1032ca4e4dc))
+
+### ♻️ Improvements
+
+* correct punctuation in comments and text across multiple files ([ac11383](https://github.com/inference-gateway/opentask/commit/ac113833a0af6b4bed23fd10bf4cd355bc357462))
+
+### 🔧 Miscellaneous
+
+* sync OpenTask Agent workflow ([#68](https://github.com/inference-gateway/opentask/issues/68)) ([0edbc6a](https://github.com/inference-gateway/opentask/commit/0edbc6a0f943963b0b268496c6393d062660ac50))
+
 ## [1.2.1](https://github.com/inference-gateway/opentask/compare/v1.2.0...v1.2.1) (2026-07-26)
 
 ### ♻️ Improvements
