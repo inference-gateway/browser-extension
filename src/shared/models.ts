@@ -241,7 +241,6 @@ misses the issue and does not scale:
 // authenticates. Missing secrets render blank and are ignored by the action.
 export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES, debug: boolean = false): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
-  const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
   const appends: string[] = [
     "gh project list( .*)?", "gh project field-list( .*)?",
@@ -298,11 +297,9 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: Model to use
-        type: choice
+        description: Model to use (provider/model, e.g. llamacpp/phi-4)
+        required: false
         default: ${def}
-        options:
-${optionLines}
       prompt:
         description: Task for the agent (workflow_dispatch only)
         required: false
@@ -338,11 +335,13 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.35.2
+      - uses: inference-gateway/infer-action@v0.36.0
         with:
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
-          model: \${{ inputs.model || '${def}' }}
+          model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}
+          llamacpp-api-url: \${{ secrets.LLAMACPP_API_URL }}
+          llamacpp-api-key: \${{ secrets.LLAMACPP_API_KEY }}
           direct-prompt: \${{ inputs.prompt }}
           system-prompt-direct: \${{ inputs.system_prompt }}
 ${permLines}${pluginLines}${agentLines}
@@ -384,6 +383,14 @@ Before the workflow can run:
 1. Go to Settings > Secrets and variables > Actions and add the provider API key secret for the model(s) you use: ${secretList}.${botStep}
 
 The workflow triggers on new/edited issues, issue comments, and pull request review comments, and can also be run manually (Actions > Task > Run workflow) with a model chosen from the dropdown.
+
+### Self-hosted llama.cpp (RunPod GPU)
+
+To route runs to a self-hosted llama.cpp endpoint (e.g. a GPU provisioned from the OpenTask popup), add to Settings > Secrets and variables > Actions:
+
+- Secret \`LLAMACPP_API_URL\` - the endpoint base URL shown in the popup, e.g. \`https://<pod>-8080.proxy.runpod.net/v1\`.
+- Secret \`LLAMACPP_API_KEY\` - the bearer token shown in the popup (the pod is started with \`--api-key\`).
+- (Optional) Variable \`DEFAULT_MODEL\` - overrides the default model for issue/comment-triggered runs, e.g. \`llamacpp/<model>\`. Manual/dispatch runs still use the picker.
 
 ### Project board tracking
 

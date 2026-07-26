@@ -45,3 +45,66 @@ export type AgentsCatalogRequest = { type: "agents-catalog" };
 export type AgentsCatalogResponse =
   | { catalog: AgentManifest[] }
   | { error: string };
+
+// --- RunPod GPU provisioning ---
+
+export type GpuState = {
+  endpointUrl?: string;
+  status: "idle" | "provisioning" | "running" | "failed";
+  createdAt?: number;
+  podId?: string;
+  modelId?: string;
+  hf?: string; // the served "repo:quant" ref; the gateway registers it as llamacpp/<hf>
+  apiKey?: string;
+};
+
+// A llama.cpp -hf ref: "owner/repo" with an optional ":quant" (e.g. bartowski/foo-GGUF:Q4_K_M).
+export const isValidHf = (hf: string) => /^[\w.-]+\/[\w.-]+(:[\w.]+)?$/.test(hf.trim());
+
+// RunPod's REST API has no GPU-types list endpoint; the ids below are the enum
+// values it accepts for gpuTypeIds. Enough spread to fit a 7-14B GGUF at Q4.
+// ponytail: static list, revisit if RunPod ships a catalog endpoint.
+export type GpuType = { id: string; label: string };
+export const GPU_TYPES: GpuType[] = [
+  { id: "NVIDIA GeForce RTX 4090", label: "RTX 4090 (24 GB)" },
+  { id: "NVIDIA RTX A5000", label: "RTX A5000 (24 GB)" },
+  { id: "NVIDIA RTX A6000", label: "RTX A6000 (48 GB)" },
+  { id: "NVIDIA L40S", label: "L40S (48 GB)" },
+  { id: "NVIDIA A100 80GB PCIe", label: "A100 (80 GB)" },
+];
+
+// Popular GGUF models deployable via llama.cpp's -hf flag ("repo:quant").
+export type LlamaModel = { id: string; label: string; hf: string };
+export const LLAMA_MODELS: LlamaModel[] = [
+  { id: "ornith-9b", label: "Ornith 1.0 9B (agentic)", hf: "deepreinforce-ai/Ornith-1.0-9B-GGUF:Q4_K_M" },
+  { id: "llama-3.1-8b", label: "Llama 3.1 8B Instruct", hf: "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q4_K_M" },
+  { id: "qwen-2.5-7b", label: "Qwen 2.5 7B Instruct", hf: "bartowski/Qwen2.5-7B-Instruct-GGUF:Q4_K_M" },
+  { id: "mistral-7b", label: "Mistral 7B Instruct v0.3", hf: "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M" },
+  { id: "phi-4", label: "Phi-4 14B", hf: "bartowski/phi-4-GGUF:Q4_K_M" },
+  { id: "gemma-2-9b", label: "Gemma 2 9B Instruct", hf: "bartowski/gemma-2-9b-it-GGUF:Q4_K_M" },
+];
+
+// Pod create body for RunPod's REST API, running llama.cpp server with the chosen model.
+// apiKey secures the endpoint (llama.cpp --api-key); the gateway forwards it as a bearer.
+export function podRequestBody(gpuTypeId: string, model: LlamaModel, apiKey: string, cloudType?: string) {
+  return {
+    name: `opentask-${model.id}`,
+    imageName: "ghcr.io/ggml-org/llama.cpp:server-cuda",
+    dockerStartCmd: ["-hf", model.hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99", "--jinja", "--api-key", apiKey],
+    gpuTypeIds: [gpuTypeId],
+    allowedCudaVersions: ["12.8", "12.9", "13.0"],
+    cloudType: cloudType ?? "SECURE",
+    ports: ["8080/http"],
+    containerDiskInGb: 50,
+    volumeInGb: 0,
+  };
+}
+
+export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; modelId: string; hf: string; cloudType?: string };
+export type ProvisionGPUResponse = { state: GpuState } | { error: string };
+
+export type DeprovisionGPURequest = { type: "deprovision-gpu" };
+export type DeprovisionGPUResponse = { state: GpuState } | { error: string };
+
+export type GPUStatusRequest = { type: "gpu-status" };
+export type GPUStatusResponse = { state: GpuState } | { error: string };

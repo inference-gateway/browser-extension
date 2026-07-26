@@ -1,5 +1,10 @@
 import type { Permissions, RefineConfig, InitConfig } from "../../shared/models";
 import { Section, ToggleRow } from "./Section";
+import { Input } from "@/ui/components/input";
+import { Button } from "@/ui/components/button";
+import { Label } from "@/ui/components/label";
+import { useEffect, useState } from "react";
+import * as storage from "../../shared/storage";
 
 export function OrchestratorTab({
   perms,
@@ -16,6 +21,13 @@ export function OrchestratorTab({
   init: InitConfig;
   setInit: (i: InitConfig) => void;
 }) {
+  const [runpodKey, setRunpodKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
+
+  useEffect(() => {
+    void storage.get<string>("runpod-key").then((k) => setRunpodKey(k ?? ""));
+  }, []);
+
   return (
     <>
       <Section
@@ -76,6 +88,35 @@ export function OrchestratorTab({
         <ToggleRow checked={init.skillsSymlink} onChange={(v) => setInit({ ...init, skillsSymlink: v })}>
           Symlink <code>.claude/skills</code> &rarr; <code>.agents/skills</code>
         </ToggleRow>
+      </Section>
+
+      <Section
+        title="RunPod GPU"
+        description={
+          <>
+            Provision on-demand GPU instances from the extension popup. Get your API key from{" "}
+            <a className="text-primary hover:underline" href="https://www.runpod.io/console/user/settings" target="_blank" rel="noreferrer">RunPod settings</a>.
+          </>
+        }
+      >
+        <Label htmlFor="runpod-key">RunPod API key</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="runpod-key"
+            type={showKey ? "text" : "password"}
+            className="flex-1"
+            placeholder="rpk_..."
+            autoComplete="off"
+            value={runpodKey}
+            onChange={(e) => {
+              setRunpodKey(e.target.value);
+              void storage.set("runpod-key", e.target.value);
+            }}
+          />
+          <Button variant="outline" onClick={() => setShowKey((v) => !v)}>
+            {showKey ? "Hide" : "Show"}
+          </Button>
+        </div>
       </Section>
     </>
   );

@@ -1,5 +1,5 @@
 import * as storage from "./shared/storage";
-import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
+import { isValidHf, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
@@ -70,6 +70,24 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === "agents-catalog") {
     fetchAgentsCatalog()
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "provision-gpu") {
+    provisionGPU(msg.gpuTypeId, msg.modelId, msg.hf, msg.cloudType)
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "deprovision-gpu") {
+    deprovisionGPU()
+      .then((r) => sendResponse(r))
+      .catch((err) => sendResponse({ error: String(err) }));
+    return true;
+  }
+  if (msg?.type === "gpu-status") {
+    gpuStatus()
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -518,4 +536,95 @@ function ghError(status: number): { error: string } {
   if (status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write and Pull requests: write." };
   if (status === 404) return { error: "Repo not found, or the PAT can't access it." };
   return { error: `GitHub ${status}` };
+}
+
+// --- RunPod GPU provisioning ---
+
+async function runpodFetch(path: string, init?: RequestInit): Promise<Response> {
+  const key = await storage.get<string>("runpod-key");
+  if (!key) throw new Error("No RunPod API key configured. Add one in Settings > Orchestrator.");
+  return fetch(`https://rest.runpod.io/v1${path}`, {
+    ...init,
+    headers: { ...init?.headers as Record<string, string>, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+  });
+}
+
+// RunPod error bodies are JSON like {"error":"..."} or plain text; surface whichever.
+async function runpodError(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "");
+  let detail = text;
+  try { detail = (JSON.parse(text) as { error?: string; message?: string }).error ?? (JSON.parse(text) as { message?: string }).message ?? text; } catch { /* not JSON */ }
+  return `RunPod ${res.status}: ${detail || res.statusText}`;
+}
+
+async function loadGpuState(): Promise<GpuState> {
+  return (await storage.get<GpuState>("gpu-state")) ?? { status: "idle" };
+}
+
+async function saveGpuState(state: GpuState): Promise<void> {
+  await storage.set("gpu-state", state);
+}
+
+async function provisionGPU(gpuTypeId: string, modelId: string, hf: string, cloudType?: string): Promise<{ state: GpuState } | { error: string }> {
+  const existing = await loadGpuState();
+  if (existing.status === "running" || existing.status === "provisioning") {
+    return { error: `GPU is already ${existing.status}. Deprovision it first.` };
+  }
+  if (!isValidHf(hf)) return { error: `Invalid HF model ref: ${hf} (expected owner/repo:quant).` };
+
+  const apiKey = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const body = podRequestBody(gpuTypeId, { id: modelId, label: modelId, hf: hf.trim() }, apiKey, cloudType);
+  const res = await runpodFetch("/pods", { method: "POST", body: JSON.stringify(body) });
+  if (!res.ok) {
+    await saveGpuState({ status: "failed" });
+    return { error: await runpodError(res) };
+  }
+  const pod = await res.json() as { id: string; podId?: string };
+  const podId = pod.id ?? pod.podId;
+  const state: GpuState = {
+    status: "provisioning",
+    podId,
+    modelId,
+    hf: hf.trim(),
+    apiKey,
+    endpointUrl: `https://${podId}-8080.proxy.runpod.net`,
+    createdAt: Date.now(),
+  };
+  await saveGpuState(state);
+  return { state };
+}
+
+async function deprovisionGPU(): Promise<{ state: GpuState } | { error: string }> {
+  const state = await loadGpuState();
+  if (!state.podId) return { state: { status: "idle" } };
+  const res = await runpodFetch(`/pods/${state.podId}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) return { error: await runpodError(res) };
+  const idle: GpuState = { status: "idle" };
+  await saveGpuState(idle);
+  return { state: idle };
+}
+
+async function gpuStatus(): Promise<{ state: GpuState } | { error: string }> {
+  const state = await loadGpuState();
+  if (!state.podId || state.status === "idle") return { state };
+  const res = await runpodFetch(`/pods/${state.podId}`);
+  if (res.status === 404) {
+    const idle: GpuState = { status: "idle" };
+    await saveGpuState(idle);
+    return { state: idle };
+  }
+  if (!res.ok) return { error: await runpodError(res) };
+  const pod = await res.json() as { desiredStatus?: string; status?: string };
+  const status = pod.desiredStatus ?? pod.status ?? "unknown";
+  if (status === "RUNNING") {
+    const running: GpuState = { ...state, status: "running" };
+    await saveGpuState(running);
+    return { state: running };
+  }
+  if (status === "TERMINATED" || status === "STOPPED") {
+    const idle: GpuState = { status: "idle" };
+    await saveGpuState(idle);
+    return { state: idle };
+  }
+  return { state: { ...state, status: "provisioning" } };
 }

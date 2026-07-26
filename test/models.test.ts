@@ -35,7 +35,7 @@ test("workflowYaml emits selected agents as a block list, and omits the key when
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.2");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.36.0");
 });
 
 test("workflowYaml sets the @opentask trigger-phrase", () => {
@@ -43,13 +43,18 @@ test("workflowYaml sets the @opentask trigger-phrase", () => {
   expect(yaml).toContain('trigger-phrase: "@opentask"');
 });
 
-test("workflowYaml exposes model as a workflow_dispatch choice input with all options + default", () => {
+test("workflowYaml exposes model as a free-text workflow_dispatch input with default", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("workflow_dispatch:");
-  expect(yaml).toContain("type: choice");
+  expect(yaml).not.toContain("type: choice");
   expect(yaml).toContain(`default: ${def}`);
-  for (const m of models) expect(yaml).toContain(`          - ${m.model}`);
-  expect(yaml).toContain(`model: \${{ inputs.model || '${def}' }}`);
+  expect(yaml).toContain(`model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}`);
+});
+
+test("workflowYaml wires the llama.cpp endpoint secret onto infer-action", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain("llamacpp-api-url: ${{ secrets.LLAMACPP_API_URL }}");
+  expect(yaml).toContain("llamacpp-api-key: ${{ secrets.LLAMACPP_API_KEY }}");
 });
 
 test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", () => {
@@ -287,7 +292,7 @@ test("workflowYaml omits all dependency steps when none enabled", () => {
   const yaml = yamlWithDeps(setEnabled([]));
   expect(yaml).not.toContain("setup-task");
   expect(yaml).not.toContain("setup-go");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.2");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.36.0");
 });
 
 test("auto-detect guards every language runtime with hashFiles and keeps task by its toggle", () => {
