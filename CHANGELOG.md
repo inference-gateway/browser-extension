@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0](https://github.com/inference-gateway/opentask/compare/v1.3.0...v1.4.0) (2026-07-26)
+
+### ✨ Features
+
+* dedicated refine system prompt, editable refine prompt, debug toggle ([#76](https://github.com/inference-gateway/opentask/issues/76)) ([97b7832](https://github.com/inference-gateway/opentask/commit/97b78323498138d3f86408ce243ff9f00cb41dc6))
+* **popup:** on-demand RunPod GPU provisioning with llama.cpp model deploy ([#81](https://github.com/inference-gateway/opentask/issues/81)) ([155922f](https://github.com/inference-gateway/opentask/commit/155922faa12d56ae356e95b8daabe6ca964f2231))
+
+### ♻️ Improvements
+
+* **options:** move Agents tab from frontend popover to options page ([#80](https://github.com/inference-gateway/opentask/issues/80)) ([d3b4c60](https://github.com/inference-gateway/opentask/commit/d3b4c6071bae01c6c0bd692b852ec70b501d2cb6))
+* **options:** rename Agent tab to Orchestrator ([#78](https://github.com/inference-gateway/opentask/issues/78)) ([04222e5](https://github.com/inference-gateway/opentask/commit/04222e541dc3fca2859319086ba7a81ce66a22a4))
+
+### 👷 CI
+
+* sync OpenTask Agent workflow ([#74](https://github.com/inference-gateway/opentask/issues/74)) ([534176c](https://github.com/inference-gateway/opentask/commit/534176c364f8c45625f8b1419f43bcab0c7ea7a7))
+* sync OpenTask Agent workflow ([#75](https://github.com/inference-gateway/opentask/issues/75)) ([b1728b8](https://github.com/inference-gateway/opentask/commit/b1728b8c258f8cf3f2385410d0aea91d7564807d))
+* sync OpenTask Agent workflow ([#82](https://github.com/inference-gateway/opentask/issues/82)) ([8619a9f](https://github.com/inference-gateway/opentask/commit/8619a9f7a2e96257a09b01d1ad61645792307bc1))
+* sync OpenTask Agent workflow ([#83](https://github.com/inference-gateway/opentask/issues/83)) ([4c209cb](https://github.com/inference-gateway/opentask/commit/4c209cbf4c3e1134ffe16c62e9ea174c055dcf6a))
+
 ## [1.3.0](https://github.com/inference-gateway/opentask/compare/v1.2.1...v1.3.0) (2026-07-26)
 
 ### ✨ Features
