@@ -28,16 +28,21 @@ export function Section({
 export function ToggleRow({
   checked,
   onChange,
+  disabled,
   children,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <Switch checked={checked} onCheckedChange={onChange} />
-      <span className="text-sm select-none cursor-pointer" onClick={() => onChange(!checked)}>
+    <div className={`flex items-center gap-2${disabled ? " opacity-50" : ""}`}>
+      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
+      <span
+        className={`text-sm select-none${disabled ? "" : " cursor-pointer"}`}
+        onClick={() => !disabled && onChange(!checked)}
+      >
         {children}
       </span>
     </div>
