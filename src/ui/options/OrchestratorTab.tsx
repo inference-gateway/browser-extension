@@ -1,7 +1,7 @@
 import type { Permissions, RefineConfig, InitConfig } from "../../shared/models";
 import { Section, ToggleRow } from "./Section";
 
-export function AgentTab({
+export function OrchestratorTab({
   perms,
   setPerms,
   refine,
