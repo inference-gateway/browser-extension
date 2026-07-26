@@ -4,12 +4,15 @@ import * as storage from "./shared/storage";
 import type { PatEntry, BotEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_TIMEOUT, normalizeTimeout, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig } from "./shared/models";
-
-type Theme = "system" | "light" | "dark";
-
-// One editable account = an owner plus its token and bot. Backed by the two owner-keyed
-// storage lists ("pats" + "bots"), merged for editing and split again on save.
-type Account = { owner: string; token: string; bot: BotConfig };
+import { applyTheme, type Theme } from "./shared/theme";
+import type { Account } from "./ui/options/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/components/tabs";
+import { Button } from "@/ui/components/button";
+import { AccountsTab } from "./ui/options/AccountsTab";
+import { AgentTab } from "./ui/options/AgentTab";
+import { ContentTab } from "./ui/options/ContentTab";
+import { WorkflowTab } from "./ui/options/WorkflowTab";
+import { AppearanceTab } from "./ui/options/AppearanceTab";
 
 // Merges the two owner-keyed lists into accounts. Empty -> one blank starter row.
 function mergeAccounts(toks: PatEntry[], bots: BotEntry[]): Account[] {
@@ -23,17 +26,6 @@ function mergeAccounts(toks: PatEntry[], bots: BotEntry[]): Account[] {
     };
   });
   return accounts.length ? accounts : [{ owner: "", token: "", bot: DEFAULT_BOT }];
-}
-
-function applyTheme(theme: Theme) {
-  const html = document.documentElement;
-  if (theme === "dark") {
-    html.setAttribute("data-theme", "dark");
-  } else if (theme === "light") {
-    html.setAttribute("data-theme", "light");
-  } else {
-    html.removeAttribute("data-theme");
-  }
 }
 
 function Options() {
@@ -72,12 +64,9 @@ function Options() {
       const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
       setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
       const t = (await storage.get<string>("theme")) as Theme | undefined;
-      if (t === "light" || t === "dark") {
-        setTheme(t);
-        applyTheme(t);
-      } else {
-        applyTheme("system");
-      }
+      const resolved = t === "light" || t === "dark" ? t : "system";
+      setTheme(resolved);
+      applyTheme(resolved);
     })();
   }, []);
 
@@ -165,309 +154,70 @@ function Options() {
     setStatus("Reset to defaults (not yet saved).");
   }
 
+  function changeTheme(t: Theme) {
+    setTheme(t);
+    applyTheme(t);
+  }
+
   const account = accounts[selected] ?? accounts[0];
   const appUrl = githubAppUrl(account.owner, orgOwners.includes(account.owner));
   const ownerChoices = [...new Set([...accounts.map((a) => a.owner), ...ownerOptions])].filter(Boolean);
 
   return (
-    <div className="igw-options">
-      <h1>OpenTask settings</h1>
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="text-2xl font-semibold mb-4">OpenTask settings</h1>
 
-      <section>
-        <h2>Accounts</h2>
-        <p>Pick a GitHub account or org to configure its token and bot below. On a repo,
-          the account whose <strong>owner</strong> matches its owner is used.</p>
-        <label className="igw-label" htmlFor="igw-owner">Owner (your GitHub user or an org)</label>
-        <div className="igw-account-bar">
-          <select
-            id="igw-owner"
-            className="igw-field"
-            value={account.owner}
-            onChange={(e) => {
-              const owner = e.target.value;
-              const idx = accounts.findIndex((a) => a.owner === owner);
-              if (idx >= 0 && idx !== selected) setSelected(idx);
-              else updateAccount({ owner });
-            }}
-          >
-            <option value="">{activeToken ? "Select an owner…" : "Enter a token below to load owners"}</option>
-            {ownerChoices.map((o) => (
-              <option key={o} value={o}>{o}</option>
-            ))}
-          </select>
-          <button className="igw-btn igw-btn--primary" onClick={addAccount}>Add account</button>
-          <button className="igw-btn" onClick={removeAccount}>Remove</button>
-        </div>
-      </section>
+      <Tabs defaultValue="accounts">
+        <TabsList>
+          <TabsTrigger value="accounts">Accounts</TabsTrigger>
+          <TabsTrigger value="agent">Agent</TabsTrigger>
+          <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+        </TabsList>
 
-      <section>
-        <h2>Personal access token</h2>
-        <p>Required to install the OpenTask Agent workflow and send tasks. Also used to list
-          skills in <strong>private</strong> repos. Fine-grained token with
-          <code> Contents: write</code>, <code> Pull requests: write</code>,
-          <code> Workflows: write</code>, <code> Issues: write</code>, and
-          <code> Actions: write</code>. Stored in this browser's extension storage.</p>
-        <div className="igw-account-bar">
-          <input
-            type={showToken ? "text" : "password"}
-            className="igw-field"
-            placeholder="github_pat_..."
-            autoComplete="off"
-            value={account.token}
-            onChange={(e) => updateAccount({ token: e.target.value })}
+        <TabsContent value="accounts" className="flex flex-col gap-4">
+          <AccountsTab
+            account={account}
+            accounts={accounts}
+            selected={selected}
+            activeToken={activeToken}
+            ownerChoices={ownerChoices}
+            appUrl={appUrl}
+            showToken={showToken}
+            setShowToken={setShowToken}
+            setSelected={setSelected}
+            updateAccount={updateAccount}
+            updateBot={updateBot}
+            addAccount={addAccount}
+            removeAccount={removeAccount}
           />
-          <button className="igw-btn" onClick={() => setShowToken((v) => !v)}>
-            {showToken ? "Hide" : "Show"}
-          </button>
-        </div>
-        <div className="igw-actions">
-          <a
-            className="igw-btn"
-            href="https://github.com/settings/personal-access-tokens/new?name=OpenTask&description=OpenTask+browser+extension&contents=write&pull_requests=write&workflows=write&issues=write&actions=write"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Create token
-          </a>
-        </div>
-      </section>
+        </TabsContent>
 
-      <section>
-        <h2>Quick prompts</h2>
-        <p>A JSON array of <code>{"{ id, label, description, insert }"}</code>. Shown in the palette.</p>
-        <textarea
-          className="igw-field igw-json"
-          spellCheck={false}
-          value={promptsText}
-          onChange={(e) => setPromptsText(e.target.value)}
-        />
-      </section>
+        <TabsContent value="agent" className="flex flex-col gap-4">
+          <AgentTab perms={perms} setPerms={setPerms} refine={refine} setRefine={setRefine} init={init} setInit={setInit} />
+        </TabsContent>
 
-      <section>
-        <h2>Install models</h2>
-        <p>A JSON array of <code>{"{ model, keyInput, secret }"}</code>. Offered in the toolbar popup's
-          Install dropdown; the first entry is the default. <code>keyInput</code> is the
-          infer-action provider-key input (e.g. <code>anthropic-api-key</code>) and
-          <code> secret</code> is the repo secret it reads. Add custom models here.</p>
-        <textarea
-          className="igw-field igw-json"
-          spellCheck={false}
-          value={modelsText}
-          onChange={(e) => setModelsText(e.target.value)}
-        />
-      </section>
+        <TabsContent value="content" className="flex flex-col gap-4">
+          <ContentTab promptsText={promptsText} setPromptsText={setPromptsText} modelsText={modelsText} setModelsText={setModelsText} />
+        </TabsContent>
 
-      <section>
-        <h2>Agent permissions</h2>
-        <p>What the OpenTask agent may do while a task runs. These widen infer-action's read-only
-          baseline; unchecked capabilities stay blocked. <strong>Re-install the workflow</strong> after
-          changing these.</p>
-        <div className="igw-bot-fields">
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={perms.createPRs}
-              onChange={(e) => setPerms({ ...perms, createPRs: e.target.checked })}
-            />
-            Create pull requests (commit &amp; push)
-          </label>
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={perms.createIssues}
-              onChange={(e) => setPerms({ ...perms, createIssues: e.target.checked })}
-            />
-            Create GitHub issues
-          </label>
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={perms.comment}
-              onChange={(e) => setPerms({ ...perms, comment: e.target.checked })}
-            />
-            Comment on issues &amp; pull requests
-          </label>
-        </div>
-      </section>
+        <TabsContent value="workflow" className="flex flex-col gap-4">
+          <WorkflowTab timeout={timeout} setTimeoutMin={setTimeoutMin} plugins={plugins} setPlugins={setPlugins} />
+        </TabsContent>
 
-      <section>
-        <h2>Issue refinement</h2>
-        <p>Let the OpenTask agent rewrite an issue's description in place. Refine edits the issue
-          body via <code>gh issue edit</code>, so the installed workflow needs
-          <code> Create GitHub issues</code> permission above - <strong>re-install</strong> after
-          enabling.</p>
-        <div className="igw-bot-fields">
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={refine.manual}
-              onChange={(e) => setRefine({ ...refine, manual: e.target.checked })}
-            />
-            Show a Refine button on issue pages
-          </label>
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={refine.auto}
-              onChange={(e) => setRefine({ ...refine, auto: e.target.checked })}
-            />
-            Auto-refine issues you create on GitHub
-          </label>
-        </div>
-      </section>
+        <TabsContent value="appearance" className="flex flex-col gap-4">
+          <AppearanceTab theme={theme} setTheme={changeTheme} />
+        </TabsContent>
+      </Tabs>
 
-      <section>
-        <h2>Project init</h2>
-        <p>What the <strong>Init</strong> button (in a repo's nav) asks the agent to scaffold. It always
-          generates an <code>AGENTS.md</code> and opens a PR; these add optional extras. Requires the
-          OpenTask Agent workflow to be installed on the repo.</p>
-        <div className="igw-bot-fields">
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={init.githooks}
-              onChange={(e) => setInit({ ...init, githooks: e.target.checked })}
-            />
-            Add a <code>.githooks/pre-commit</code> hook
-          </label>
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={init.claudeSymlink}
-              onChange={(e) => setInit({ ...init, claudeSymlink: e.target.checked })}
-            />
-            Symlink <code>CLAUDE.md</code> &rarr; <code>AGENTS.md</code>
-          </label>
-          <label className="igw-check">
-            <input
-              type="checkbox"
-              checked={init.skillsSymlink}
-              onChange={(e) => setInit({ ...init, skillsSymlink: e.target.checked })}
-            />
-            Symlink <code>.claude/skills</code> &rarr; <code>.agents/skills</code>
-          </label>
-        </div>
-      </section>
-
-      <section>
-        <h2>Workflow</h2>
-        <p>Per-run job timeout for the generated workflow. Applies to newly installed workflows;
-          re-run <strong>Install</strong> on a repo to update an existing one.</p>
-        <div className="igw-bot-fields">
-          <label className="igw-check">
-            Timeout (minutes)
-            <input
-              type="number"
-              min={1}
-              value={timeout}
-              onChange={(e) => setTimeoutMin(e.target.value === "" ? DEFAULT_TIMEOUT : Number(e.target.value))}
-            />
-          </label>
-        </div>
-      </section>
-
-      <section>
-        <h2>Plugins</h2>
-        <p>Optional <a href="https://github.com/inference-gateway/infer-action">infer-action</a> plugins
-          the installed workflow pre-installs to extend the agent. All off by default; check the ones you
-          want. <strong>Re-install the workflow</strong> after changing these.</p>
-        <div className="igw-bot-fields">
-          {plugins.map((p) => (
-            <label key={p.id} className="igw-check">
-              <input
-                type="checkbox"
-                checked={p.enabled}
-                onChange={(e) => setPlugins(plugins.map((x) => (x.id === p.id ? { ...x, enabled: e.target.checked } : x)))}
-              />
-              <code>{p.id}</code>
-            </label>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2>Theme</h2>
-        <p>Choose how the options page and toolbar popup are displayed.</p>
-        <div className="igw-bot-fields">
-          <label className="igw-check">
-            <input
-              type="radio"
-              name="theme"
-              value="system"
-              checked={theme === "system"}
-              onChange={() => { setTheme("system"); applyTheme("system"); }}
-            />
-            System default
-          </label>
-          <label className="igw-check">
-            <input
-              type="radio"
-              name="theme"
-              value="light"
-              checked={theme === "light"}
-              onChange={() => { setTheme("light"); applyTheme("light"); }}
-            />
-            Light
-          </label>
-          <label className="igw-check">
-            <input
-              type="radio"
-              name="theme"
-              value="dark"
-              checked={theme === "dark"}
-              onChange={() => { setTheme("dark"); applyTheme("dark"); }}
-            />
-            Dark
-          </label>
-        </div>
-      </section>
-
-      <section>
-        <h2>Custom bot</h2>
-        <p>Run the agent as a GitHub App for <strong>{account.owner || "this account"}</strong> instead of
-          <code> github-actions[bot]</code>. When enabled, the generated workflow mints a token with
-          <code> actions/create-github-app-token@v3</code> and checks out + comments as your
-          App, so its comments and commits are attributed to (and verified for) the App.</p>
-        <div className="igw-actions" style={{ marginBottom: 12 }}>
-          <a className="igw-btn igw-btn--primary" href={appUrl} target="_blank" rel="noreferrer">Create GitHub App</a>
-        </div>
-        <label className="igw-check">
-          <input
-            type="checkbox"
-            checked={account.bot.enabled}
-            onChange={(e) => updateBot({ enabled: e.target.checked })}
-          />
-          Use a custom bot (GitHub App)
-        </label>
-        {account.bot.enabled && (
-          <div className="igw-bot-fields">
-            <label className="igw-label" htmlFor="igw-bot-client-id">App Client ID</label>
-            <input
-              id="igw-bot-client-id"
-              className="igw-field"
-              placeholder="Iv23li..."
-              autoComplete="off"
-              value={account.bot.clientId}
-              onChange={(e) => updateBot({ clientId: e.target.value })}
-            />
-            <label className="igw-label" htmlFor="igw-bot-secret">Private-key secret name</label>
-            <input
-              id="igw-bot-secret"
-              className="igw-field"
-              placeholder="OPENTASK_APP_PRIVATE_KEY"
-              autoComplete="off"
-              value={account.bot.privateKeySecret}
-              onChange={(e) => updateBot({ privateKeySecret: e.target.value })}
-            />
-            <p className="igw-status">Add this repo secret with your App's private key. The Client ID is inlined into the workflow (it isn't sensitive).</p>
-          </div>
-        )}
-        <div className="igw-actions">
-          <button className="igw-btn igw-btn--primary" onClick={save}>Save</button>
-          <button className="igw-btn" onClick={reset}>Reset to defaults</button>
-          <span className="igw-status">{status}</span>
-        </div>
-      </section>
+      <div className="flex items-center gap-3 mt-6 border-t pt-4">
+        <Button onClick={save}>Save</Button>
+        <Button variant="outline" onClick={reset}>
+          Reset to defaults
+        </Button>
+        <span className="text-sm text-muted-foreground">{status}</span>
+      </div>
     </div>
   );
 }
