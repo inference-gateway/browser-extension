@@ -49,6 +49,10 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
 
+      - uses: arduino/setup-task@v3.0.0
+        with:
+          version: 3.x
+
       - uses: inference-gateway/infer-action@v0.35.2
         with:
           github-token: ${{ steps.app-token.outputs.token }}
