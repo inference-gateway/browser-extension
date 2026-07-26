@@ -19,7 +19,7 @@ export function OrchestratorTab({
   return (
     <>
       <Section
-        title="Agent permissions"
+        title="Permissions"
         description={
           <>
             What the OpenTask agent may do while a task runs. These widen infer-action's read-only

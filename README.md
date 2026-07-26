@@ -182,7 +182,7 @@ model dropdown. The first entry is the default. `keyInput` is the infer-action
 provider-key input (e.g. `anthropic-api-key`) and `secret` is the repo secret it
 reads. Add custom models here.
 
-### Agent permissions
+### Permissions
 
 What the OpenTask agent may do while a task runs. These widen infer-action's read-only
 baseline; unchecked capabilities stay blocked. **Re-install the workflow** after
