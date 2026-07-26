@@ -35,7 +35,7 @@ test("workflowYaml emits selected agents as a block list, and omits the key when
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.0");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.1");
 });
 
 test("workflowYaml sets the @opentask trigger-phrase", () => {
