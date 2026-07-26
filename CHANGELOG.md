@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/inference-gateway/opentask/compare/v1.1.0...v1.2.0) (2026-07-26)
+
+### ✨ Features
+
+* add configurable workflow job timeout ([66365bc](https://github.com/inference-gateway/opentask/commit/66365bce511489600a7b4530bbe5b26c98b58f55))
+* add per-owner bot configuration ([52aceaa](https://github.com/inference-gateway/opentask/commit/52aceaa353dbebd07ceeb5a5a770fb392fa0d655))
+* add project initialization scaffold ([d6bb78b](https://github.com/inference-gateway/opentask/commit/d6bb78bcbd63d65a9a73683f586b954a6ac62fac))
+* anchor palette to caret position ([379294c](https://github.com/inference-gateway/opentask/commit/379294c28c6b8d2dc361e8a402cc43f35fa3a08b))
+* **options:** add Create GitHub App button and toggle-style checkboxes ([4f57cf3](https://github.com/inference-gateway/opentask/commit/4f57cf37315db6054e87f82f32c1d37f8c96ee6c))
+* **options:** add Create token button prefilling fine-grained PAT ([cd6c0a9](https://github.com/inference-gateway/opentask/commit/cd6c0a905cf9f94f6e02bf3010d4a9fd20cf2de7))
+* support per-owner personal access tokens ([17b9e31](https://github.com/inference-gateway/opentask/commit/17b9e3188ab467d3f204848ff6c5622348779c54))
+* **ui:** add dark theme support for options page and toolbar popup ([#61](https://github.com/inference-gateway/opentask/issues/61)) ([f2899b7](https://github.com/inference-gateway/opentask/commit/f2899b738cb535c22b15f091c06fbb165c552f36))
+
+### ♻️ Improvements
+
+* rename Infer Agent to OpenTask Agent ([0e30b87](https://github.com/inference-gateway/opentask/commit/0e30b876656e63dba5054e3397f4de10fcf350f5))
+* rename Infer references to OpenTask ([67bea00](https://github.com/inference-gateway/opentask/commit/67bea00140227bd9bd13261b24c5d4441bcf7232))
+* update directive references from [@infer](https://github.com/infer) to [@opentask](https://github.com/opentask) across documentation and code ([eded6c6](https://github.com/inference-gateway/opentask/commit/eded6c6f1ffec8dc3f9ba3ac27c73750d201defd))
+
+### 🐛 Bug Fixes
+
+* **docs:** standardize punctuation in Safari listing and background documentation ([c8563dd](https://github.com/inference-gateway/opentask/commit/c8563dd16fe760c560142f18f1df711753fb7e7c))
+* **task:** allow refine to also update issue title ([#60](https://github.com/inference-gateway/opentask/issues/60)) ([0cc8aae](https://github.com/inference-gateway/opentask/commit/0cc8aae5b2bbd3a34416a9df42af37c18227690e))
+* **ui:** apply light theme background when light theme is selected and saved ([#62](https://github.com/inference-gateway/opentask/issues/62)) ([34ee3d1](https://github.com/inference-gateway/opentask/commit/34ee3d1c845cf1070700773d72cc6caf26ac0448))
+* **ui:** apply light theme to page background, not just inputs ([529be23](https://github.com/inference-gateway/opentask/commit/529be23ea2d3226ca8bc8a9b0a7148320c093f2a))
+
+### 🔧 Miscellaneous
+
+* bump infer-action to v0.35.1 ([#64](https://github.com/inference-gateway/opentask/issues/64)) ([4ace8a6](https://github.com/inference-gateway/opentask/commit/4ace8a6228bde2c35f45c78755d74a9d9cfde2b0))
+* **deps:** bump infer-action from v0.34.6 to v0.35.0 ([#58](https://github.com/inference-gateway/opentask/issues/58)) ([d86f4c8](https://github.com/inference-gateway/opentask/commit/d86f4c8af7f120ef30813b0a38267657d47382f0))
+* **options:** rename 'GitHub Comment Helper' to 'OpenTask settings' ([#63](https://github.com/inference-gateway/opentask/issues/63)) ([a113d3e](https://github.com/inference-gateway/opentask/commit/a113d3e65fd1091af4303e5b43a9ea0561eb907a))
+
 ## [1.1.0](https://github.com/inference-gateway/opentask/compare/v1.0.2...v1.1.0) (2026-07-25)
 
 ### ✨ Features
