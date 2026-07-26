@@ -37,11 +37,12 @@ permissions:
 jobs:
   infer:
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - uses: actions/create-github-app-token@v3.2.0
         id: app-token
         with:
-          client-id: 2370225
+          client-id: Iv23lintsGU98zndcj0i
           private-key: ${{ secrets.INFERENCE_GATEWAY_MAINTAINER_APP_PRIVATE_KEY }}
 
       - uses: actions/checkout@v7.0.1
@@ -56,6 +57,7 @@ jobs:
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           github-app-slug: ${{ steps.app-token.outputs.app-slug }}
+          trigger-phrase: "@opentask"
           model: ${{ inputs.model || 'ollama_cloud/deepseek-v4-flash' }}
           direct-prompt: ${{ inputs.prompt }}
           enable-git-operations: "true"
@@ -85,7 +87,10 @@ jobs:
               "In Progress" BEFORE you start changing anything, and the option closest to "Done" when
               your work is complete (body refined, fix pushed, or comment posted).
           plugins: |
+            DietrichGebert/ponytail
             ayghri/i-have-adhd
+          agents: |
+            documentation-agent
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           google-api-key: ${{ secrets.GOOGLE_API_KEY }}
