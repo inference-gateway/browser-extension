@@ -18,6 +18,10 @@ on:
         description: Task for the agent (workflow_dispatch only)
         required: false
         default: ""
+      enable_git:
+        description: Enable git operations - branch, commit, PR (workflow_dispatch only)
+        required: false
+        default: "true"
   issues:
     types:
       - opened
@@ -60,7 +64,7 @@ jobs:
           trigger-phrase: "@opentask"
           model: ${{ inputs.model || 'ollama_cloud/deepseek-v4-flash' }}
           direct-prompt: ${{ inputs.prompt }}
-          enable-git-operations: "true"
+          enable-git-operations: "${{ inputs.enable_git || 'true' }}"
           bash-allow-append: "gh project list( .*)?,gh project field-list( .*)?,gh project item-add( .*)?,gh project item-edit( .*)?,gh issue create( .*)?,gh issue edit( .*)?,gh issue comment( .*)?,gh pr comment( .*)?"
           custom-instructions: |
             When working on a GitHub issue that belongs to a project board, keep the board's status in
