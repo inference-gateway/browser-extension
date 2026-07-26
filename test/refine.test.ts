@@ -10,6 +10,12 @@ test("refinePrompt names the issue and edits in place", () => {
   expect(p).toContain("gh issue edit 11");
 });
 
+test("refinePrompt substitutes placeholders in a custom template", () => {
+  expect(refinePrompt("octo", "repo", 11, "fix {owner}/{repo}#{issue} now {issue}")).toBe(
+    "fix octo/repo#11 now 11",
+  );
+});
+
 test("isRefineConfig accepts the default and rejects malformed input", () => {
   expect(isRefineConfig(DEFAULT_REFINE)).toBe(true);
   expect(isRefineConfig({ auto: true, manual: false })).toBe(true);

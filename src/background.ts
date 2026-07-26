@@ -3,7 +3,7 @@ import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskRes
 import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
-import { taskBody, taskTitle, refinePrompt, initPrompt } from "./shared/task";
+import { taskBody, taskTitle, refinePrompt, DEFAULT_REFINE_PROMPT, REFINE_SYSTEM_PROMPT, initPrompt } from "./shared/task";
 import { CATALOG_URL, agentsFromCatalog, type AgentManifest } from "./shared/agents";
 
 const TTL = 10 * 60 * 1000;
@@ -201,6 +201,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const agents = await loadSelectedAgents();
   const timeout = normalizeTimeout(await storage.get<unknown>("timeout"));
   const instructions = (await storage.get<string>("instructions")) ?? DEFAULT_INSTRUCTIONS;
+  const debug = (await storage.get<boolean>("debug")) ?? false;
   const deps = await loadDependencies();
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
@@ -216,7 +217,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const defaultBranch = repoData.default_branch;
   const headSha = repoData.head?.sha ?? (await ghFetch(owner, repo, `git/refs/heads/${defaultBranch}`).then((r) => r.json())).object.sha;
 
-  const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps);
+  const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps, debug);
   const content = btoa(yaml);
 
   const current = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${defaultBranch}`);
@@ -226,9 +227,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   }
   const title = currentData ? "ci: sync OpenTask Agent workflow" : "feat: add OpenTask Agent workflow";
 
-  // Fresh, unique branch per install. Reusing one fixed branch accumulates closed PRs and
-  // force-pushes, which can poison GitHub's PR-create for that head (500s via API *and* web
-  // UI). A new branch name has no such history, so the PR opens cleanly.
   const branch = `${BRANCH}-${Date.now().toString(36)}`;
   const branchRes = await ghFetch(owner, repo, "git/refs", {
     method: "POST",
@@ -240,8 +238,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  // The branch forks from the default-branch head, so the existing file's sha there is the
-  // sha to PUT against.
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -292,7 +288,7 @@ async function createTask(owner: string, repo: string, prompt: string): Promise<
 
 // Run a free-text task without an issue: dispatch the installed workflow with the prompt,
 // which infer-action picks up via its direct-prompt input.
-async function dispatchTask(owner: string, repo: string, model: string, prompt: string): Promise<DispatchTaskResponse> {
+async function dispatchTask(owner: string, repo: string, model: string, prompt: string, extra?: Record<string, string>): Promise<DispatchTaskResponse> {
   if (!prompt || !prompt.trim()) return { error: "Task is empty." };
   const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Actions: write in the extension options." };
@@ -301,11 +297,14 @@ async function dispatchTask(owner: string, repo: string, model: string, prompt: 
   if (!repoRes.ok) return ghError(repoRes.status);
   const base = (await repoRes.json()).default_branch;
 
-  const res = await ghFetch(owner, repo, `actions/workflows/${WORKFLOW_FILE}/dispatches`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ref: base, inputs: { model, prompt } }),
-  });
+  const dispatch = (inputs: Record<string, string>) =>
+    ghFetch(owner, repo, `actions/workflows/${WORKFLOW_FILE}/dispatches`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ref: base, inputs }),
+    });
+  let res = await dispatch({ model, prompt, ...extra });
+  if (res.status === 422 && extra) res = await dispatch({ model, prompt });
   if (res.status === 204) return { url: `https://github.com/${owner}/${repo}/actions` };
   if (res.status === 404) return { error: "Workflow not found on the default branch. Merge the OpenTask Agent install PR first." };
   if (res.status === 403) return { error: "PAT lacks Actions: write. Grant it in the extension options." };
@@ -320,7 +319,8 @@ async function refineIssue(owner: string, repo: string, issue: number): Promise<
   const models: ModelOption[] = Array.isArray(stored) && stored.length && stored.every(isModelOption)
     ? (stored as ModelOption[])
     : DEFAULT_MODELS;
-  return dispatchTask(owner, repo, models[0].model, refinePrompt(owner, repo, issue));
+  const template = (await storage.get<string>("refinePrompt")) ?? DEFAULT_REFINE_PROMPT;
+  return dispatchTask(owner, repo, models[0].model, refinePrompt(owner, repo, issue, template), { enable_git: "false", system_prompt: REFINE_SYSTEM_PROMPT });
 }
 
 // Scaffold a repo: read the global init config, then dispatch the installed workflow with

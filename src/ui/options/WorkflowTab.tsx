@@ -9,11 +9,15 @@ export function WorkflowTab({
   setTimeoutMin,
   plugins,
   setPlugins,
+  debug,
+  setDebug,
 }: {
   timeout: number;
   setTimeoutMin: (n: number) => void;
   plugins: PluginOption[];
   setPlugins: (p: PluginOption[]) => void;
+  debug: boolean;
+  setDebug: (v: boolean) => void;
 }) {
   return (
     <>
@@ -37,6 +41,20 @@ export function WorkflowTab({
             onChange={(e) => setTimeoutMin(e.target.value === "" ? DEFAULT_TIMEOUT : Number(e.target.value))}
           />
         </div>
+      </Section>
+
+      <Section
+        title="Debug logging"
+        description={
+          <>
+            Enable infer-action debug-level logging and diagnostic output in the workflow run logs.
+            Off by default. <strong>Re-install the workflow</strong> after changing this.
+          </>
+        }
+      >
+        <ToggleRow checked={debug} onChange={setDebug}>
+          Verbose agent logs
+        </ToggleRow>
       </Section>
 
       <Section
