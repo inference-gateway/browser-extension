@@ -304,9 +304,6 @@ async function dispatchTask(owner: string, repo: string, model: string, prompt: 
       body: JSON.stringify({ ref: base, inputs }),
     });
   let res = await dispatch({ model, prompt, ...extra });
-  // Workflows installed before the enable_git input 422 on the unknown input; retry with just
-  // the core inputs so the run still works (falling back to the prompt-level PR guard) until
-  // the user re-installs.
   if (res.status === 422 && extra) res = await dispatch({ model, prompt });
   if (res.status === 204) return { url: `https://github.com/${owner}/${repo}/actions` };
   if (res.status === 404) return { error: "Workflow not found on the default branch. Merge the OpenTask Agent install PR first." };
