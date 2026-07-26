@@ -4,16 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: Model to use
-        type: choice
+        description: Model to use (provider/model, e.g. llamacpp/phi-4)
+        required: false
         default: ollama_cloud/deepseek-v4-flash
-        options:
-          - ollama_cloud/deepseek-v4-flash
-          - deepseek/deepseek-v4-flash
-          - anthropic/claude-sonnet-4-6
-          - openai/gpt-5
-          - google/gemini-3-pro
-          - moonshot/kimi-k2
       prompt:
         description: Task for the agent (workflow_dispatch only)
         required: false
