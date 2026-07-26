@@ -10,7 +10,7 @@ import type { Account } from "./ui/options/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/components/tabs";
 import { Button } from "@/ui/components/button";
 import { AccountsTab } from "./ui/options/AccountsTab";
-import { AgentTab } from "./ui/options/AgentTab";
+import { OrchestratorTab } from "./ui/options/OrchestratorTab";
 import { PromptsTab } from "./ui/options/PromptsTab";
 import { WorkflowTab } from "./ui/options/WorkflowTab";
 import { DependenciesTab } from "./ui/options/DependenciesTab";
@@ -189,7 +189,7 @@ function Options() {
       <Tabs defaultValue="accounts">
         <TabsList>
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
-          <TabsTrigger value="agent">Agent</TabsTrigger>
+          <TabsTrigger value="orchestrator">Orchestrator</TabsTrigger>
           <TabsTrigger value="prompts">Prompts</TabsTrigger>
           <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
@@ -214,8 +214,8 @@ function Options() {
           />
         </TabsContent>
 
-        <TabsContent value="agent" className="flex flex-col gap-4">
-          <AgentTab perms={perms} setPerms={setPerms} refine={refine} setRefine={setRefine} init={init} setInit={setInit} />
+        <TabsContent value="orchestrator" className="flex flex-col gap-4">
+          <OrchestratorTab perms={perms} setPerms={setPerms} refine={refine} setRefine={setRefine} init={init} setInit={setInit} />
         </TabsContent>
 
         <TabsContent value="prompts" className="flex flex-col gap-4">

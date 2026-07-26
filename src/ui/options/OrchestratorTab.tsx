@@ -1,7 +1,7 @@
 import type { Permissions, RefineConfig, InitConfig } from "../../shared/models";
 import { Section, ToggleRow } from "./Section";
 
-export function AgentTab({
+export function OrchestratorTab({
   perms,
   setPerms,
   refine,
@@ -19,7 +19,7 @@ export function AgentTab({
   return (
     <>
       <Section
-        title="Agent permissions"
+        title="Permissions"
         description={
           <>
             What the OpenTask agent may do while a task runs. These widen infer-action's read-only
