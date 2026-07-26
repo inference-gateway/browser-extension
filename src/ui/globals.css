@@ -1,5 +1,5 @@
 /* Tailwind + shadcn tokens for the STANDALONE pages only (options + popup).
-   Compiled by build.ts to dist/options.css. Never injected into GitHub pages —
+   Compiled by build.ts to dist/options.css. Never injected into GitHub pages -
    the content-script overlays keep using src/styles.css + GitHub's own CSS vars. */
 @import "tailwindcss";
 

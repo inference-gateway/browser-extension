@@ -154,7 +154,7 @@ export function AccountsTab({
               onChange={(e) => updateBot({ clientId: e.target.value })}
             />
             <p className="text-sm text-muted-foreground">
-              On your App's settings page (<strong>General</strong>) under <strong>Client ID</strong> — it
+              On your App's settings page (<strong>General</strong>) under <strong>Client ID</strong> - it
               starts with <code>Iv23li…</code>. This is <strong>not</strong> the numeric <em>App ID</em>{" "}
               (e.g. <code>4394298</code>) shown at the top of the same page.
             </p>

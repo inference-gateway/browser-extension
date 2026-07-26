@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 // The filterable checkbox list that SkillsTab and AgentsTab both reimplemented: a search
-// box plus a list of checkbox rows. Presentational only — callers own filtering/ranking
+// box plus a list of checkbox rows. Presentational only - callers own filtering/ranking
 // (they pass already-filtered `items`) and the per-row label. Keeps the .igw-* classes so
 // it stays themed by GitHub's CSS variables inside the injected overlay.
 export function CheckList<T>({
