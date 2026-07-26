@@ -3,14 +3,14 @@ import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import type { PatEntry, BotEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_TIMEOUT, normalizeTimeout, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, normalizeTimeout, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig } from "./shared/models";
 import { applyTheme, type Theme } from "./shared/theme";
 import type { Account } from "./ui/options/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/components/tabs";
 import { Button } from "@/ui/components/button";
 import { AccountsTab } from "./ui/options/AccountsTab";
 import { AgentTab } from "./ui/options/AgentTab";
-import { ContentTab } from "./ui/options/ContentTab";
+import { PromptsTab } from "./ui/options/PromptsTab";
 import { WorkflowTab } from "./ui/options/WorkflowTab";
 import { AppearanceTab } from "./ui/options/AppearanceTab";
 
@@ -33,6 +33,7 @@ function Options() {
   const [selected, setSelected] = useState(0);
   const [promptsText, setPromptsText] = useState("");
   const [modelsText, setModelsText] = useState("");
+  const [instructions, setInstructions] = useState(DEFAULT_INSTRUCTIONS);
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
   const [init, setInit] = useState<InitConfig>(DEFAULT_INIT);
@@ -53,6 +54,7 @@ function Options() {
       setPromptsText(JSON.stringify(p, null, 2));
       const m = (await storage.get<unknown[]>("models")) ?? DEFAULT_MODELS;
       setModelsText(JSON.stringify(m, null, 2));
+      setInstructions((await storage.get<string>("instructions")) ?? DEFAULT_INSTRUCTIONS);
       const pm = await storage.get<unknown>("permissions");
       setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
       const rf = await storage.get<unknown>("refine");
@@ -110,6 +112,7 @@ function Options() {
     await storage.saveBots(accounts.map((a) => ({ owner: a.owner, ...a.bot })));
     await storage.set("prompts", parsed);
     await storage.set("models", models);
+    await storage.set("instructions", instructions);
     await storage.set("permissions", perms);
     await storage.set("refine", refine);
     await storage.set("init", init);
@@ -145,6 +148,7 @@ function Options() {
   function reset() {
     setPromptsText(JSON.stringify(DEFAULT_PROMPTS, null, 2));
     setModelsText(JSON.stringify(DEFAULT_MODELS, null, 2));
+    setInstructions(DEFAULT_INSTRUCTIONS);
     updateAccount({ bot: DEFAULT_BOT });
     setPerms(DEFAULT_PERMISSIONS);
     setRefine(DEFAULT_REFINE);
@@ -171,7 +175,7 @@ function Options() {
         <TabsList>
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
           <TabsTrigger value="agent">Agent</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="prompts">Prompts</TabsTrigger>
           <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
@@ -198,8 +202,8 @@ function Options() {
           <AgentTab perms={perms} setPerms={setPerms} refine={refine} setRefine={setRefine} init={init} setInit={setInit} />
         </TabsContent>
 
-        <TabsContent value="content" className="flex flex-col gap-4">
-          <ContentTab promptsText={promptsText} setPromptsText={setPromptsText} modelsText={modelsText} setModelsText={setModelsText} />
+        <TabsContent value="prompts" className="flex flex-col gap-4">
+          <PromptsTab promptsText={promptsText} setPromptsText={setPromptsText} modelsText={modelsText} setModelsText={setModelsText} instructions={instructions} setInstructions={setInstructions} />
         </TabsContent>
 
         <TabsContent value="workflow" className="flex flex-col gap-4">
