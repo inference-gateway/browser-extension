@@ -54,8 +54,12 @@ export type GpuState = {
   createdAt?: number;
   podId?: string;
   modelId?: string;
+  hf?: string; // the served "repo:quant" ref; the gateway registers it as llamacpp/<hf>
   apiKey?: string;
 };
+
+// A llama.cpp -hf ref: "owner/repo" with an optional ":quant" (e.g. bartowski/foo-GGUF:Q4_K_M).
+export const isValidHf = (hf: string) => /^[\w.-]+\/[\w.-]+(:[\w.]+)?$/.test(hf.trim());
 
 // RunPod's REST API has no GPU-types list endpoint; the ids below are the enum
 // values it accepts for gpuTypeIds. Enough spread to fit a 7-14B GGUF at Q4.
@@ -96,7 +100,7 @@ export function podRequestBody(gpuTypeId: string, model: LlamaModel, apiKey: str
   };
 }
 
-export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; modelId: string; cloudType?: string };
+export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; modelId: string; hf: string; cloudType?: string };
 export type ProvisionGPUResponse = { state: GpuState } | { error: string };
 
 export type DeprovisionGPURequest = { type: "deprovision-gpu" };

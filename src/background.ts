@@ -1,5 +1,5 @@
 import * as storage from "./shared/storage";
-import { LLAMA_MODELS, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
+import { isValidHf, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
@@ -75,7 +75,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
   if (msg?.type === "provision-gpu") {
-    provisionGPU(msg.gpuTypeId, msg.modelId, msg.cloudType)
+    provisionGPU(msg.gpuTypeId, msg.modelId, msg.hf, msg.cloudType)
       .then((r) => sendResponse(r))
       .catch((err) => sendResponse({ error: String(err) }));
     return true;
@@ -565,17 +565,16 @@ async function saveGpuState(state: GpuState): Promise<void> {
   await storage.set("gpu-state", state);
 }
 
-async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: string): Promise<{ state: GpuState } | { error: string }> {
+async function provisionGPU(gpuTypeId: string, modelId: string, hf: string, cloudType?: string): Promise<{ state: GpuState } | { error: string }> {
   const existing = await loadGpuState();
   if (existing.status === "running" || existing.status === "provisioning") {
     return { error: `GPU is already ${existing.status}. Deprovision it first.` };
   }
-  const model = LLAMA_MODELS.find((m) => m.id === modelId);
-  if (!model) return { error: `Unknown model: ${modelId}` };
+  if (!isValidHf(hf)) return { error: `Invalid HF model ref: ${hf} (expected owner/repo:quant).` };
 
   // Client-generated bearer token: RunPod can't return it later, so persist it in state.
   const apiKey = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, "0")).join("");
-  const body = podRequestBody(gpuTypeId, model, apiKey, cloudType);
+  const body = podRequestBody(gpuTypeId, { id: modelId, label: modelId, hf: hf.trim() }, apiKey, cloudType);
   const res = await runpodFetch("/pods", { method: "POST", body: JSON.stringify(body) });
   if (!res.ok) {
     await saveGpuState({ status: "failed" });
@@ -587,6 +586,7 @@ async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: stri
     status: "provisioning",
     podId,
     modelId,
+    hf: hf.trim(),
     apiKey,
     endpointUrl: `https://${podId}-8080.proxy.runpod.net`,
     createdAt: Date.now(),

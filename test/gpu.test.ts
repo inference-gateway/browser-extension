@@ -1,5 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import { LLAMA_MODELS, podRequestBody } from "../src/shared/messages";
+import { LLAMA_MODELS, isValidHf, podRequestBody } from "../src/shared/messages";
+
+describe("isValidHf", () => {
+  test("accepts owner/repo with optional quant", () => {
+    expect(isValidHf("bartowski/phi-4-GGUF:Q4_K_M")).toBe(true);
+    expect(isValidHf("deepreinforce-ai/Ornith-1.0-9B-GGUF")).toBe(true);
+  });
+  test("rejects junk and provider-prefixed refs", () => {
+    expect(isValidHf("phi-4")).toBe(false);
+    expect(isValidHf("llamacpp/owner/repo:Q4")).toBe(false);
+    expect(isValidHf("")).toBe(false);
+  });
+});
 
 describe("LLAMA_MODELS", () => {
   test("ids are unique", () => {

@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import { applyTheme, type Theme } from "./shared/theme";
-import { GPU_TYPES, LLAMA_MODELS, type GpuState, type ProvisionGPUResponse, type GPUStatusResponse, type DeprovisionGPUResponse } from "./shared/messages";
+import { GPU_TYPES, LLAMA_MODELS, isValidHf, type GpuState, type ProvisionGPUResponse, type GPUStatusResponse, type DeprovisionGPUResponse } from "./shared/messages";
 import { ask } from "./ui/ask";
 import { Button } from "@/ui/components/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/select";
@@ -30,7 +30,13 @@ function Popup() {
   const [gpu, setGpu] = useState<GpuState>({ status: "idle" });
   const [selectedGpu, setSelectedGpu] = useState(GPU_TYPES[0].id);
   const [selectedModel, setSelectedModel] = useState(LLAMA_MODELS[0].id);
+  const [customHf, setCustomHf] = useState("");
+  const [hasKey, setHasKey] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    void storage.get<string>("runpod-key").then((k) => setHasKey(!!k?.trim()));
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -39,7 +45,6 @@ function Popup() {
     })();
   }, []);
 
-  // Load last known GPU state on mount
   useEffect(() => {
     ask({ type: "gpu-status" }, (resp) => {
       const r = resp as GPUStatusResponse;
@@ -60,7 +65,11 @@ function Popup() {
 
   function provision() {
     setError("");
-    ask({ type: "provision-gpu", gpuTypeId: selectedGpu, modelId: selectedModel }, (resp) => {
+    const custom = customHf.trim();
+    if (custom && !isValidHf(custom)) return setError("Custom model must be owner/repo:quant.");
+    const hf = custom || LLAMA_MODELS.find((m) => m.id === selectedModel)!.hf;
+    const modelId = custom ? custom.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) : selectedModel;
+    ask({ type: "provision-gpu", gpuTypeId: selectedGpu, modelId, hf }, (resp) => {
       const r = resp as ProvisionGPUResponse;
       if ("error" in r) return setError(r.error);
       setGpu(r.state);
@@ -85,6 +94,7 @@ function Popup() {
         </p>
       </div>
 
+      {(hasKey || gpu.status !== "idle") && (
       <div className="border-t px-4 py-3">
         <h3 className="font-medium mb-2">GPU</h3>
         <div className="flex items-center gap-2 mb-2">
@@ -106,7 +116,7 @@ function Popup() {
             <p>Add to the repo's Settings &rarr; Secrets and variables &rarr; Actions:</p>
             <CopyRow label="Secret" name="LLAMACPP_API_URL" value={`${gpu.endpointUrl}/v1`} />
             {gpu.apiKey && <CopyRow label="Secret" name="LLAMACPP_API_KEY" value={gpu.apiKey} secret />}
-            {gpu.modelId && <CopyRow label="Variable" name="DEFAULT_MODEL" value={`llamacpp/${LLAMA_MODELS.find((m) => m.id === gpu.modelId)?.hf ?? gpu.modelId}`} />}
+            {(gpu.hf ?? gpu.modelId) && <CopyRow label="Variable" name="DEFAULT_MODEL" value={`llamacpp/${gpu.hf ?? gpu.modelId}`} />}
             <p>Re-install the workflow (from a repo's Tasks tab) to pick up llama.cpp support.</p>
           </div>
         )}
@@ -124,6 +134,12 @@ function Popup() {
                   ))}
                 </SelectContent>
               </Select>
+              <input
+                className="w-full rounded-md border bg-background px-2 py-1 text-xs"
+                placeholder="or custom HF repo:quant"
+                value={customHf}
+                onChange={(e) => setCustomHf(e.target.value)}
+              />
               <Select value={selectedGpu} onValueChange={setSelectedGpu}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -145,6 +161,7 @@ function Popup() {
           </div>
         </div>
       </div>
+      )}
 
       <div className="border-t px-4 py-2 text-right">
         <a
