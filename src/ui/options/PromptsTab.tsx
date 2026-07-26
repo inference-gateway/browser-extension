@@ -8,6 +8,8 @@ export function PromptsTab({
   setPromptsText,
   instructions,
   setInstructions,
+  refinePromptText,
+  setRefinePromptText,
   modelsText,
   setModelsText,
 }: {
@@ -15,6 +17,8 @@ export function PromptsTab({
   setPromptsText: (v: string) => void;
   instructions: string;
   setInstructions: (v: string) => void;
+  refinePromptText: string;
+  setRefinePromptText: (v: string) => void;
   modelsText: string;
   setModelsText: (v: string) => void;
 }) {
@@ -52,6 +56,25 @@ export function PromptsTab({
           spellCheck={false}
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
+        />
+      </Section>
+
+      <Section
+        title="Refine prompt"
+        description={
+          <>
+            The prompt dispatched when you click <strong>Refine</strong> on an issue. Placeholders{" "}
+            <code>{"{owner}"}</code>, <code>{"{repo}"}</code>, and <code>{"{issue}"}</code> are
+            substituted at dispatch time. Steer how issues get rewritten (e.g. instruct the agent to
+            read the code first and follow your <code>.github/ISSUE_TEMPLATE</code> structure).
+          </>
+        }
+      >
+        <Textarea
+          className="text-xs min-h-48"
+          spellCheck={false}
+          value={refinePromptText}
+          onChange={(e) => setRefinePromptText(e.target.value)}
         />
       </Section>
 

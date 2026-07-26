@@ -58,6 +58,22 @@ test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", 
   expect(yaml).toContain("direct-prompt: ${{ inputs.prompt }}");
 });
 
+test("workflowYaml wires the debug flag onto infer-action, off by default", () => {
+  expect(workflowYaml(models, def, noBot)).toContain(`debug: "false"`);
+  expect(workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, [], [], DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, true)).toContain(`debug: "true"`);
+});
+
+test("workflowYaml exposes an enable_git input defaulting to the createPRs permission", () => {
+  expect(workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS)).toContain('enable_git:\n        description: Enable git operations - branch, commit, PR (workflow_dispatch only)\n        required: false\n        default: "true"');
+  expect(workflowYaml(models, def, noBot, { createPRs: false, createIssues: true, comment: true })).toContain('default: "false"');
+});
+
+test("workflowYaml exposes a system_prompt input wired to infer-action system-prompt-direct", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain("system_prompt:\n        description: Override the direct-prompt system prompt (workflow_dispatch only)");
+  expect(yaml).toContain("system-prompt-direct: ${{ inputs.system_prompt }}");
+});
+
 test("workflowYaml wires every standard provider key", () => {
   const yaml = workflowYaml(models, def, noBot);
   for (const p of DEFAULT_PROVIDERS) expect(yaml).toContain(`${p.keyInput}: \${{ secrets.${p.secret} }}`);
@@ -107,13 +123,13 @@ test("prBody names the provider secret and, with a bot, the private-key secret",
 
 test("workflowYaml maps permissions onto infer-action allow-list inputs", () => {
   const all = workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS);
-  expect(all).toContain(`enable-git-operations: "true"`);
+  expect(all).toContain("enable-git-operations: \"${{ inputs.enable_git || 'true' }}\"");
   expect(all).toContain("gh issue create( .*)?");
   expect(all).toContain("gh issue comment( .*)?");
   expect(all).toContain("gh pr comment( .*)?");
 
   const readonly = workflowYaml(models, def, noBot, { createPRs: false, createIssues: false, comment: false });
-  expect(readonly).toContain(`enable-git-operations: "false"`);
+  expect(readonly).toContain("enable-git-operations: \"${{ inputs.enable_git || 'false' }}\"");
   expect(readonly).toContain("gh project item-edit( .*)?");
   expect(readonly).not.toContain("gh issue create");
   expect(readonly).not.toContain("gh pr comment");

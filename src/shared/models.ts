@@ -239,7 +239,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES, debug: boolean = false): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -253,7 +253,8 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     ? `\n          custom-instructions: |\n${instructions.split("\n").map((l) => `            ${l}`).join("\n")}`
     : "";
   const permLines =
-    `          enable-git-operations: "${perms.createPRs}"` +
+    `          enable-git-operations: "\${{ inputs.enable_git || '${perms.createPRs}' }}"` +
+    `\n          debug: "${debug}"` +
     `\n          bash-allow-append: "${appends.join(",")}"` +
     instrBlock;
 
@@ -306,6 +307,14 @@ ${optionLines}
         description: Task for the agent (workflow_dispatch only)
         required: false
         default: ""
+      enable_git:
+        description: Enable git operations - branch, commit, PR (workflow_dispatch only)
+        required: false
+        default: "${perms.createPRs}"
+      system_prompt:
+        description: Override the direct-prompt system prompt (workflow_dispatch only)
+        required: false
+        default: ""
   issues:
     types:
       - opened
@@ -335,6 +344,7 @@ ${appTokenStep}${checkoutStep}${depSteps}
           trigger-phrase: "@opentask"
           model: \${{ inputs.model || '${def}' }}
           direct-prompt: \${{ inputs.prompt }}
+          system-prompt-direct: \${{ inputs.system_prompt }}
 ${permLines}${pluginLines}${agentLines}
 ${keyLines}
 `;

@@ -4,6 +4,7 @@ import * as storage from "./shared/storage";
 import type { PatEntry, BotEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
 import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, normalizeTimeout, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, isDependenciesConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig, type DependenciesConfig } from "./shared/models";
+import { DEFAULT_REFINE_PROMPT } from "./shared/task";
 import { applyTheme, type Theme } from "./shared/theme";
 import type { Account } from "./ui/options/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/components/tabs";
@@ -35,11 +36,13 @@ function Options() {
   const [promptsText, setPromptsText] = useState("");
   const [modelsText, setModelsText] = useState("");
   const [instructions, setInstructions] = useState(DEFAULT_INSTRUCTIONS);
+  const [refinePromptText, setRefinePromptText] = useState(DEFAULT_REFINE_PROMPT);
   const [perms, setPerms] = useState<Permissions>(DEFAULT_PERMISSIONS);
   const [refine, setRefine] = useState<RefineConfig>(DEFAULT_REFINE);
   const [init, setInit] = useState<InitConfig>(DEFAULT_INIT);
   const [timeout, setTimeoutMin] = useState<number>(DEFAULT_TIMEOUT);
   const [plugins, setPlugins] = useState<PluginOption[]>(DEFAULT_PLUGINS);
+  const [debug, setDebug] = useState(false);
   const [deps, setDeps] = useState<DependenciesConfig>(DEFAULT_DEPENDENCIES);
   const [theme, setTheme] = useState<Theme>("system");
   const [showToken, setShowToken] = useState(false);
@@ -57,6 +60,7 @@ function Options() {
       const m = (await storage.get<unknown[]>("models")) ?? DEFAULT_MODELS;
       setModelsText(JSON.stringify(m, null, 2));
       setInstructions((await storage.get<string>("instructions")) ?? DEFAULT_INSTRUCTIONS);
+      setRefinePromptText((await storage.get<string>("refinePrompt")) ?? DEFAULT_REFINE_PROMPT);
       const pm = await storage.get<unknown>("permissions");
       setPerms(isPermissions(pm) ? pm : DEFAULT_PERMISSIONS);
       const rf = await storage.get<unknown>("refine");
@@ -64,6 +68,7 @@ function Options() {
       const it = await storage.get<unknown>("init");
       setInit(isInitConfig(it) ? it : DEFAULT_INIT);
       setTimeoutMin(normalizeTimeout(await storage.get<unknown>("timeout")));
+      setDebug((await storage.get<boolean>("debug")) ?? false);
       const pl = await storage.get<unknown>("plugins");
       const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
       setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
@@ -119,10 +124,12 @@ function Options() {
     await storage.set("prompts", parsed);
     await storage.set("models", models);
     await storage.set("instructions", instructions);
+    await storage.set("refinePrompt", refinePromptText);
     await storage.set("permissions", perms);
     await storage.set("refine", refine);
     await storage.set("init", init);
     await storage.set("timeout", normalizeTimeout(timeout));
+    await storage.set("debug", debug);
     await storage.set("plugins", plugins);
     await storage.set("dependencies", deps);
     await storage.set("theme", theme);
@@ -154,11 +161,13 @@ function Options() {
     setPromptsText(JSON.stringify(DEFAULT_PROMPTS, null, 2));
     setModelsText(JSON.stringify(DEFAULT_MODELS, null, 2));
     setInstructions(DEFAULT_INSTRUCTIONS);
+    setRefinePromptText(DEFAULT_REFINE_PROMPT);
     updateAccount({ bot: DEFAULT_BOT });
     setPerms(DEFAULT_PERMISSIONS);
     setRefine(DEFAULT_REFINE);
     setInit(DEFAULT_INIT);
     setTimeoutMin(DEFAULT_TIMEOUT);
+    setDebug(false);
     setPlugins(DEFAULT_PLUGINS);
     setDeps(DEFAULT_DEPENDENCIES);
     setStatus("Reset to defaults (not yet saved).");
@@ -210,11 +219,11 @@ function Options() {
         </TabsContent>
 
         <TabsContent value="prompts" className="flex flex-col gap-4">
-          <PromptsTab promptsText={promptsText} setPromptsText={setPromptsText} modelsText={modelsText} setModelsText={setModelsText} instructions={instructions} setInstructions={setInstructions} />
+          <PromptsTab promptsText={promptsText} setPromptsText={setPromptsText} modelsText={modelsText} setModelsText={setModelsText} instructions={instructions} setInstructions={setInstructions} refinePromptText={refinePromptText} setRefinePromptText={setRefinePromptText} />
         </TabsContent>
 
         <TabsContent value="workflow" className="flex flex-col gap-4">
-          <WorkflowTab timeout={timeout} setTimeoutMin={setTimeoutMin} plugins={plugins} setPlugins={setPlugins} />
+          <WorkflowTab timeout={timeout} setTimeoutMin={setTimeoutMin} plugins={plugins} setPlugins={setPlugins} debug={debug} setDebug={setDebug} />
         </TabsContent>
 
         <TabsContent value="dependencies" className="flex flex-col gap-4">
