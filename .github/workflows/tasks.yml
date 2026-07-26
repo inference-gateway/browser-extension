@@ -53,6 +53,10 @@ jobs:
         with:
           version: 3.x
 
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: lts/*
+
       - uses: inference-gateway/infer-action@v0.35.2
         with:
           github-token: ${{ steps.app-token.outputs.token }}
