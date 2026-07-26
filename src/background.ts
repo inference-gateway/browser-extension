@@ -216,6 +216,19 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const defaultBranch = repoData.default_branch;
   const headSha = repoData.head?.sha ?? (await ghFetch(owner, repo, `git/refs/heads/${defaultBranch}`).then((r) => r.json())).object.sha;
 
+  const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps);
+  const content = btoa(yaml);
+
+  // Compare against the workflow already on the default branch before creating anything.
+  // Byte-identical means there's nothing to install - skip the branch/commit/PR so we never
+  // open an empty-diff PR. Exists-but-differs is a sync; absent is a fresh add.
+  const current = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${defaultBranch}`);
+  const currentData = current.status === 200 ? await current.json() : undefined;
+  if (currentData && atob((currentData.content as string).replace(/\s/g, "")) === yaml) {
+    return { error: "The workflow is already up to date - nothing to install." };
+  }
+  const title = currentData ? "ci: sync OpenTask Agent workflow" : "feat: add OpenTask Agent workflow";
+
   // Fresh, unique branch per install. Reusing one fixed branch accumulates closed PRs and
   // force-pushes, which can poison GitHub's PR-create for that head (500s via API *and* web
   // UI). A new branch name has no such history, so the PR opens cleanly.
@@ -230,17 +243,16 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps));
-  const existing = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${branch}`);
-  const sha = existing.status === 200 ? (await existing.json()).sha : undefined;
+  // The branch forks from the default-branch head, so the existing file's sha there is the
+  // sha to PUT against.
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: "feat: add OpenTask Agent workflow",
+      message: title,
       content,
       branch,
-      ...(sha ? { sha } : {}),
+      ...(currentData ? { sha: currentData.sha } : {}),
     }),
   });
   if (!putRes.ok) {
@@ -248,7 +260,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${putRes.status}`);
   }
 
-  const title = "feat: add OpenTask Agent workflow";
   const body = prBody(models, defaultModel, bot, enabledPlugins(plugins), agents);
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
