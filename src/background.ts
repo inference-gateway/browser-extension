@@ -219,9 +219,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps);
   const content = btoa(yaml);
 
-  // Compare against the workflow already on the default branch before creating anything.
-  // Byte-identical means there's nothing to install - skip the branch/commit/PR so we never
-  // open an empty-diff PR. Exists-but-differs is a sync; absent is a fresh add.
   const current = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${defaultBranch}`);
   const currentData = current.status === 200 ? await current.json() : undefined;
   if (currentData && atob((currentData.content as string).replace(/\s/g, "")) === yaml) {
