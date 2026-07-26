@@ -241,7 +241,6 @@ misses the issue and does not scale:
 // authenticates. Missing secrets render blank and are ignored by the action.
 export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES, debug: boolean = false): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
-  const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
   const appends: string[] = [
     "gh project list( .*)?", "gh project field-list( .*)?",
@@ -298,11 +297,9 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: Model to use
-        type: choice
+        description: Model to use (provider/model, e.g. llamacpp/phi-4)
+        required: false
         default: ${def}
-        options:
-${optionLines}
       prompt:
         description: Task for the agent (workflow_dispatch only)
         required: false

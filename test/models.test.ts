@@ -43,12 +43,12 @@ test("workflowYaml sets the @opentask trigger-phrase", () => {
   expect(yaml).toContain('trigger-phrase: "@opentask"');
 });
 
-test("workflowYaml exposes model as a workflow_dispatch choice input with all options + default", () => {
+test("workflowYaml exposes model as a free-text workflow_dispatch input with default", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("workflow_dispatch:");
-  expect(yaml).toContain("type: choice");
+  // free-text (not choice) so any provider/model - including llamacpp/* - is accepted
+  expect(yaml).not.toContain("type: choice");
   expect(yaml).toContain(`default: ${def}`);
-  for (const m of models) expect(yaml).toContain(`          - ${m.model}`);
   expect(yaml).toContain(`model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}`);
 });
 

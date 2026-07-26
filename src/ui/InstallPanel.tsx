@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as storage from "../shared/storage";
 import { DEFAULT_MODELS, isModelOption, type ModelOption } from "../shared/models";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "../shared/prompts";
-import type { GpuState } from "../shared/messages";
+import { LLAMA_MODELS, type GpuState } from "../shared/messages";
 import { ask } from "./ask";
 
 type State =
@@ -43,7 +43,10 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
     // LLAMACPP_API_URL repo config the workflow reads).
     ask({ type: "gpu-status" }, (resp) => {
       const state = (resp as { state?: GpuState }).state;
-      if (state?.status === "running" && state.modelId) setGpuModel(`llamacpp/${state.modelId}`);
+      if (state?.status === "running" && state.modelId) {
+        const hf = LLAMA_MODELS.find((m) => m.id === state.modelId)?.hf ?? state.modelId;
+        setGpuModel(`llamacpp/${hf}`);
+      }
     });
     ask({ type: "check-install", owner, repo }, (resp) => {
       if (chrome.runtime?.lastError || !resp) return setState({ kind: "ready", installed: false, error: "Failed to check install status." });

@@ -19,6 +19,7 @@ describe("podRequestBody", () => {
     const body = podRequestBody("NVIDIA GeForce RTX 4090", LLAMA_MODELS[0], "sekret");
     expect(body.imageName).toBe("ghcr.io/ggml-org/llama.cpp:server-cuda");
     expect(body.gpuTypeIds).toEqual(["NVIDIA GeForce RTX 4090"]);
+    expect(body.allowedCudaVersions).toEqual(["12.8", "12.9", "13.0"]);
     expect(body.cloudType).toBe("SECURE");
     expect(body.ports).toEqual(["8080/http"]);
     expect(body.dockerStartCmd).toEqual([

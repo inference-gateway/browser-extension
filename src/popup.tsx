@@ -106,7 +106,7 @@ function Popup() {
             <p>Add to the repo's Settings &rarr; Secrets and variables &rarr; Actions:</p>
             <CopyRow label="Secret" name="LLAMACPP_API_URL" value={`${gpu.endpointUrl}/v1`} />
             {gpu.apiKey && <CopyRow label="Secret" name="LLAMACPP_API_KEY" value={gpu.apiKey} secret />}
-            {gpu.modelId && <CopyRow label="Variable" name="DEFAULT_MODEL" value={`llamacpp/${gpu.modelId}`} />}
+            {gpu.modelId && <CopyRow label="Variable" name="DEFAULT_MODEL" value={`llamacpp/${LLAMA_MODELS.find((m) => m.id === gpu.modelId)?.hf ?? gpu.modelId}`} />}
             <p>Re-install the workflow (from a repo's Tasks tab) to pick up llama.cpp support.</p>
           </div>
         )}

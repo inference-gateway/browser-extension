@@ -72,6 +72,7 @@ export const GPU_TYPES: GpuType[] = [
 // Popular GGUF models deployable via llama.cpp's -hf flag ("repo:quant").
 export type LlamaModel = { id: string; label: string; hf: string };
 export const LLAMA_MODELS: LlamaModel[] = [
+  { id: "ornith-9b", label: "Ornith 1.0 9B (agentic)", hf: "deepreinforce-ai/Ornith-1.0-9B-GGUF:Q4_K_M" },
   { id: "llama-3.1-8b", label: "Llama 3.1 8B Instruct", hf: "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q4_K_M" },
   { id: "qwen-2.5-7b", label: "Qwen 2.5 7B Instruct", hf: "bartowski/Qwen2.5-7B-Instruct-GGUF:Q4_K_M" },
   { id: "mistral-7b", label: "Mistral 7B Instruct v0.3", hf: "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M" },
@@ -87,6 +88,7 @@ export function podRequestBody(gpuTypeId: string, model: LlamaModel, apiKey: str
     imageName: "ghcr.io/ggml-org/llama.cpp:server-cuda",
     dockerStartCmd: ["-hf", model.hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99", "--jinja", "--api-key", apiKey],
     gpuTypeIds: [gpuTypeId],
+    allowedCudaVersions: ["12.8", "12.9", "13.0"],
     cloudType: cloudType ?? "SECURE",
     ports: ["8080/http"],
     containerDiskInGb: 50,
