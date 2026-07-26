@@ -167,6 +167,7 @@ function Options() {
 
   const account = accounts[selected] ?? accounts[0];
   const appUrl = githubAppUrl(account.owner, orgOwners.includes(account.owner));
+  const ownerChoices = [...new Set([...accounts.map((a) => a.owner), ...ownerOptions])].filter(Boolean);
 
   return (
     <div className="igw-options">
@@ -176,30 +177,27 @@ function Options() {
         <h2>Accounts</h2>
         <p>Pick a GitHub account or org to configure its token and bot below. On a repo,
           the account whose <strong>owner</strong> matches its owner is used.</p>
+        <label className="igw-label" htmlFor="igw-owner">Owner (your GitHub user or an org)</label>
         <div className="igw-account-bar">
-          <select className="igw-field" value={selected} onChange={(e) => setSelected(Number(e.target.value))}>
-            {accounts.map((a, i) => (
-              <option key={i} value={i}>{a.owner || "(unnamed)"}</option>
+          <select
+            id="igw-owner"
+            className="igw-field"
+            value={account.owner}
+            onChange={(e) => {
+              const owner = e.target.value;
+              const idx = accounts.findIndex((a) => a.owner === owner);
+              if (idx >= 0 && idx !== selected) setSelected(idx);
+              else updateAccount({ owner });
+            }}
+          >
+            <option value="">{activeToken ? "Select an owner…" : "Enter a token below to load owners"}</option>
+            {ownerChoices.map((o) => (
+              <option key={o} value={o}>{o}</option>
             ))}
           </select>
           <button className="igw-btn igw-btn--primary" onClick={addAccount}>Add account</button>
           <button className="igw-btn" onClick={removeAccount}>Remove</button>
         </div>
-        <label className="igw-label" htmlFor="igw-owner">Owner (your GitHub user or an org)</label>
-        <select
-          id="igw-owner"
-          className="igw-field"
-          value={account.owner}
-          onChange={(e) => updateAccount({ owner: e.target.value })}
-        >
-          <option value="">{activeToken ? "Select an owner…" : "Enter a token below to load owners"}</option>
-          {account.owner && !ownerOptions.includes(account.owner) && (
-            <option value={account.owner}>{account.owner}</option>
-          )}
-          {ownerOptions.map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
-        </select>
       </section>
 
       <section>
