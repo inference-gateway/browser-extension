@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1](https://github.com/inference-gateway/opentask/compare/v1.2.0...v1.2.1) (2026-07-26)
+
+### ♻️ Improvements
+
+* improve owner selection in options ([8a28a89](https://github.com/inference-gateway/opentask/commit/8a28a899c6bc9985fcf40b6929b6462daeeae2a6))
+* simplify caching logic in getSkills ([7577d53](https://github.com/inference-gateway/opentask/commit/7577d53674bd981587b4d50e642094f902e00d8e))
+
+### 📚 Documentation
+
+* update README to reflect current codebase state ([#66](https://github.com/inference-gateway/opentask/issues/66)) ([34b380e](https://github.com/inference-gateway/opentask/commit/34b380ef82bea3d2bd9cdcce097016329b651774))
+
+### 🔧 Miscellaneous
+
+* bump infer-action to v0.35.2 ([#65](https://github.com/inference-gateway/opentask/issues/65)) ([9ce8b44](https://github.com/inference-gateway/opentask/commit/9ce8b44ff2e458b946f2f625dfa05b716bd70f4d))
+
 ## [1.2.0](https://github.com/inference-gateway/opentask/compare/v1.1.0...v1.2.0) (2026-07-26)
 
 ### ✨ Features
