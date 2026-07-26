@@ -1,6 +1,6 @@
 import * as storage from "./shared/storage";
 import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
-import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, isModelOption, isPermissions, isPluginOption, isInitConfig, enabledPlugins, workflowYaml, prBody } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, isModelOption, isPermissions, isPluginOption, isInitConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt, initPrompt } from "./shared/task";
@@ -194,6 +194,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const perms: Permissions = isPermissions(storedPerms) ? storedPerms : DEFAULT_PERMISSIONS;
   const plugins = await loadPlugins();
   const agents = await loadSelectedAgents();
+  const timeout = normalizeTimeout(await storage.get<unknown>("timeout"));
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
   const pat = await patFor(owner);
@@ -222,7 +223,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents));
+  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout));
   const existing = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${branch}`);
   const sha = existing.status === 200 ? (await existing.json()).sha : undefined;
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {

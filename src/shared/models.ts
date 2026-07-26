@@ -148,6 +148,12 @@ export function isInitConfig(x: unknown): x is InitConfig {
   );
 }
 
+// Per-run job timeout (minutes) for the generated workflow. Stored under "timeout".
+export const DEFAULT_TIMEOUT = 25;
+export function normalizeTimeout(x: unknown): number {
+  return typeof x === "number" && Number.isFinite(x) && x > 0 ? Math.round(x) : DEFAULT_TIMEOUT;
+}
+
 // Generic, board-agnostic project-board tracking, appended to the agent's instructions.
 // No hardcoded project/field/option ids: the agent discovers the board and its Status
 // field at runtime, so this works on any repo/org, not just one specific board. Best-effort
@@ -180,7 +186,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = []): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -261,6 +267,7 @@ permissions:
 jobs:
   infer:
     runs-on: ubuntu-24.04
+    timeout-minutes: ${timeoutMinutes}
     steps:
 ${appTokenStep}${checkoutStep}
 
