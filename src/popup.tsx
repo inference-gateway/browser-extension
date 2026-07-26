@@ -7,6 +7,24 @@ import { ask } from "./ui/ask";
 import { Button } from "@/ui/components/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/select";
 
+// A "name = value" row with a click-to-copy button for the value.
+function CopyRow({ label, name, value }: { label: string; name: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex items-center gap-1">
+      <span className="truncate" title={value}>
+        {label} <code className="text-foreground">{name}</code> = <code className="text-foreground">{value}</code>
+      </span>
+      <button
+        className="ml-auto shrink-0 text-primary hover:underline"
+        onClick={() => { void navigator.clipboard.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
+
 function Popup() {
   const [gpu, setGpu] = useState<GpuState>({ status: "idle" });
   const [selectedGpu, setSelectedGpu] = useState(GPU_TYPES[0].id);
@@ -85,14 +103,8 @@ function Popup() {
         {gpu.status === "running" && gpu.endpointUrl && (
           <div className="text-xs text-muted-foreground mb-2 space-y-1">
             <p>Add to the repo's Settings &rarr; Secrets and variables &rarr; Actions:</p>
-            <p className="truncate" title={`${gpu.endpointUrl}/v1`}>
-              Secret <code className="text-foreground">LLAMACPP_API_URL</code> = <code className="text-foreground">{gpu.endpointUrl}/v1</code>
-            </p>
-            {gpu.modelId && (
-              <p className="truncate">
-                Variable <code className="text-foreground">DEFAULT_MODEL</code> = <code className="text-foreground">llamacpp/{gpu.modelId}</code>
-              </p>
-            )}
+            <CopyRow label="Secret" name="LLAMACPP_API_URL" value={`${gpu.endpointUrl}/v1`} />
+            {gpu.modelId && <CopyRow label="Variable" name="DEFAULT_MODEL" value={`llamacpp/${gpu.modelId}`} />}
             <p>Re-install the workflow (from a repo's Tasks tab) to pick up llama.cpp support.</p>
           </div>
         )}
