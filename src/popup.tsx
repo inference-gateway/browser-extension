@@ -7,13 +7,14 @@ import { ask } from "./ui/ask";
 import { Button } from "@/ui/components/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/components/select";
 
-// A "name = value" row with a click-to-copy button for the value.
-function CopyRow({ label, name, value }: { label: string; name: string; value: string }) {
+// A "name = value" row with a click-to-copy button. secret masks the displayed value
+// (Copy still copies the real one).
+function CopyRow({ label, name, value, secret }: { label: string; name: string; value: string; secret?: boolean }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-center gap-1">
-      <span className="truncate" title={value}>
-        {label} <code className="text-foreground">{name}</code> = <code className="text-foreground">{value}</code>
+      <span className="truncate" title={secret ? undefined : value}>
+        {label} <code className="text-foreground">{name}</code> = <code className="text-foreground">{secret ? "••••••••" : value}</code>
       </span>
       <button
         className="ml-auto shrink-0 text-primary hover:underline"
@@ -104,6 +105,7 @@ function Popup() {
           <div className="text-xs text-muted-foreground mb-2 space-y-1">
             <p>Add to the repo's Settings &rarr; Secrets and variables &rarr; Actions:</p>
             <CopyRow label="Secret" name="LLAMACPP_API_URL" value={`${gpu.endpointUrl}/v1`} />
+            {gpu.apiKey && <CopyRow label="Secret" name="LLAMACPP_API_KEY" value={gpu.apiKey} secret />}
             {gpu.modelId && <CopyRow label="Variable" name="DEFAULT_MODEL" value={`llamacpp/${gpu.modelId}`} />}
             <p>Re-install the workflow (from a repo's Tasks tab) to pick up llama.cpp support.</p>
           </div>

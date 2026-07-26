@@ -573,7 +573,9 @@ async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: stri
   const model = LLAMA_MODELS.find((m) => m.id === modelId);
   if (!model) return { error: `Unknown model: ${modelId}` };
 
-  const body = podRequestBody(gpuTypeId, model, cloudType);
+  // Client-generated bearer token: RunPod can't return it later, so persist it in state.
+  const apiKey = [...crypto.getRandomValues(new Uint8Array(24))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const body = podRequestBody(gpuTypeId, model, apiKey, cloudType);
   const res = await runpodFetch("/pods", { method: "POST", body: JSON.stringify(body) });
   if (!res.ok) {
     await saveGpuState({ status: "failed" });
@@ -585,6 +587,7 @@ async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: stri
     status: "provisioning",
     podId,
     modelId,
+    apiKey,
     endpointUrl: `https://${podId}-8080.proxy.runpod.net`,
     createdAt: Date.now(),
   };

@@ -54,6 +54,7 @@ export type GpuState = {
   createdAt?: number;
   podId?: string;
   modelId?: string;
+  apiKey?: string;
 };
 
 // RunPod's REST API has no GPU-types list endpoint; the ids below are the enum
@@ -79,15 +80,16 @@ export const LLAMA_MODELS: LlamaModel[] = [
 ];
 
 // Pod create body for RunPod's REST API, running llama.cpp server with the chosen model.
-export function podRequestBody(gpuTypeId: string, model: LlamaModel, cloudType?: string) {
+// apiKey secures the endpoint (llama.cpp --api-key); the gateway forwards it as a bearer.
+export function podRequestBody(gpuTypeId: string, model: LlamaModel, apiKey: string, cloudType?: string) {
   return {
     name: `opentask-${model.id}`,
     imageName: "ghcr.io/ggml-org/llama.cpp:server-cuda",
-    dockerStartCmd: ["-hf", model.hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99"],
+    dockerStartCmd: ["-hf", model.hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99", "--jinja", "--api-key", apiKey],
     gpuTypeIds: [gpuTypeId],
     cloudType: cloudType ?? "SECURE",
     ports: ["8080/http"],
-    containerDiskInGb: 30,
+    containerDiskInGb: 50,
     volumeInGb: 0,
   };
 }

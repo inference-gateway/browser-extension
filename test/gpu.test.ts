@@ -15,18 +15,18 @@ describe("LLAMA_MODELS", () => {
 });
 
 describe("podRequestBody", () => {
-  test("runs llama.cpp server with the chosen model", () => {
-    const body = podRequestBody("NVIDIA GeForce RTX 4090", LLAMA_MODELS[0]);
+  test("runs llama.cpp server with the chosen model and api key", () => {
+    const body = podRequestBody("NVIDIA GeForce RTX 4090", LLAMA_MODELS[0], "sekret");
     expect(body.imageName).toBe("ghcr.io/ggml-org/llama.cpp:server-cuda");
     expect(body.gpuTypeIds).toEqual(["NVIDIA GeForce RTX 4090"]);
     expect(body.cloudType).toBe("SECURE");
     expect(body.ports).toEqual(["8080/http"]);
     expect(body.dockerStartCmd).toEqual([
-      "-hf", LLAMA_MODELS[0].hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99",
+      "-hf", LLAMA_MODELS[0].hf, "--host", "0.0.0.0", "--port", "8080", "-ngl", "99", "--jinja", "--api-key", "sekret",
     ]);
   });
 
   test("honors cloudType override", () => {
-    expect(podRequestBody("gpu", LLAMA_MODELS[0], "COMMUNITY").cloudType).toBe("COMMUNITY");
+    expect(podRequestBody("gpu", LLAMA_MODELS[0], "k", "COMMUNITY").cloudType).toBe("COMMUNITY");
   });
 });

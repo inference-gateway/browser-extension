@@ -338,12 +338,13 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.35.2
+      - uses: inference-gateway/infer-action@v0.36.0
         with:
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
           model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}
           llamacpp-api-url: \${{ secrets.LLAMACPP_API_URL }}
+          llamacpp-api-key: \${{ secrets.LLAMACPP_API_KEY }}
           direct-prompt: \${{ inputs.prompt }}
           system-prompt-direct: \${{ inputs.system_prompt }}
 ${permLines}${pluginLines}${agentLines}
@@ -391,6 +392,7 @@ The workflow triggers on new/edited issues, issue comments, and pull request rev
 To route runs to a self-hosted llama.cpp endpoint (e.g. a GPU provisioned from the OpenTask popup), add to Settings > Secrets and variables > Actions:
 
 - Secret \`LLAMACPP_API_URL\` — the endpoint base URL shown in the popup, e.g. \`https://<pod>-8080.proxy.runpod.net/v1\`.
+- Secret \`LLAMACPP_API_KEY\` — the bearer token shown in the popup (the pod is started with \`--api-key\`).
 - (Optional) Variable \`DEFAULT_MODEL\` — overrides the default model for issue/comment-triggered runs, e.g. \`llamacpp/<model>\`. Manual/dispatch runs still use the picker.
 
 ### Project board tracking
