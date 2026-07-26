@@ -8,7 +8,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://api.runpod.io/*"
   ],
   "background": {
     "service_worker": "background.js"

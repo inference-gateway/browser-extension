@@ -45,3 +45,35 @@ export type AgentsCatalogRequest = { type: "agents-catalog" };
 export type AgentsCatalogResponse =
   | { catalog: AgentManifest[] }
   | { error: string };
+
+// --- RunPod GPU provisioning ---
+
+export type GpuState = {
+  endpointUrl?: string;
+  status: "idle" | "provisioning" | "running" | "failed";
+  createdAt?: number;
+  podId?: string;
+};
+
+export type GpuType = {
+  id: string;
+  name: string;
+  memoryInGb: number;
+  displayName: string;
+  securePrice: number;
+  communityPrice: number;
+  communitySpotPrice: number;
+  regions: string[];
+};
+
+export type ListGPUsRequest = { type: "list-gpus" };
+export type ListGPUsResponse = { gpus: GpuType[] } | { error: string };
+
+export type ProvisionGPURequest = { type: "provision-gpu"; gpuTypeId: string; cloudType?: string };
+export type ProvisionGPUResponse = { state: GpuState } | { error: string };
+
+export type DeprovisionGPURequest = { type: "deprovision-gpu" };
+export type DeprovisionGPUResponse = { state: GpuState } | { error: string };
+
+export type GPUStatusRequest = { type: "gpu-status" };
+export type GPUStatusResponse = { state: GpuState } | { error: string };
