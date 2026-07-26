@@ -84,17 +84,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 async function getSkills(owner: string, repo: string): Promise<Skill[]> {
   const key = `skills:${owner}/${repo}`;
   const cached = await storage.get<{ ts: number; items: Skill[] }>(key);
-  if (cached && Date.now() - cached.ts < TTL) return cached.items;
-
-  const repoSkills = await fetchFromGitHub(owner, repo);
+  const repoSkills =
+    cached && Date.now() - cached.ts < TTL
+      ? cached.items
+      : await fetchFromGitHub(owner, repo).then(async (items) => {
+          await storage.set(key, { ts: Date.now(), items });
+          return items;
+        });
 
   const pluginSkills = await fetchPluginSkills();
-
   const names = new Set(repoSkills.map((s) => s.name));
-  const items = [...repoSkills, ...pluginSkills.filter((s) => !names.has(s.name))];
-
-  await storage.set(key, { ts: Date.now(), items });
-  return items;
+  return [...repoSkills, ...pluginSkills.filter((s) => !names.has(s.name))];
 }
 
 async function loadPlugins(): Promise<PluginOption[]> {
