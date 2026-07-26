@@ -1,4 +1,5 @@
 import { rm, mkdir, cp, readFile, writeFile } from "node:fs/promises";
+import { $ } from "bun";
 
 const isFirefox = process.argv.includes("--firefox");
 const isSafari = process.argv.includes("--safari");
@@ -32,6 +33,11 @@ if (isFirefox) {
 } else {
   await cp("manifest.json", "dist/manifest.json");
 }
+
+// Tailwind/shadcn CSS for the standalone pages only (options + popup). Bun.build does
+// not process Tailwind, so compile it here to dist/options.css. The overlay stylesheet
+// (styles.css) is copied verbatim below and stays GitHub-var-based.
+await $`bun x @tailwindcss/cli -i src/ui/globals.css -o dist/options.css --minify`.quiet();
 
 await cp("src/styles.css", "dist/styles.css");
 await cp("src/options.html", "dist/options.html");

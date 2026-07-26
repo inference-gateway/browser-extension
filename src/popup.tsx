@@ -1,45 +1,29 @@
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
-
-type Theme = "system" | "light" | "dark";
-
-function applyTheme(theme: Theme) {
-  const html = document.documentElement;
-  if (theme === "dark") {
-    html.setAttribute("data-theme", "dark");
-  } else if (theme === "light") {
-    html.setAttribute("data-theme", "light");
-  } else {
-    html.removeAttribute("data-theme");
-  }
-}
+import { applyTheme, type Theme } from "./shared/theme";
 
 // Install now lives in GitHub's own repo nav (the "Tasks" tab, injected by the content
 // script). The toolbar popup is just a pointer + Settings.
 function Popup() {
   useEffect(() => {
     void (async () => {
-      const t = await storage.get<string>("theme") as Theme | undefined;
-      if (t === "light" || t === "dark") {
-        applyTheme(t);
-      } else {
-        applyTheme("system");
-      }
+      const t = (await storage.get<string>("theme")) as Theme | undefined;
+      applyTheme(t === "light" || t === "dark" ? t : "system");
     })();
   }, []);
 
   return (
-    <div className="igw-popup">
-      <div className="igw-popup-body">
-        <p className="igw-popup-muted">
-          Open a repository on GitHub and use the <strong>Tasks</strong> tab in the repo
-          navigation to install the OpenTask Agent.
+    <div className="w-72 bg-background text-foreground text-sm">
+      <div className="p-4">
+        <p className="text-muted-foreground leading-relaxed">
+          Open a repository on GitHub and use the <strong className="text-foreground">Tasks</strong> tab
+          in the repo navigation to install the OpenTask Agent.
         </p>
       </div>
-      <div className="igw-popup-footer">
+      <div className="border-t px-4 py-2 text-right">
         <a
-          className="igw-popup-link"
+          className="text-primary hover:underline cursor-pointer"
           href="#"
           onClick={(e) => {
             e.preventDefault();

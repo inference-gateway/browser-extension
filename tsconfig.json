@@ -9,7 +9,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["chrome"]
+    "types": ["chrome", "bun"],
+    "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

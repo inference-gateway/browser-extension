@@ -1,31 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { suggestForLanguages, type CatalogSkill } from "../shared/skills";
 import { ask } from "./ask";
+import { useAsk } from "./useAsk";
+import { CheckList } from "./CheckList";
 
 type Loaded = { catalog: CatalogSkill[]; installed: string[]; languages: string[] };
-type Status = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; data: Loaded };
 type Apply = { kind: "idle" } | { kind: "applying" } | { kind: "done"; url: string } | { kind: "error"; message: string };
 
 // Multi-select skills list: checked = installed. Applying opens one PR that adds the newly
 // checked skills' folders and removes the unchecked-but-installed ones under .agents/skills/.
 export function SkillsTab({ owner, repo }: { owner: string; repo: string }) {
-  const [status, setStatus] = useState<Status>({ kind: "loading" });
+  const { status } = useAsk<Loaded>({ type: "skills-catalog", owner, repo }, "Failed to load skills.", [owner, repo]);
   const [installed, setInstalled] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [apply, setApply] = useState<Apply>({ kind: "idle" });
 
+  // Seed installed/selected from each fresh catalog load.
   useEffect(() => {
-    ask({ type: "skills-catalog", owner, repo }, (resp) => {
-      if (chrome.runtime?.lastError || !resp) return setStatus({ kind: "error", message: "Failed to load skills." });
-      if (resp.error) return setStatus({ kind: "error", message: resp.error });
-      const data = resp as unknown as Loaded;
-      const inst = new Set(data.installed);
-      setInstalled(inst);
-      setSelected(new Set(inst));
-      setStatus({ kind: "ready", data });
-    });
-  }, [owner, repo]);
+    if (status.kind !== "ready") return;
+    const inst = new Set(status.data.installed);
+    setInstalled(inst);
+    setSelected(new Set(inst));
+  }, [status]);
 
   const ranked = useMemo(() => {
     if (status.kind !== "ready") return [];
@@ -67,29 +64,27 @@ export function SkillsTab({ owner, repo }: { owner: string; repo: string }) {
   const langs = status.data.languages;
   return (
     <>
-      <input
-        className="igw-tasks-search"
-        placeholder="Search skills…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      {langs.length > 0 && <p className="igw-tasks-hint">Suggested for {langs.join(", ")}</p>}
-      <div className="igw-skill-list">
-        {ranked.length === 0 && <p className="igw-tasks-muted">No skills match.</p>}
-        {ranked.map(({ skill, suggested }) => (
-          <label key={skill.name} className="igw-skill-row">
-            <input type="checkbox" checked={selected.has(skill.name)} onChange={() => toggle(skill.name)} />
-            <span className="igw-skill-text">
-              <span className="igw-skill-name">
-                {skill.name}
-                {suggested && <span className="igw-skill-badge">suggested</span>}
-                {installed.has(skill.name) && <span className="igw-skill-badge igw-skill-badge-on">installed</span>}
-              </span>
-              <span className="igw-skill-desc">{skill.description}</span>
+      <CheckList
+        items={ranked}
+        keyOf={({ skill }) => skill.name}
+        checked={({ skill }) => selected.has(skill.name)}
+        onToggle={({ skill }) => toggle(skill.name)}
+        search={query}
+        onSearch={setQuery}
+        searchPlaceholder="Search skills…"
+        emptyText="No skills match."
+        hint={langs.length > 0 && <p className="igw-tasks-hint">Suggested for {langs.join(", ")}</p>}
+        renderLabel={({ skill, suggested }) => (
+          <>
+            <span className="igw-skill-name">
+              {skill.name}
+              {suggested && <span className="igw-skill-badge">suggested</span>}
+              {installed.has(skill.name) && <span className="igw-skill-badge igw-skill-badge-on">installed</span>}
             </span>
-          </label>
-        ))}
-      </div>
+            <span className="igw-skill-desc">{skill.description}</span>
+          </>
+        )}
+      />
       <button className="igw-tasks-btn" onClick={applyChanges} disabled={!dirty || apply.kind === "applying"}>
         {apply.kind === "applying" ? "Opening PR…" : dirty ? `Apply changes (+${add.length} / −${remove.length})` : "No changes"}
       </button>

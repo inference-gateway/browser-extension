@@ -52,7 +52,7 @@ test("saveTokens trims, drops blank tokens, and clears the legacy pat key", asyn
     { owner: "  acme ", token: "  tok  " },
     { owner: "empty", token: "  " },
   ]);
-  expect(await storage.get("pats")).toEqual([{ owner: "acme", token: "tok" }]);
+  expect(await storage.get<storage.PatEntry[]>("pats")).toEqual([{ owner: "acme", token: "tok" }]);
   expect(await storage.get<string>("pat")).toBeUndefined();
 });
 
@@ -83,7 +83,7 @@ test("saveBots trims, drops empty disabled rows, and clears the legacy bot key",
     { owner: "empty", enabled: false, clientId: "  ", privateKeySecret: "APP_PRIVATE_KEY" },
     { owner: "keep", enabled: false, clientId: "Iv2", privateKeySecret: "K" },
   ]);
-  expect(await storage.get("bots")).toEqual([
+  expect(await storage.get<storage.BotEntry[]>("bots")).toEqual([
     { owner: "acme", enabled: true, clientId: "Iv1", privateKeySecret: "ACME_KEY" },
     { owner: "keep", enabled: false, clientId: "Iv2", privateKeySecret: "K" },
   ]);
