@@ -1,7 +1,7 @@
 import * as storage from "./shared/storage";
 import type { Skill, SkillsCatalogResponse, ApplySkillsResponse, DispatchTaskResponse, AgentsCatalogResponse } from "./shared/messages";
-import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, isModelOption, isPermissions, isPluginOption, isInitConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
-import type { ModelOption, BotConfig, Permissions, PluginOption } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
+import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt, initPrompt } from "./shared/task";
 import { CATALOG_URL, agentsFromCatalog, type AgentManifest } from "./shared/agents";
@@ -104,6 +104,11 @@ async function loadPlugins(): Promise<PluginOption[]> {
     : DEFAULT_PLUGINS;
 }
 
+async function loadDependencies(): Promise<DependenciesConfig> {
+  const stored = await storage.get<unknown>("dependencies");
+  return isDependenciesConfig(stored) ? stored : DEFAULT_DEPENDENCIES;
+}
+
 // Agent names the user checked in the Agents panel (AgentsTab), fed to infer-action's
 // `agents:` input on (re)install.
 async function loadSelectedAgents(): Promise<string[]> {
@@ -196,6 +201,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const agents = await loadSelectedAgents();
   const timeout = normalizeTimeout(await storage.get<unknown>("timeout"));
   const instructions = (await storage.get<string>("instructions")) ?? DEFAULT_INSTRUCTIONS;
+  const deps = await loadDependencies();
   const defaultModel = models.some((m) => m.model === model) ? model : models[0].model;
 
   const pat = await patFor(owner);
@@ -209,6 +215,16 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const repoData = await repoRes.json();
   const defaultBranch = repoData.default_branch;
   const headSha = repoData.head?.sha ?? (await ghFetch(owner, repo, `git/refs/heads/${defaultBranch}`).then((r) => r.json())).object.sha;
+
+  const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps);
+  const content = btoa(yaml);
+
+  const current = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${defaultBranch}`);
+  const currentData = current.status === 200 ? await current.json() : undefined;
+  if (currentData && atob((currentData.content as string).replace(/\s/g, "")) === yaml) {
+    return { error: "The workflow is already up to date - nothing to install." };
+  }
+  const title = currentData ? "ci: sync OpenTask Agent workflow" : "feat: add OpenTask Agent workflow";
 
   // Fresh, unique branch per install. Reusing one fixed branch accumulates closed PRs and
   // force-pushes, which can poison GitHub's PR-create for that head (500s via API *and* web
@@ -224,17 +240,16 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${branchRes.status}`);
   }
 
-  const content = btoa(workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions));
-  const existing = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}?ref=${branch}`);
-  const sha = existing.status === 200 ? (await existing.json()).sha : undefined;
+  // The branch forks from the default-branch head, so the existing file's sha there is the
+  // sha to PUT against.
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: "feat: add OpenTask Agent workflow",
+      message: title,
       content,
       branch,
-      ...(sha ? { sha } : {}),
+      ...(currentData ? { sha: currentData.sha } : {}),
     }),
   });
   if (!putRes.ok) {
@@ -242,7 +257,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${putRes.status}`);
   }
 
-  const title = "feat: add OpenTask Agent workflow";
   const body = prBody(models, defaultModel, bot, enabledPlugins(plugins), agents);
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };

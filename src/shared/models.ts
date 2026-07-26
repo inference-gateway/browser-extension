@@ -127,6 +127,59 @@ export function isPluginOption(p: unknown): p is PluginOption {
 export const enabledPlugins = (plugins: PluginOption[]): string[] =>
   plugins.filter((p) => p.enabled).map((p) => p.id);
 
+// Common CI dependencies baked into the generated workflow as setup steps between
+// checkout and infer-action. `autoDetect` (default off) ignores the language toggles
+// and instead emits every language runtime guarded by an `if: hashFiles(...)` on its
+// manifest, so a runtime installs only when the repo actually contains that language.
+// `task` has no manifest guard - it is controlled purely by its toggle. Stored under
+// "dependencies", reusing PluginOption's {id, enabled} shape for the toggle list.
+export type DependenciesConfig = { autoDetect: boolean; items: PluginOption[] };
+
+export const DEFAULT_DEPENDENCIES: DependenciesConfig = {
+  autoDetect: false,
+  items: [
+    { id: "task", enabled: true },
+    { id: "go", enabled: false },
+    { id: "rust", enabled: false },
+    { id: "node", enabled: false },
+    { id: "python", enabled: false },
+  ],
+};
+
+// Registry mapping each dependency id to its rendered workflow step (6-space indent for
+// `- uses:`, matching checkoutStep) and, for language runtimes, the hashFiles guard used
+// in auto-detect mode. Order here is the render order in the generated workflow.
+export const DEPENDENCY_DEFS: { id: string; label: string; step: string; detect?: string }[] = [
+  { id: "task", label: "Task (go-task)", step: `      - uses: arduino/setup-task@v3.0.0\n        with:\n          version: 3.x` },
+  { id: "go", label: "Go", step: `      - uses: actions/setup-go@v7.0.0\n        with:\n          go-version: stable`, detect: "hashFiles('**/go.mod') != ''" },
+  { id: "rust", label: "Rust", step: `      - uses: dtolnay/rust-toolchain@stable`, detect: "hashFiles('**/Cargo.toml') != ''" },
+  { id: "node", label: "Node.js / TypeScript", step: `      - uses: actions/setup-node@v7.0.0\n        with:\n          node-version: lts/*`, detect: "hashFiles('**/package.json') != ''" },
+  { id: "python", label: "Python", step: `      - uses: actions/setup-python@v7.0.0\n        with:\n          python-version: '3.x'`, detect: "hashFiles('**/pyproject.toml', '**/requirements.txt', '**/setup.py') != ''" },
+];
+
+export function isDependenciesConfig(x: unknown): x is DependenciesConfig {
+  return (
+    !!x &&
+    typeof x === "object" &&
+    typeof (x as Record<string, unknown>).autoDetect === "boolean" &&
+    Array.isArray((x as Record<string, unknown>).items) &&
+    ((x as { items: unknown[] }).items).every(isPluginOption)
+  );
+}
+
+// The setup-step YAML block to insert between checkout and infer-action. In auto-detect
+// mode every language runtime (those with a `detect` guard) is emitted with its
+// `if: hashFiles(...)`; task follows its toggle either way. Otherwise only toggled-on
+// deps are emitted, unconditionally.
+export function dependencySteps(deps: DependenciesConfig): string {
+  const on = new Set(deps.items.filter((d) => d.enabled).map((d) => d.id));
+  return DEPENDENCY_DEFS.flatMap((def) => {
+    if (deps.autoDetect && def.detect) return [`${def.step}\n        if: ${def.detect}`];
+    if (on.has(def.id)) return [def.step];
+    return [];
+  }).join("\n\n");
+}
+
 export function isRefineConfig(r: unknown): r is RefineConfig {
   return (
     !!r &&
@@ -186,7 +239,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
   const optionLines = models.map((m) => `          - ${m.model}`).join("\n");
 
@@ -233,6 +286,8 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
         with:
           token: \${{ steps.app-token.outputs.token }}`
     : `      - uses: actions/checkout@v7.0.1`;
+  const depBlock = dependencySteps(deps);
+  const depSteps = depBlock ? `\n\n${depBlock}` : "";
   const githubToken = bot.enabled ? "${{ steps.app-token.outputs.token }}" : "${{ secrets.GITHUB_TOKEN }}";
   const botSlugLine = bot.enabled ? "\n          github-app-slug: ${{ steps.app-token.outputs.app-slug }}" : "";
 
@@ -272,7 +327,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: ${timeoutMinutes}
     steps:
-${appTokenStep}${checkoutStep}
+${appTokenStep}${checkoutStep}${depSteps}
 
       - uses: inference-gateway/infer-action@v0.35.2
         with:

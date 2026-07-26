@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import * as storage from "./shared/storage";
 import type { PatEntry, BotEntry } from "./shared/storage";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "./shared/prompts";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, normalizeTimeout, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PERMISSIONS, DEFAULT_REFINE, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, normalizeTimeout, isModelOption, isPermissions, isRefineConfig, isPluginOption, isInitConfig, isDependenciesConfig, githubAppUrl, type BotConfig, type Permissions, type RefineConfig, type PluginOption, type InitConfig, type DependenciesConfig } from "./shared/models";
 import { applyTheme, type Theme } from "./shared/theme";
 import type { Account } from "./ui/options/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/components/tabs";
@@ -12,6 +12,7 @@ import { AccountsTab } from "./ui/options/AccountsTab";
 import { AgentTab } from "./ui/options/AgentTab";
 import { PromptsTab } from "./ui/options/PromptsTab";
 import { WorkflowTab } from "./ui/options/WorkflowTab";
+import { DependenciesTab } from "./ui/options/DependenciesTab";
 import { AppearanceTab } from "./ui/options/AppearanceTab";
 
 // Merges the two owner-keyed lists into accounts. Empty -> one blank starter row.
@@ -39,6 +40,7 @@ function Options() {
   const [init, setInit] = useState<InitConfig>(DEFAULT_INIT);
   const [timeout, setTimeoutMin] = useState<number>(DEFAULT_TIMEOUT);
   const [plugins, setPlugins] = useState<PluginOption[]>(DEFAULT_PLUGINS);
+  const [deps, setDeps] = useState<DependenciesConfig>(DEFAULT_DEPENDENCIES);
   const [theme, setTheme] = useState<Theme>("system");
   const [showToken, setShowToken] = useState(false);
   const [ownerOptions, setOwnerOptions] = useState<string[]>([]);
@@ -65,6 +67,12 @@ function Options() {
       const pl = await storage.get<unknown>("plugins");
       const stored = Array.isArray(pl) ? pl.filter(isPluginOption) : [];
       setPlugins(DEFAULT_PLUGINS.map((p) => ({ ...p, enabled: stored.find((s) => s.id === p.id)?.enabled ?? p.enabled })));
+      const dp = await storage.get<unknown>("dependencies");
+      const dpc = isDependenciesConfig(dp) ? dp : DEFAULT_DEPENDENCIES;
+      setDeps({
+        autoDetect: dpc.autoDetect,
+        items: DEFAULT_DEPENDENCIES.items.map((d) => ({ ...d, enabled: dpc.items.find((s) => s.id === d.id)?.enabled ?? d.enabled })),
+      });
       const t = (await storage.get<string>("theme")) as Theme | undefined;
       const resolved = t === "light" || t === "dark" ? t : "system";
       setTheme(resolved);
@@ -72,8 +80,6 @@ function Options() {
     })();
   }, []);
 
-  // Fetch the selected token's owners (user + orgs) so the account dropdown is populated
-  // from GitHub, not hand-typed. Re-runs when you switch account or edit its token.
   const activeToken = (accounts[selected] ?? accounts[0]).token.trim();
   useEffect(() => {
     if (!activeToken) { setOwnerOptions([]); setOrgOwners([]); return; }
@@ -118,6 +124,7 @@ function Options() {
     await storage.set("init", init);
     await storage.set("timeout", normalizeTimeout(timeout));
     await storage.set("plugins", plugins);
+    await storage.set("dependencies", deps);
     await storage.set("theme", theme);
     setStatus("Saved.");
   }
@@ -131,8 +138,6 @@ function Options() {
   }
 
   function addAccount() {
-    // ponytail: two accounts can share an owner; last wins at read time (tokenFor/botFor
-    // find first). No dedupe UI - the dropdown makes duplicates obvious enough.
     setAccounts((prev) => [...prev, { owner: "", token: "", bot: DEFAULT_BOT }]);
     setSelected(accounts.length);
   }
@@ -155,6 +160,7 @@ function Options() {
     setInit(DEFAULT_INIT);
     setTimeoutMin(DEFAULT_TIMEOUT);
     setPlugins(DEFAULT_PLUGINS);
+    setDeps(DEFAULT_DEPENDENCIES);
     setStatus("Reset to defaults (not yet saved).");
   }
 
@@ -177,6 +183,7 @@ function Options() {
           <TabsTrigger value="agent">Agent</TabsTrigger>
           <TabsTrigger value="prompts">Prompts</TabsTrigger>
           <TabsTrigger value="workflow">Workflow</TabsTrigger>
+          <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
         </TabsList>
 
@@ -208,6 +215,10 @@ function Options() {
 
         <TabsContent value="workflow" className="flex flex-col gap-4">
           <WorkflowTab timeout={timeout} setTimeoutMin={setTimeoutMin} plugins={plugins} setPlugins={setPlugins} />
+        </TabsContent>
+
+        <TabsContent value="dependencies" className="flex flex-col gap-4">
+          <DependenciesTab deps={deps} setDeps={setDeps} />
         </TabsContent>
 
         <TabsContent value="appearance" className="flex flex-col gap-4">

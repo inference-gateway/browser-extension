@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, isModelOption, isBotConfig, isPermissions, isPluginOption, enabledPlugins, githubAppUrl, prBody, workflowYaml } from "../src/shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_DEPENDENCIES, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, isModelOption, isBotConfig, isPermissions, isPluginOption, isDependenciesConfig, enabledPlugins, githubAppUrl, prBody, workflowYaml, type DependenciesConfig } from "../src/shared/models";
 
 const models = DEFAULT_MODELS;
 const def = "anthropic/claude-sonnet-4-6";
@@ -234,4 +234,66 @@ test("prBody accepts custom plugins", () => {
   const body = prBody(models, def, noBot, custom);
   expect(body).toContain("`custom/plugin-a`");
   expect(body).not.toContain("inference-gateway/caveman");
+});
+
+// deps is the trailing workflowYaml arg; this fills the ones before it.
+const yamlWithDeps = (deps: DependenciesConfig) =>
+  workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, [], [], DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, deps);
+
+const setEnabled = (ids: string[], autoDetect = false): DependenciesConfig => ({
+  autoDetect,
+  items: DEFAULT_DEPENDENCIES.items.map((d) => ({ ...d, enabled: ids.includes(d.id) })),
+});
+
+test("DEFAULT_DEPENDENCIES enables only task, auto-detect off", () => {
+  expect(DEFAULT_DEPENDENCIES.autoDetect).toBe(false);
+  expect(DEFAULT_DEPENDENCIES.items.filter((d) => d.enabled).map((d) => d.id)).toEqual(["task"]);
+});
+
+test("workflowYaml installs task by default and no language runtimes", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain("uses: arduino/setup-task@v3.0.0");
+  expect(yaml).not.toContain("setup-go");
+  expect(yaml).not.toContain("hashFiles");
+});
+
+test("workflowYaml emits enabled language runtimes unconditionally, before infer-action", () => {
+  const yaml = yamlWithDeps(setEnabled(["task", "go", "node"]));
+  expect(yaml).toContain("uses: actions/setup-go@v7.0.0");
+  expect(yaml).toContain("uses: actions/setup-node@v7.0.0");
+  expect(yaml).not.toContain("uses: actions/setup-python");
+  expect(yaml).not.toContain("if: hashFiles");
+  expect(yaml.indexOf("setup-go")).toBeLessThan(yaml.indexOf("infer-action"));
+  expect(yaml.indexOf("actions/checkout")).toBeLessThan(yaml.indexOf("setup-go"));
+});
+
+test("workflowYaml omits all dependency steps when none enabled", () => {
+  const yaml = yamlWithDeps(setEnabled([]));
+  expect(yaml).not.toContain("setup-task");
+  expect(yaml).not.toContain("setup-go");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.35.2");
+});
+
+test("auto-detect guards every language runtime with hashFiles and keeps task by its toggle", () => {
+  const yaml = yamlWithDeps(setEnabled(["task"], true));
+  expect(yaml).toContain("uses: arduino/setup-task@v3.0.0");
+  expect(yaml).toContain("uses: actions/setup-go@v7.0.0\n        with:\n          go-version: stable\n        if: hashFiles('**/go.mod') != ''");
+  expect(yaml).toContain("if: hashFiles('**/Cargo.toml') != ''");
+  expect(yaml).toContain("if: hashFiles('**/package.json') != ''");
+  expect(yaml).toContain("if: hashFiles('**/pyproject.toml', '**/requirements.txt', '**/setup.py') != ''");
+});
+
+test("auto-detect ignores the per-language toggles (rust off still emitted with guard)", () => {
+  const yaml = yamlWithDeps(setEnabled([], true));
+  expect(yaml).toContain("uses: dtolnay/rust-toolchain@stable\n        if: hashFiles('**/Cargo.toml') != ''");
+  expect(yaml).not.toContain("uses: arduino/setup-task");
+});
+
+test("isDependenciesConfig accepts a valid config and rejects bad shapes", () => {
+  expect(isDependenciesConfig(DEFAULT_DEPENDENCIES)).toBe(true);
+  expect(isDependenciesConfig({ autoDetect: true, items: [] })).toBe(true);
+  expect(isDependenciesConfig({ autoDetect: "yes", items: [] })).toBe(false);
+  expect(isDependenciesConfig({ autoDetect: true, items: [{ id: "go" }] })).toBe(false);
+  expect(isDependenciesConfig({ autoDetect: true })).toBe(false);
+  expect(isDependenciesConfig(null)).toBe(false);
 });
