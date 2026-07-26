@@ -21,7 +21,6 @@ function Popup() {
     })();
   }, []);
 
-  // Fetch GPU types and last known GPU state on mount
   useEffect(() => {
     ask({ type: "list-gpus" }, (resp) => {
       const r = resp as ListGPUsResponse;
@@ -36,7 +35,6 @@ function Popup() {
     });
   }, []);
 
-  // Poll for status while provisioning
   useEffect(() => {
     if (gpu.status !== "provisioning") return;
     const id = setInterval(() => {
