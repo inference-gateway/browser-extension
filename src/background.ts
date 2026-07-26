@@ -549,6 +549,14 @@ async function runpodFetch(path: string, init?: RequestInit): Promise<Response> 
   });
 }
 
+// RunPod error bodies are JSON like {"error":"..."} or plain text; surface whichever.
+async function runpodError(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "");
+  let detail = text;
+  try { detail = (JSON.parse(text) as { error?: string; message?: string }).error ?? (JSON.parse(text) as { message?: string }).message ?? text; } catch { /* not JSON */ }
+  return `RunPod ${res.status}: ${detail || res.statusText}`;
+}
+
 async function loadGpuState(): Promise<GpuState> {
   return (await storage.get<GpuState>("gpu-state")) ?? { status: "idle" };
 }
@@ -569,7 +577,7 @@ async function provisionGPU(gpuTypeId: string, modelId: string, cloudType?: stri
   const res = await runpodFetch("/pods", { method: "POST", body: JSON.stringify(body) });
   if (!res.ok) {
     await saveGpuState({ status: "failed" });
-    return { error: `RunPod ${res.status}: ${res.statusText}` };
+    return { error: await runpodError(res) };
   }
   const pod = await res.json() as { id: string; podId?: string };
   const podId = pod.id ?? pod.podId;
@@ -588,7 +596,7 @@ async function deprovisionGPU(): Promise<{ state: GpuState } | { error: string }
   const state = await loadGpuState();
   if (!state.podId) return { state: { status: "idle" } };
   const res = await runpodFetch(`/pods/${state.podId}`, { method: "DELETE" });
-  if (!res.ok && res.status !== 404) return { error: `RunPod ${res.status}: ${res.statusText}` };
+  if (!res.ok && res.status !== 404) return { error: await runpodError(res) };
   const idle: GpuState = { status: "idle" };
   await saveGpuState(idle);
   return { state: idle };
@@ -603,7 +611,7 @@ async function gpuStatus(): Promise<{ state: GpuState } | { error: string }> {
     await saveGpuState(idle);
     return { state: idle };
   }
-  if (!res.ok) return { error: `RunPod ${res.status}: ${res.statusText}` };
+  if (!res.ok) return { error: await runpodError(res) };
   const pod = await res.json() as { desiredStatus?: string; status?: string };
   const status = pod.desiredStatus ?? pod.status ?? "unknown";
   if (status === "RUNNING") {
