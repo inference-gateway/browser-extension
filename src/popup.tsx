@@ -82,8 +82,19 @@ function Popup() {
             )}
           </span>
         </div>
-        {gpu.endpointUrl && (
-          <p className="text-xs text-muted-foreground mb-2 truncate" title={gpu.endpointUrl}>{gpu.endpointUrl}</p>
+        {gpu.status === "running" && gpu.endpointUrl && (
+          <div className="text-xs text-muted-foreground mb-2 space-y-1">
+            <p>Add to the repo's Settings &rarr; Secrets and variables &rarr; Actions:</p>
+            <p className="truncate" title={`${gpu.endpointUrl}/v1`}>
+              Secret <code className="text-foreground">LLAMACPP_API_URL</code> = <code className="text-foreground">{gpu.endpointUrl}/v1</code>
+            </p>
+            {gpu.modelId && (
+              <p className="truncate">
+                Variable <code className="text-foreground">DEFAULT_MODEL</code> = <code className="text-foreground">llamacpp/{gpu.modelId}</code>
+              </p>
+            )}
+            <p>Re-install the workflow (from a repo's Tasks tab) to pick up llama.cpp support.</p>
+          </div>
         )}
         {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
         <div className="flex flex-col gap-2">

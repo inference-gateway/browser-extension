@@ -49,7 +49,12 @@ test("workflowYaml exposes model as a workflow_dispatch choice input with all op
   expect(yaml).toContain("type: choice");
   expect(yaml).toContain(`default: ${def}`);
   for (const m of models) expect(yaml).toContain(`          - ${m.model}`);
-  expect(yaml).toContain(`model: \${{ inputs.model || '${def}' }}`);
+  expect(yaml).toContain(`model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}`);
+});
+
+test("workflowYaml wires the llama.cpp endpoint secret onto infer-action", () => {
+  const yaml = workflowYaml(models, def, noBot);
+  expect(yaml).toContain("llamacpp-api-url: ${{ secrets.LLAMACPP_API_URL }}");
 });
 
 test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", () => {

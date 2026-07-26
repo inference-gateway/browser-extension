@@ -342,7 +342,8 @@ ${appTokenStep}${checkoutStep}${depSteps}
         with:
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
-          model: \${{ inputs.model || '${def}' }}
+          model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}
+          llamacpp-api-url: \${{ secrets.LLAMACPP_API_URL }}
           direct-prompt: \${{ inputs.prompt }}
           system-prompt-direct: \${{ inputs.system_prompt }}
 ${permLines}${pluginLines}${agentLines}
@@ -384,6 +385,13 @@ Before the workflow can run:
 1. Go to Settings > Secrets and variables > Actions and add the provider API key secret for the model(s) you use: ${secretList}.${botStep}
 
 The workflow triggers on new/edited issues, issue comments, and pull request review comments, and can also be run manually (Actions > Task > Run workflow) with a model chosen from the dropdown.
+
+### Self-hosted llama.cpp (RunPod GPU)
+
+To route runs to a self-hosted llama.cpp endpoint (e.g. a GPU provisioned from the OpenTask popup), add to Settings > Secrets and variables > Actions:
+
+- Secret \`LLAMACPP_API_URL\` — the endpoint base URL shown in the popup, e.g. \`https://<pod>-8080.proxy.runpod.net/v1\`.
+- (Optional) Variable \`DEFAULT_MODEL\` — overrides the default model for issue/comment-triggered runs, e.g. \`llamacpp/<model>\`. Manual/dispatch runs still use the picker.
 
 ### Project board tracking
 

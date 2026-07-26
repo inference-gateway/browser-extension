@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as storage from "../shared/storage";
 import { DEFAULT_MODELS, isModelOption, type ModelOption } from "../shared/models";
 import { DEFAULT_PROMPTS, mergePrompts, type Prompt } from "../shared/prompts";
+import type { GpuState } from "../shared/messages";
 import { ask } from "./ask";
 
 type State =
@@ -20,6 +21,7 @@ type SendState =
 export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: string; onClose: () => void }) {
   const [state, setState] = useState<State>({ kind: "checking" });
   const [models, setModels] = useState<ModelOption[]>(DEFAULT_MODELS);
+  const [gpuModel, setGpuModel] = useState<string | null>(null);
   const [model, setModel] = useState(DEFAULT_MODELS[0].model);
   const [prompts, setPrompts] = useState<Prompt[]>(DEFAULT_PROMPTS);
   const [task, setTask] = useState("");
@@ -37,6 +39,12 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
       setModel(list[0].model);
       setPrompts(mergePrompts(await storage.get<Prompt[]>("prompts")));
     })();
+    // Offer the running llama.cpp GPU as a model option (routed via the DEFAULT_MODEL/
+    // LLAMACPP_API_URL repo config the workflow reads).
+    ask({ type: "gpu-status" }, (resp) => {
+      const state = (resp as { state?: GpuState }).state;
+      if (state?.status === "running" && state.modelId) setGpuModel(`llamacpp/${state.modelId}`);
+    });
     ask({ type: "check-install", owner, repo }, (resp) => {
       if (chrome.runtime?.lastError || !resp) return setState({ kind: "ready", installed: false, error: "Failed to check install status." });
       if (resp.error) return setState({ kind: "ready", installed: false, error: resp.error });
@@ -134,6 +142,7 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
                 onChange={(e) => setModel(e.target.value)}
                 aria-label="Model for this run"
               >
+                {gpuModel && <option value={gpuModel}>{gpuModel}</option>}
                 {models.map((m) => <option key={m.model} value={m.model}>{m.model}</option>)}
               </select>
             )}
