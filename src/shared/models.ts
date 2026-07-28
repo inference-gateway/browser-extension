@@ -335,7 +335,7 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.37.1
+      - uses: inference-gateway/infer-action@v0.38.0
         with:
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
