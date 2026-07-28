@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1](https://github.com/inference-gateway/opentask/compare/v1.4.0...v1.4.1) (2026-07-28)
+
+### 🐛 Bug Fixes
+
+* **ci:** update maintainer app ID to client ID in workflows and documentation ([137fa0f](https://github.com/inference-gateway/opentask/commit/137fa0fc994edc88889d69fe01dfc428ae8d093f))
+
+### 🔧 Miscellaneous
+
+* **deps:** bump infer-action from v0.37.1 to v0.38.0 ([#86](https://github.com/inference-gateway/opentask/issues/86)) ([75ba6bd](https://github.com/inference-gateway/opentask/commit/75ba6bdf64bb6b6ba10daa3eeac8bb8113406e0d))
+* **deps:** bump inference-gateway/infer-action from v0.36.0 to v0.37.1 ([#85](https://github.com/inference-gateway/opentask/issues/85)) ([b35f790](https://github.com/inference-gateway/opentask/commit/b35f790760b35b22046ffec2578769fccbffe172))
+
 ## [1.4.0](https://github.com/inference-gateway/opentask/compare/v1.3.0...v1.4.0) (2026-07-26)
 
 ### ✨ Features
