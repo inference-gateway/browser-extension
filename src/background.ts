@@ -1,6 +1,6 @@
 import * as storage from "./shared/storage";
 import { isValidHf, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
-import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout, emptyRepoError } from "./shared/models";
+import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
 import { taskBody, taskTitle, refinePrompt, DEFAULT_REFINE_PROMPT, REFINE_SYSTEM_PROMPT, initPrompt } from "./shared/task";
@@ -232,9 +232,13 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
     throw new Error(`GitHub ${repoRes.status}`);
   }
   const repoData = await repoRes.json();
-  const emptyErr = emptyRepoError(repoData);
-  if (emptyErr) return { error: emptyErr };
   const defaultBranch = repoData.default_branch;
+
+  // Empty repo (no commits): create an initial commit so we can create branches and PRs
+  if (!repoData.head) {
+    const initSha = await createInitialCommit(owner, repo, defaultBranch);
+    repoData.head = { sha: initSha };
+  }
   const headSha = repoData.head!.sha;
 
   const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps, debug);
@@ -410,9 +414,13 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
   const repoRes = await ghFetch(owner, repo, "");
   if (!repoRes.ok) return ghError(repoRes.status);
   const repoData = await repoRes.json();
-  const emptyErr = emptyRepoError(repoData);
-  if (emptyErr) return { error: emptyErr };
   const base = repoData.default_branch;
+
+  // Empty repo (no commits): create an initial commit so we can create branches and PRs
+  if (!repoData.head) {
+    const initSha = await createInitialCommit(owner, repo, base);
+    repoData.head = { sha: initSha };
+  }
   const baseSha = (await ghFetch(owner, repo, `git/refs/heads/${base}`).then((r) => r.json())).object.sha;
   const baseTree = (await ghFetch(owner, repo, `git/commits/${baseSha}`).then((r) => r.json())).tree.sha;
 
@@ -486,6 +494,27 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
     return { prUrl: `https://github.com/${owner}/${repo}/compare/${base}...${skillsBranch}?${q}` };
   }
   return ghError(prRes.status);
+}
+
+// Create an initial commit on an empty repo so we can create branches and PRs.
+// Creates an empty tree, commits it with no parents, and creates the default branch ref.
+async function createInitialCommit(owner: string, repo: string, branch: string): Promise<string> {
+  const tree = await ghFetch(owner, repo, "git/trees", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tree: [] }),
+  }).then((r) => r.json());
+  const commit = await ghFetch(owner, repo, "git/commits", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: "chore: initial commit for OpenTask Agent", tree: tree.sha, parents: [] }),
+  }).then((r) => r.json());
+  await ghFetch(owner, repo, "git/refs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: commit.sha }),
+  });
+  return commit.sha;
 }
 
 // GitHub's POST /pulls transiently 500s in the moment right after a branch ref is

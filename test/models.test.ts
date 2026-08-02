@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_DEPENDENCIES, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, isModelOption, isBotConfig, isPermissions, isPluginOption, isDependenciesConfig, enabledPlugins, githubAppUrl, prBody, workflowYaml, emptyRepoError, type DependenciesConfig } from "../src/shared/models";
+import { DEFAULT_MODELS, DEFAULT_BOT, DEFAULT_PROVIDERS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_DEPENDENCIES, DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, isModelOption, isBotConfig, isPermissions, isPluginOption, isDependenciesConfig, enabledPlugins, githubAppUrl, prBody, workflowYaml, type DependenciesConfig } from "../src/shared/models";
 
 const models = DEFAULT_MODELS;
 const def = "anthropic/claude-sonnet-4-6";
@@ -317,12 +317,4 @@ test("isDependenciesConfig accepts a valid config and rejects bad shapes", () =>
   expect(isDependenciesConfig({ autoDetect: true, items: [{ id: "go" }] })).toBe(false);
   expect(isDependenciesConfig({ autoDetect: true })).toBe(false);
   expect(isDependenciesConfig(null)).toBe(false);
-});
-
-test("emptyRepoError returns error for empty repo (no head)", () => {
-  expect(emptyRepoError({ head: null })).toBe("The repository has no commits yet. Create an initial commit before installing the OpenTask Agent workflow.");
-});
-
-test("emptyRepoError returns null for repo with commits", () => {
-  expect(emptyRepoError({ head: { sha: "abc123" } })).toBeNull();
 });
