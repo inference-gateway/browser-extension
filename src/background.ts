@@ -234,7 +234,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const repoData = await repoRes.json();
   const defaultBranch = repoData.default_branch;
 
-  // Empty repo (no commits): create an initial commit so we can create branches and PRs
   if (!repoData.head) {
     const initSha = await createInitialCommit(owner, repo, defaultBranch);
     repoData.head = { sha: initSha };
@@ -416,7 +415,6 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
   const repoData = await repoRes.json();
   const base = repoData.default_branch;
 
-  // Empty repo (no commits): create an initial commit so we can create branches and PRs
   if (!repoData.head) {
     const initSha = await createInitialCommit(owner, repo, base);
     repoData.head = { sha: initSha };
