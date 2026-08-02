@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.4](https://github.com/inference-gateway/opentask/compare/v1.4.3...v1.4.4) (2026-08-02)
+
+### 🐛 Bug Fixes
+
+* install on empty repos and surface GitHub's error reason ([#93](https://github.com/inference-gateway/opentask/issues/93)) ([7e43977](https://github.com/inference-gateway/opentask/commit/7e439777ecb1ecd67c9f90c2cc917570ded1f950)), closes [#91](https://github.com/inference-gateway/opentask/issues/91)
+
 ## [1.4.3](https://github.com/inference-gateway/opentask/compare/v1.4.2...v1.4.3) (2026-08-02)
 
 ### 🐛 Bug Fixes
