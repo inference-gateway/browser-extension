@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.5](https://github.com/inference-gateway/opentask/compare/v1.4.4...v1.4.5) (2026-08-02)
+
+### 🐛 Bug Fixes
+
+* render secret-name client id as a secrets reference ([#94](https://github.com/inference-gateway/opentask/issues/94)) ([ab82480](https://github.com/inference-gateway/opentask/commit/ab824809e3ae35cd08234e08c37c173157dc4477))
+
 ## [1.4.4](https://github.com/inference-gateway/opentask/compare/v1.4.3...v1.4.4) (2026-08-02)
 
 ### 🐛 Bug Fixes
