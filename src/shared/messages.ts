@@ -61,6 +61,22 @@ export type GpuState = {
 // A llama.cpp -hf ref: "owner/repo" with an optional ":quant" (e.g. bartowski/foo-GGUF:Q4_K_M).
 export const isValidHf = (hf: string) => /^[\w.-]+\/[\w.-]+(:[\w.]+)?$/.test(hf.trim());
 
+// GitHub error bodies carry the actual reason - {"message":"Invalid tree info"} or a
+// "message" plus an "errors" array. A bare "GitHub 422" tells the user nothing and hides
+// which call failed, so always fold the body into the message we surface.
+export function githubError(status: number, body: string): string {
+  let detail = body.trim();
+  try {
+    const json = JSON.parse(body) as { message?: string; errors?: { message?: string; field?: string; code?: string }[] };
+    const errors = (json.errors ?? [])
+      .map((e) => e.message ?? [e.field, e.code].filter(Boolean).join(" "))
+      .filter(Boolean)
+      .join("; ");
+    detail = [json.message, errors].filter(Boolean).join(" - ");
+  } catch { /* not JSON - fall back to the raw text */ }
+  return detail ? `GitHub ${status}: ${detail.slice(0, 300)}` : `GitHub ${status}`;
+}
+
 // RunPod's REST API has no GPU-types list endpoint; the ids below are the enum
 // values it accepts for gpuTypeIds. Enough spread to fit a 7-14B GGUF at Q4.
 // ponytail: static list, revisit if RunPod ships a catalog endpoint.

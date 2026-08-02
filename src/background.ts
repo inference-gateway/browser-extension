@@ -1,5 +1,5 @@
 import * as storage from "./shared/storage";
-import { isValidHf, podRequestBody, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
+import { isValidHf, podRequestBody, githubError, type Skill, type SkillsCatalogResponse, type ApplySkillsResponse, type DispatchTaskResponse, type AgentsCatalogResponse, type GpuState } from "./shared/messages";
 import { DEFAULT_MODELS, DEFAULT_PERMISSIONS, DEFAULT_PLUGINS, DEFAULT_INIT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, isModelOption, isPermissions, isPluginOption, isInitConfig, isDependenciesConfig, enabledPlugins, workflowYaml, prBody, normalizeTimeout } from "./shared/models";
 import type { ModelOption, BotConfig, Permissions, PluginOption, DependenciesConfig } from "./shared/models";
 import { REGISTRY, parseSource, isCatalogSkill, type CatalogSkill } from "./shared/skills";
@@ -176,7 +176,7 @@ async function fetchFromGitHub(owner: string, repo: string): Promise<Skill[]> {
     { headers },
   );
   if (res.status === 404) return []; // repo has no skills - degrade gracefully
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  if (!res.ok) throw await ghFail(res);
   const data = await res.json();
   if (!Array.isArray(data)) return [];
   return data.filter((e) => e?.type === "dir").map((e) => ({ name: String(e.name) }));
@@ -193,6 +193,22 @@ async function ghFetch(owner: string, repo: string, path: string, init?: Request
   return fetch(url, { ...init, headers });
 }
 
+// The Error to throw for a failed GitHub call: carries GitHub's own explanation
+// ("Invalid tree info") instead of a bare status code. Use as `throw await ghFail(res)`.
+async function ghFail(res: Response): Promise<Error> {
+  return new Error(githubError(res.status, await res.text().catch(() => "")));
+}
+
+// The default branch's head sha. GET /repos has no `head` field, so an empty repo is
+// detected where it actually shows: the ref lookup answers 409 "Git Repository is empty."
+// on a repo with no commits - then seed one so there is a base to branch from.
+async function headShaFor(owner: string, repo: string, branch: string): Promise<string> {
+  const res = await ghFetch(owner, repo, `git/ref/heads/${branch}`);
+  if (res.ok) return (await res.json()).object.sha;
+  if (res.status !== 404 && res.status !== 409) throw await ghFail(res);
+  return createInitialCommit(owner, repo);
+}
+
 async function checkInstall(owner: string, repo: string): Promise<{ installed: boolean; url?: string } | { error: string }> {
   const pat = await patFor(owner);
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Contents: write, Pull requests: write, and Workflows: write in the extension options." };
@@ -204,7 +220,7 @@ async function checkInstall(owner: string, repo: string): Promise<{ installed: b
   }
   if (res.status === 404) return { installed: false };
   if (res.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write, Pull requests: write, and Workflows: write." };
-  throw new Error(`GitHub ${res.status}`);
+  throw await ghFail(res);
 }
 
 async function doInstall(owner: string, repo: string, model: string): Promise<{ prUrl: string; manual?: boolean } | { error: string }> {
@@ -229,16 +245,10 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   const repoRes = await ghFetch(owner, repo, "");
   if (!repoRes.ok) {
     if (repoRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write, Pull requests: write, and Workflows: write." };
-    throw new Error(`GitHub ${repoRes.status}`);
+    throw await ghFail(repoRes);
   }
-  const repoData = await repoRes.json();
-  const defaultBranch = repoData.default_branch;
-
-  if (!repoData.head) {
-    const initSha = await createInitialCommit(owner, repo, defaultBranch);
-    repoData.head = { sha: initSha };
-  }
-  const headSha = repoData.head!.sha;
+  const defaultBranch = (await repoRes.json()).default_branch;
+  const headSha = await headShaFor(owner, repo, defaultBranch);
 
   const yaml = workflowYaml(models, defaultModel, bot, perms, enabledPlugins(plugins), agents, timeout, instructions, deps, debug);
   const content = btoa(yaml);
@@ -258,7 +268,7 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   });
   if (!branchRes.ok) {
     if (branchRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write, Pull requests: write, and Workflows: write." };
-    throw new Error(`GitHub ${branchRes.status}`);
+    throw await ghFail(branchRes);
   }
 
   const putRes = await ghFetch(owner, repo, `contents/${WORKFLOW_PATH}`, {
@@ -273,21 +283,26 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   });
   if (!putRes.ok) {
     if (putRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write, Pull requests: write, and Workflows: write." };
-    throw new Error(`GitHub ${putRes.status}`);
+    throw await ghFail(putRes);
   }
 
   const body = prBody(models, defaultModel, bot, enabledPlugins(plugins), agents);
   const prRes = await openPull(owner, repo, { title, head: branch, base: defaultBranch, body });
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
   if (prRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Pull requests: write." };
-  if (prRes.status === 422) return { error: "The workflow is already up to date - nothing to re-install." };
+  if (prRes.status === 422) {
+    // "No commits between ..." really is "nothing to install"; any other 422 (a PR already
+    // open for the branch, a protected base) must not be relabelled as that.
+    const detail = githubError(422, await prRes.text().catch(() => ""));
+    return { error: /no commits between/i.test(detail) ? "The workflow is already up to date - nothing to re-install." : detail };
+  }
   if (prRes.status >= 500) {
     const detail = await prRes.text().catch(() => "");
     console.warn(`[igw] POST /pulls ${prRes.status}: ${detail.slice(0, 300)}`);
     const q = `expand=1&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
     return { prUrl: `https://github.com/${owner}/${repo}/compare/${defaultBranch}...${branch}?${q}`, manual: true };
   }
-  throw new Error(`GitHub ${prRes.status}`);
+  throw await ghFail(prRes);
 }
 
 // Send a free-text task: open an issue whose body carries the "@opentask" trigger, so
@@ -304,7 +319,7 @@ async function createTask(owner: string, repo: string, prompt: string): Promise<
   });
   if (res.status === 403) return { error: "PAT lacks Issues: write. Grant it in the extension options." };
   if (res.status === 404) return { error: "Repo not found, or the PAT can't access it." };
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  if (!res.ok) throw await ghFail(res);
   const data = await res.json();
   return { url: data.html_url };
 }
@@ -317,7 +332,7 @@ async function dispatchTask(owner: string, repo: string, model: string, prompt: 
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Actions: write in the extension options." };
 
   const repoRes = await ghFetch(owner, repo, "");
-  if (!repoRes.ok) return ghError(repoRes.status);
+  if (!repoRes.ok) return ghError(repoRes);
   const base = (await repoRes.json()).default_branch;
 
   const dispatch = (inputs: Record<string, string>) =>
@@ -332,7 +347,7 @@ async function dispatchTask(owner: string, repo: string, model: string, prompt: 
   if (res.status === 404) return { error: "Workflow not found on the default branch. Merge the OpenTask Agent install PR first." };
   if (res.status === 403) return { error: "PAT lacks Actions: write. Grant it in the extension options." };
   if (res.status === 422) return { error: "Dispatch rejected - the installed workflow may predate the prompt input. Re-install the OpenTask Agent workflow." };
-  throw new Error(`GitHub ${res.status}`);
+  throw await ghFail(res);
 }
 
 // Refine one existing issue: pick the default model and dispatch the workflow with a
@@ -374,7 +389,7 @@ async function fetchCatalog(): Promise<CatalogSkill[]> {
   const cached = await storage.get<{ ts: number; items: CatalogSkill[] }>(key);
   if (cached && Date.now() - cached.ts < TTL) return cached.items;
   const res = await ghFetch(REGISTRY.owner, REGISTRY.repo, "contents/catalog.json");
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  if (!res.ok) throw await ghFail(res);
   const file = await res.json();
   const json = JSON.parse(decodeBase64(file.content));
   const items: CatalogSkill[] = Array.isArray(json.skills) ? json.skills.filter(isCatalogSkill) : [];
@@ -411,15 +426,10 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
   if (!pat) return { error: "No PAT configured. Add a fine-grained token with Contents: write and Pull requests: write in the extension options." };
 
   const repoRes = await ghFetch(owner, repo, "");
-  if (!repoRes.ok) return ghError(repoRes.status);
-  const repoData = await repoRes.json();
-  const base = repoData.default_branch;
+  if (!repoRes.ok) return ghError(repoRes);
+  const base = (await repoRes.json()).default_branch;
 
-  if (!repoData.head) {
-    const initSha = await createInitialCommit(owner, repo, base);
-    repoData.head = { sha: initSha };
-  }
-  const baseSha = (await ghFetch(owner, repo, `git/refs/heads/${base}`).then((r) => r.json())).object.sha;
+  const baseSha = await headShaFor(owner, repo, base);
   const baseTree = (await ghFetch(owner, repo, `git/commits/${baseSha}`).then((r) => r.json())).tree.sha;
 
   const tree: Record<string, unknown>[] = [];
@@ -479,7 +489,7 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ref: `refs/heads/${skillsBranch}`, sha: commit.sha }),
   });
-  if (!mk.ok) return ghError(mk.status);
+  if (!mk.ok) return ghError(mk);
 
   const title = "chore: update OpenTask skills";
   const body = skillsPrBody(add, remove);
@@ -491,28 +501,21 @@ async function applySkills(owner: string, repo: string, add: string[], remove: s
     const q = `expand=1&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
     return { prUrl: `https://github.com/${owner}/${repo}/compare/${base}...${skillsBranch}?${q}` };
   }
-  return ghError(prRes.status);
+  return ghError(prRes);
 }
 
-// Create an initial commit on an empty repo so we can create branches and PRs.
-// Creates an empty tree, commits it with no parents, and creates the default branch ref.
-async function createInitialCommit(owner: string, repo: string, branch: string): Promise<string> {
-  const tree = await ghFetch(owner, repo, "git/trees", {
-    method: "POST",
+// Create the initial commit on an empty repo so we can create branches and PRs.
+// Goes through the Contents API, which creates the default branch when the repo has no
+// commits. The git-data route cannot: POST /git/trees rejects an empty tree with
+// 422 "Invalid tree info", and every later call then inherits an undefined sha.
+async function createInitialCommit(owner: string, repo: string): Promise<string> {
+  const res = await ghFetch(owner, repo, "contents/README.md", {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tree: [] }),
-  }).then((r) => r.json());
-  const commit = await ghFetch(owner, repo, "git/commits", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: "chore: initial commit for OpenTask Agent", tree: tree.sha, parents: [] }),
-  }).then((r) => r.json());
-  await ghFetch(owner, repo, "git/refs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: commit.sha }),
+    body: JSON.stringify({ message: "chore: initial commit", content: btoa(`# ${repo}\n`) }),
   });
-  return commit.sha;
+  if (!res.ok) throw await ghFail(res);
+  return (await res.json()).commit.sha;
 }
 
 // GitHub's POST /pulls transiently 500s in the moment right after a branch ref is
@@ -546,13 +549,13 @@ function skillsPrBody(add: string[], remove: string[]): string {
 // Resolve a ref (branch or tag) to its tree sha; the trees API wants a tree sha, not a ref.
 async function resolveTree(owner: string, repo: string, ref: string): Promise<string> {
   const res = await ghFetch(owner, repo, `commits/${ref}`);
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  if (!res.ok) throw await ghFail(res);
   return (await res.json()).commit.tree.sha;
 }
 
 async function listTreeFiles(owner: string, repo: string, treeSha: string): Promise<{ path: string; sha: string; mode: string }[]> {
   const res = await ghFetch(owner, repo, `git/trees/${treeSha}?recursive=1`);
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  if (!res.ok) throw await ghFail(res);
   const data = await res.json();
   const all = Array.isArray(data.tree) ? data.tree : [];
   return all.filter((e: { type: string }) => e.type === "blob").map((e: { path: string; sha: string; mode: string }) => ({ path: e.path, sha: e.sha, mode: e.mode }));
@@ -564,10 +567,10 @@ function decodeBase64(b64: string): string {
   return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
 }
 
-function ghError(status: number): { error: string } {
-  if (status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write and Pull requests: write." };
-  if (status === 404) return { error: "Repo not found, or the PAT can't access it." };
-  return { error: `GitHub ${status}` };
+async function ghError(res: Response): Promise<{ error: string }> {
+  if (res.status === 403) return { error: "PAT lacks the required scopes. The token needs Contents: write and Pull requests: write." };
+  if (res.status === 404) return { error: "Repo not found, or the PAT can't access it." };
+  return { error: githubError(res.status, await res.text().catch(() => "")) };
 }
 
 // --- RunPod GPU provisioning ---
