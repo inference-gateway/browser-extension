@@ -8,8 +8,8 @@ export function caretPosition(el: HTMLTextAreaElement, index: number): CaretPos 
   const c = getCaretCoordinates(el, index);
   const rect = el.getBoundingClientRect();
   return {
-    left: rect.left + c.left - el.scrollLeft,
-    top: rect.top + c.top - el.scrollTop,
+    left: rect.left + c.left,
+    top: rect.top + c.top,
     height: c.height,
   };
 }
