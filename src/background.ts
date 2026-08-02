@@ -291,8 +291,6 @@ async function doInstall(owner: string, repo: string, model: string): Promise<{ 
   if (prRes.ok) return { prUrl: (await prRes.json()).html_url };
   if (prRes.status === 403) return { error: "PAT lacks the required scopes. The token needs Pull requests: write." };
   if (prRes.status === 422) {
-    // "No commits between ..." really is "nothing to install"; any other 422 (a PR already
-    // open for the branch, a protected base) must not be relabelled as that.
     const detail = githubError(422, await prRes.text().catch(() => ""));
     return { error: /no commits between/i.test(detail) ? "The workflow is already up to date - nothing to re-install." : detail };
   }
