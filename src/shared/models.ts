@@ -233,7 +233,7 @@ misses the issue and does not scale:
 - Set Status with \`gh project item-edit --id <item-id> --project-id <project-id>
   --field-id <field-id> --single-select-option-id <option-id>\`: the option closest to
   "In Progress" BEFORE you start changing anything, and the option closest to "Done" when
-  your work is complete (body refined, fix pushed, or comment posted).`;
+  your work is complete (code changes committed and pushed).`;
 
 // Canonical infer-action issue-agent.yml, pinned to a release. The model is a
 // workflow_dispatch choice input (options = the configured models, default = the
