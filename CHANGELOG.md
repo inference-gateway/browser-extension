@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.3](https://github.com/inference-gateway/opentask/compare/v1.4.2...v1.4.3) (2026-08-02)
+
+### 🐛 Bug Fixes
+
+* guard against crash on empty repos with no commits ([#91](https://github.com/inference-gateway/opentask/issues/91)) ([f3638db](https://github.com/inference-gateway/opentask/commit/f3638db342d51e011899c196c1516ec6022d5072))
+
+### 🔧 Miscellaneous
+
+* **deps:** bump infer-action from v0.39.0/v0.42.1 to v0.42.2 ([#92](https://github.com/inference-gateway/opentask/issues/92)) ([d6263b4](https://github.com/inference-gateway/opentask/commit/d6263b49f14e55874d4106f12191b95d54490181))
+
 ## [1.4.2](https://github.com/inference-gateway/opentask/compare/v1.4.1...v1.4.2) (2026-08-01)
 
 ### 🔧 Miscellaneous
