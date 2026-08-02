@@ -156,7 +156,9 @@ export function AccountsTab({
             <p className="text-sm text-muted-foreground">
               On your App's settings page (<strong>General</strong>) under <strong>Client ID</strong> - it
               starts with <code>Iv23li…</code>. This is <strong>not</strong> the numeric <em>App ID</em>{" "}
-              (e.g. <code>4394298</code>) shown at the top of the same page.
+              (e.g. <code>4394298</code>) shown at the top of the same page. You can also enter the
+              name of a repo secret holding it (e.g. <code>APP_CLIENT_ID</code>) and the workflow
+              will read it from <code>secrets</code>.
             </p>
             <Label htmlFor="igw-bot-secret">Private-key secret name</Label>
             <Input

@@ -115,6 +115,12 @@ test("workflowYaml with a bot mints an app token and uses it for checkout + infe
   expect(yaml).toContain("github-app-slug: ${{ steps.app-token.outputs.app-slug }}");
 });
 
+test("workflowYaml renders a SCREAMING_SNAKE client id as a secrets reference", () => {
+  const yaml = workflowYaml(models, def, { ...bot, clientId: "INFERENCE_GATEWAY_APP_CLIENT_ID" });
+  expect(yaml).toContain("client-id: ${{ secrets.INFERENCE_GATEWAY_APP_CLIENT_ID }}");
+  expect(yaml).not.toContain("client-id: INFERENCE_GATEWAY_APP_CLIENT_ID");
+});
+
 test("workflowYaml without a bot does not pass github-app-slug", () => {
   expect(workflowYaml(models, def, noBot)).not.toContain("github-app-slug");
 });
