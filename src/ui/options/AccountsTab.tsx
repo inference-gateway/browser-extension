@@ -156,7 +156,9 @@ export function AccountsTab({
             <p className="text-sm text-muted-foreground">
               On your App's settings page (<strong>General</strong>) under <strong>Client ID</strong> - it
               starts with <code>Iv23li…</code>. This is <strong>not</strong> the numeric <em>App ID</em>{" "}
-              (e.g. <code>4394298</code>) shown at the top of the same page.
+              (e.g. <code>4394298</code>) shown at the top of the same page. You can also enter the
+              name of a repo secret holding it (e.g. <code>APP_CLIENT_ID</code>) and the workflow
+              will read it from <code>secrets</code>.
             </p>
             <Label htmlFor="igw-bot-secret">Private-key secret name</Label>
             <Input
@@ -167,8 +169,8 @@ export function AccountsTab({
               onChange={(e) => updateBot({ privateKeySecret: e.target.value })}
             />
             <p className="text-sm text-muted-foreground">
-              Add this repo secret with your App's private key. The Client ID is inlined into the
-              workflow (it isn't sensitive).
+              Add this repo secret with your App's private key. The Client ID is also wrapped in
+              a secrets reference so it can be stored as a repo secret too.
             </p>
           </div>
         )}

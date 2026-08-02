@@ -107,12 +107,18 @@ test("workflowYaml without a bot uses GITHUB_TOKEN and no app-token step", () =>
 test("workflowYaml with a bot mints an app token and uses it for checkout + infer-action", () => {
   const yaml = workflowYaml(models, def, bot);
   expect(yaml).toContain("uses: actions/create-github-app-token@v3");
-  expect(yaml).toContain(`client-id: ${bot.clientId}`);
+  expect(yaml).toContain(`client-id: \${{ secrets.${bot.clientId} }}`);
   expect(yaml).toContain(`private-key: \${{ secrets.${bot.privateKeySecret} }}`);
   expect(yaml).toContain("token: ${{ steps.app-token.outputs.token }}");
   expect(yaml).toContain("github-token: ${{ steps.app-token.outputs.token }}");
   expect(yaml).not.toContain("github-token: ${{ secrets.GITHUB_TOKEN }}");
   expect(yaml).toContain("github-app-slug: ${{ steps.app-token.outputs.app-slug }}");
+});
+
+test("workflowYaml renders a SCREAMING_SNAKE client id as a secrets reference", () => {
+  const yaml = workflowYaml(models, def, { ...bot, clientId: "INFERENCE_GATEWAY_APP_CLIENT_ID" });
+  expect(yaml).toContain("client-id: ${{ secrets.INFERENCE_GATEWAY_APP_CLIENT_ID }}");
+  expect(yaml).not.toContain("client-id: INFERENCE_GATEWAY_APP_CLIENT_ID");
 });
 
 test("workflowYaml without a bot does not pass github-app-slug", () => {

@@ -276,7 +276,7 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     ? `      - uses: actions/create-github-app-token@v3.2.0
         id: app-token
         with:
-          client-id: ${bot.clientId}
+          client-id: \${{ secrets.${bot.clientId} }}
           private-key: \${{ secrets.${bot.privateKeySecret} }}
 
 `
