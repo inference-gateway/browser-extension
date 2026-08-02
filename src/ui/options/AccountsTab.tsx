@@ -169,8 +169,8 @@ export function AccountsTab({
               onChange={(e) => updateBot({ privateKeySecret: e.target.value })}
             />
             <p className="text-sm text-muted-foreground">
-              Add this repo secret with your App's private key. The Client ID is inlined into the
-              workflow (it isn't sensitive).
+              Add this repo secret with your App's private key. The Client ID is also wrapped in
+              a secrets reference so it can be stored as a repo secret too.
             </p>
           </div>
         )}

@@ -107,7 +107,7 @@ test("workflowYaml without a bot uses GITHUB_TOKEN and no app-token step", () =>
 test("workflowYaml with a bot mints an app token and uses it for checkout + infer-action", () => {
   const yaml = workflowYaml(models, def, bot);
   expect(yaml).toContain("uses: actions/create-github-app-token@v3");
-  expect(yaml).toContain(`client-id: ${bot.clientId}`);
+  expect(yaml).toContain("client-id: ${{ secrets." + bot.clientId + " }}");
   expect(yaml).toContain(`private-key: \${{ secrets.${bot.privateKeySecret} }}`);
   expect(yaml).toContain("token: ${{ steps.app-token.outputs.token }}");
   expect(yaml).toContain("github-token: ${{ steps.app-token.outputs.token }}");
