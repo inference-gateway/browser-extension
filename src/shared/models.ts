@@ -203,6 +203,13 @@ export function isInitConfig(x: unknown): x is InitConfig {
 
 // Per-run job timeout (minutes) for the generated workflow. Stored under "timeout".
 export const DEFAULT_TIMEOUT = 25;
+// Guard: check that a GitHub repo API response has at least one commit (head is non-null).
+// Empty repos (no commits) have no branch refs, so any git/refs/heads/ call would 404.
+export function emptyRepoError(repoData: { head: unknown }): string | null {
+  if (!repoData.head) return "The repository has no commits yet. Create an initial commit before installing the OpenTask Agent workflow.";
+  return null;
+}
+
 export function normalizeTimeout(x: unknown): number {
   return typeof x === "number" && Number.isFinite(x) && x > 0 ? Math.round(x) : DEFAULT_TIMEOUT;
 }
