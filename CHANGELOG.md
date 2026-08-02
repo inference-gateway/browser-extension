@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.6](https://github.com/inference-gateway/opentask/compare/v1.4.5...v1.4.6) (2026-08-02)
+
+### 🐛 Bug Fixes
+
+* **caret:** remove incorrect scroll subtraction in caretPosition ([#97](https://github.com/inference-gateway/opentask/issues/97)) ([ce38fb1](https://github.com/inference-gateway/opentask/commit/ce38fb15d8e196675a9e7d04af0853be9607d568))
+* **models:** remove 'body refined' from board Done condition ([#98](https://github.com/inference-gateway/opentask/issues/98)) ([8ee9e84](https://github.com/inference-gateway/opentask/commit/8ee9e844b0ddbdfc6d15b26475edb311417a6d7f))
+
 ## [1.4.5](https://github.com/inference-gateway/opentask/compare/v1.4.4...v1.4.5) (2026-08-02)
 
 ### 🐛 Bug Fixes
