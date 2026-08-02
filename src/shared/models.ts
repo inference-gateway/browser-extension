@@ -51,15 +51,6 @@ export type BotConfig = { enabled: boolean; clientId: string; privateKeySecret: 
 
 export const DEFAULT_BOT: BotConfig = { enabled: false, clientId: "", privateKeySecret: "OPENTASK_APP_PRIVATE_KEY" };
 
-// The Client ID field accepts either the literal id ("Iv23li...") or the name of a repo
-// secret holding it. A SCREAMING_SNAKE value is a secret name - a real Client ID is
-// mixed-case and never matches - so render it as a secrets reference instead of inlining
-// it, which would emit an undefined-variable literal into the workflow.
-export function clientIdRef(clientId: string): string {
-  const id = clientId.trim();
-  return /^[A-Z][A-Z0-9_]*$/.test(id) ? `\${{ secrets.${id} }}` : id;
-}
-
 export function isBotConfig(b: unknown): b is BotConfig {
   return (
     !!b &&
@@ -285,7 +276,7 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     ? `      - uses: actions/create-github-app-token@v3.2.0
         id: app-token
         with:
-          client-id: ${clientIdRef(bot.clientId)}
+          client-id: \${{ secrets.${bot.clientId} }}
           private-key: \${{ secrets.${bot.privateKeySecret} }}
 
 `
