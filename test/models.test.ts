@@ -35,7 +35,7 @@ test("workflowYaml emits selected agents as a block list, and omits the key when
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.42.2");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.43.1");
 });
 
 test("workflowYaml sets the @opentask trigger-phrase", () => {
@@ -51,10 +51,21 @@ test("workflowYaml exposes model as a free-text workflow_dispatch input with def
   expect(yaml).toContain(`model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}`);
 });
 
-test("workflowYaml wires the llama.cpp endpoint secret onto infer-action", () => {
+test("workflowYaml wires the llama.cpp endpoint secret onto infer-action, grouped with the provider keys", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("llamacpp-api-url: ${{ secrets.LLAMACPP_API_URL }}");
   expect(yaml).toContain("llamacpp-api-key: ${{ secrets.LLAMACPP_API_KEY }}");
+  expect(yaml.indexOf("llamacpp-api-url:")).toBeGreaterThan(yaml.indexOf("custom-instructions:"));
+  expect(yaml.indexOf("anthropic-api-key:")).toBeGreaterThan(yaml.indexOf("llamacpp-api-key:"));
+});
+
+test("workflowYaml emits vision-model/image-model only when set", () => {
+  const off = workflowYaml(models, def, noBot);
+  expect(off).not.toContain("vision-model:");
+  expect(off).not.toContain("image-model:");
+  const on = workflowYaml(models, def, noBot, undefined, undefined, undefined, undefined, undefined, undefined, false, "anthropic/claude-haiku-4-5-20251001", "openai/gpt-image-2");
+  expect(on).toContain("          vision-model: anthropic/claude-haiku-4-5-20251001");
+  expect(on).toContain("          image-model: openai/gpt-image-2");
 });
 
 test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", () => {
@@ -298,7 +309,7 @@ test("workflowYaml omits all dependency steps when none enabled", () => {
   const yaml = yamlWithDeps(setEnabled([]));
   expect(yaml).not.toContain("setup-task");
   expect(yaml).not.toContain("setup-go");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.42.2");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.43.1");
 });
 
 test("auto-detect guards every language runtime with hashFiles and keeps task by its toggle", () => {
