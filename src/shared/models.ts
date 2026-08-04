@@ -239,7 +239,7 @@ misses the issue and does not scale:
 // workflow_dispatch choice input (options = the configured models, default = the
 // one picked at install); every provider's key is wired so any dropdown choice
 // authenticates. Missing secrets render blank and are ignored by the action.
-export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES, debug: boolean = false): string {
+export function workflowYaml(models: ModelOption[], defaultModel: string, bot: BotConfig, perms: Permissions = DEFAULT_PERMISSIONS, plugins: string[] = enabledPlugins(DEFAULT_PLUGINS), agents: string[] = [], timeoutMinutes: number = DEFAULT_TIMEOUT, instructions: string = DEFAULT_INSTRUCTIONS, deps: DependenciesConfig = DEFAULT_DEPENDENCIES, debug: boolean = false, visionModel: string = "", imageModel: string = ""): string {
   const def = models.some((m) => m.model === defaultModel) ? defaultModel : models[0]?.model ?? "";
 
   const appends: string[] = [
@@ -255,7 +255,9 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     `          enable-git-operations: "\${{ inputs.enable_git || '${perms.createPRs}' }}"` +
     `\n          debug: "${debug}"` +
     `\n          bash-allow-append: "${appends.join(",")}"` +
-    instrBlock;
+    instrBlock +
+    (visionModel.trim() ? `\n          vision-model: ${visionModel.trim()}` : "") +
+    (imageModel.trim() ? `\n          image-model: ${imageModel.trim()}` : "");
 
   const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
   const agentLines = agents.length ? `\n          agents: |\n${agents.map((a) => `            ${a}`).join("\n")}` : "";
@@ -268,9 +270,11 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
       providers.push({ keyInput: m.keyInput, secret: m.secret });
     }
   }
-  const keyLines = providers
-    .map((p) => `          ${p.keyInput}: \${{ secrets.${p.secret} }}`)
-    .join("\n");
+  const keyLines = [
+    `          llamacpp-api-url: \${{ secrets.LLAMACPP_API_URL }}`,
+    `          llamacpp-api-key: \${{ secrets.LLAMACPP_API_KEY }}`,
+    ...providers.map((p) => `          ${p.keyInput}: \${{ secrets.${p.secret} }}`),
+  ].join("\n");
 
   const appTokenStep = bot.enabled
     ? `      - uses: actions/create-github-app-token@v3.2.0
@@ -335,13 +339,11 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.42.2
+      - uses: inference-gateway/infer-action@v0.43.1
         with:
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
           model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}
-          llamacpp-api-url: \${{ secrets.LLAMACPP_API_URL }}
-          llamacpp-api-key: \${{ secrets.LLAMACPP_API_KEY }}
           direct-prompt: \${{ inputs.prompt }}
           system-prompt-direct: \${{ inputs.system_prompt }}
 ${permLines}${pluginLines}${agentLines}
