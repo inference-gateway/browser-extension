@@ -35,7 +35,7 @@ test("workflowYaml emits selected agents as a block list, and omits the key when
 test("workflowYaml pins the checkout and infer-action refs", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: actions/checkout@v7.0.1");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.43.1");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.44.0");
 });
 
 test("workflowYaml sets the @opentask trigger-phrase", () => {
@@ -311,7 +311,7 @@ test("workflowYaml omits all dependency steps when none enabled", () => {
   const yaml = yamlWithDeps(setEnabled([]));
   expect(yaml).not.toContain("setup-task");
   expect(yaml).not.toContain("setup-go");
-  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.43.1");
+  expect(yaml).toContain("uses: inference-gateway/infer-action@v0.44.0");
 });
 
 test("auto-detect guards every language runtime with hashFiles and keeps task by its toggle", () => {
