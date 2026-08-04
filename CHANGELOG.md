@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0](https://github.com/inference-gateway/opentask/compare/v1.4.6...v1.5.0) (2026-08-04)
+
+### ✨ Features
+
+* bump infer-action to v0.43.1, expose vision/image models, group llamacpp keys with providers ([#101](https://github.com/inference-gateway/opentask/issues/101)) ([91f0cb3](https://github.com/inference-gateway/opentask/commit/91f0cb3e31e0fecae9245dff665a9297fada4412))
+
+### ♻️ Improvements
+
+* **models:** move debug to top of with: block in workflowYaml template ([#102](https://github.com/inference-gateway/opentask/issues/102)) ([80dcd3b](https://github.com/inference-gateway/opentask/commit/80dcd3be92532746769518a80f95f837ad162ab7))
+
+### 👷 CI
+
+* sync OpenTask Agent workflow ([#105](https://github.com/inference-gateway/opentask/issues/105)) ([7cfe6d6](https://github.com/inference-gateway/opentask/commit/7cfe6d6383de164b2701b1acbe6e6c0ceaec51c3))
+* sync OpenTask Agent workflow ([#106](https://github.com/inference-gateway/opentask/issues/106)) ([e6ec950](https://github.com/inference-gateway/opentask/commit/e6ec9506642a6f2a02a49b2b5eccb7cd914c1b66))
+* upgrade infer-action version and modify inputs ([0ee5d4c](https://github.com/inference-gateway/opentask/commit/0ee5d4ca000d02ee9140538530ab55d5d0090159))
+
+### 🔧 Miscellaneous
+
+* change debug value to string in tasks.yml ([e503831](https://github.com/inference-gateway/opentask/commit/e5038312bd11898e66890b0a3421c2a8e484780d))
+* **deps:** bump infer-action template from v0.43.1 to v0.44.0 ([#104](https://github.com/inference-gateway/opentask/issues/104)) ([5408788](https://github.com/inference-gateway/opentask/commit/5408788bd152b4c0b4916528fac5512454fc2825))
+* **deps:** bump the npm group with 4 updates ([#100](https://github.com/inference-gateway/opentask/issues/100)) ([287a9c2](https://github.com/inference-gateway/opentask/commit/287a9c23e194a1c5a3b736b0bdcbee9e72ae8977))
+* enable debug mode in inference-gateway action ([6f13d1d](https://github.com/inference-gateway/opentask/commit/6f13d1d7ef4957793e267182d326fa3fcd60bfcb))
+* group dependabot updates to reduce PR noise ([#99](https://github.com/inference-gateway/opentask/issues/99)) ([c89901b](https://github.com/inference-gateway/opentask/commit/c89901bca738cb24d9a00c058b2615fb428f8521))
+
 ## [1.4.6](https://github.com/inference-gateway/opentask/compare/v1.4.5...v1.4.6) (2026-08-02)
 
 ### 🐛 Bug Fixes
