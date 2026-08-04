@@ -59,13 +59,15 @@ test("workflowYaml wires the llama.cpp endpoint secret onto infer-action, groupe
   expect(yaml.indexOf("anthropic-api-key:")).toBeGreaterThan(yaml.indexOf("llamacpp-api-key:"));
 });
 
-test("workflowYaml emits vision-model/image-model only when set", () => {
+test("workflowYaml emits vision-model/image-model inputs always, with: params only when set", () => {
   const off = workflowYaml(models, def, noBot);
-  expect(off).not.toContain("vision-model:");
-  expect(off).not.toContain("image-model:");
+  expect(off).toContain("      vision-model:\n        description: Vision model for image analysis (workflow_dispatch only)");
+  expect(off).toContain("      image-model:\n        description: Image generation model (workflow_dispatch only)");
+  expect(off).not.toContain("          vision-model:");
+  expect(off).not.toContain("          image-model:");
   const on = workflowYaml(models, def, noBot, undefined, undefined, undefined, undefined, undefined, undefined, false, "anthropic/claude-haiku-4-5-20251001", "openai/gpt-image-2");
-  expect(on).toContain("          vision-model: anthropic/claude-haiku-4-5-20251001");
-  expect(on).toContain("          image-model: openai/gpt-image-2");
+  expect(on).toContain("          vision-model: ${{ inputs.vision-model || 'anthropic/claude-haiku-4-5-20251001' }}");
+  expect(on).toContain("          image-model: ${{ inputs.image-model || 'openai/gpt-image-2' }}");
 });
 
 test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", () => {
