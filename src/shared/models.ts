@@ -255,8 +255,8 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     `          enable-git-operations: "\${{ inputs.enable_git || '${perms.createPRs}' }}"` +
     `\n          bash-allow-append: "${appends.join(",")}"` +
     instrBlock +
-    (visionModel.trim() ? `\n          vision-model: ${visionModel.trim()}` : "") +
-    (imageModel.trim() ? `\n          image-model: ${imageModel.trim()}` : "");
+    (visionModel.trim() ? `\n          vision-model: \${{ inputs.vision-model || '${visionModel.trim()}' }}` : "") +
+    (imageModel.trim() ? `\n          image-model: \${{ inputs.image-model || '${imageModel.trim()}' }}` : "");
 
   const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
   const agentLines = agents.length ? `\n          agents: |\n${agents.map((a) => `            ${a}`).join("\n")}` : "";
@@ -315,6 +315,14 @@ on:
         description: Override the direct-prompt system prompt (workflow_dispatch only)
         required: false
         default: ""
+      vision-model:
+        description: Vision model for image analysis (workflow_dispatch only)
+        required: false
+        default: ${visionModel.trim() || '""'}
+      image-model:
+        description: Image generation model (workflow_dispatch only)
+        required: false
+        default: ${imageModel.trim() || '""'}
   issues:
     types:
       - opened
