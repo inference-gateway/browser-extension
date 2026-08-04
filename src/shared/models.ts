@@ -346,7 +346,7 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.44.0
+      - uses: inference-gateway/infer-action@v0.44.2
         with:
           debug: "${debug}"
           github-token: ${githubToken}${botSlugLine}
