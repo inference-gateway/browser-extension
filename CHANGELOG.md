@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1](https://github.com/inference-gateway/opentask/compare/v1.5.0...v1.5.1) (2026-08-04)
+
+### 🔧 Miscellaneous
+
+* **deps:** bump infer-action from v0.44.0 to v0.44.2 ([#107](https://github.com/inference-gateway/opentask/issues/107)) ([cbe3643](https://github.com/inference-gateway/opentask/commit/cbe3643af41b6b50a4f5b2d5fd9b25283a84af51))
+
 ## [1.5.0](https://github.com/inference-gateway/opentask/compare/v1.4.6...v1.5.0) (2026-08-04)
 
 ### ✨ Features
