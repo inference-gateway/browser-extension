@@ -54,18 +54,16 @@ jobs:
         with:
           version: 3.x
 
-      - uses: inference-gateway/infer-action@v0.42.2
+      - uses: inference-gateway/infer-action@v0.44.0
         with:
+          debug: "false"
           github-token: ${{ steps.app-token.outputs.token }}
           github-app-slug: ${{ steps.app-token.outputs.app-slug }}
           trigger-phrase: "@opentask"
           model: ${{ inputs.model || vars.DEFAULT_MODEL || 'ollama_cloud/deepseek-v4-flash' }}
-          llamacpp-api-url: ${{ secrets.LLAMACPP_API_URL }}
-          llamacpp-api-key: ${{ secrets.LLAMACPP_API_KEY }}
           direct-prompt: ${{ inputs.prompt }}
           system-prompt-direct: ${{ inputs.system_prompt }}
           enable-git-operations: "${{ inputs.enable_git || 'true' }}"
-          debug: "false"
           bash-allow-append: "gh project list( .*)?,gh project field-list( .*)?,gh project item-add( .*)?,gh project item-edit( .*)?,gh issue create( .*)?,gh issue edit( .*)?,gh issue comment( .*)?,gh pr comment( .*)?"
           custom-instructions: |
             When working on a GitHub issue that belongs to a project board, keep the board's status in
@@ -96,6 +94,9 @@ jobs:
             ayghri/i-have-adhd
           agents: |
             documentation-agent
+            browser-agent
+          llamacpp-api-url: ${{ secrets.LLAMACPP_API_URL }}
+          llamacpp-api-key: ${{ secrets.LLAMACPP_API_KEY }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           google-api-key: ${{ secrets.GOOGLE_API_KEY }}
