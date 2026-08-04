@@ -253,7 +253,6 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     : "";
   const permLines =
     `          enable-git-operations: "\${{ inputs.enable_git || '${perms.createPRs}' }}"` +
-    `\n          debug: "${debug}"` +
     `\n          bash-allow-append: "${appends.join(",")}"` +
     instrBlock +
     (visionModel.trim() ? `\n          vision-model: ${visionModel.trim()}` : "") +
@@ -341,6 +340,7 @@ ${appTokenStep}${checkoutStep}${depSteps}
 
       - uses: inference-gateway/infer-action@v0.43.1
         with:
+          debug: "${debug}"
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
           model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}
