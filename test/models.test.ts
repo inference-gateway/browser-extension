@@ -295,9 +295,10 @@ test("DEFAULT_DEPENDENCIES enables only task, auto-detect off", () => {
   expect(DEFAULT_DEPENDENCIES.items.filter((d) => d.enabled).map((d) => d.id)).toEqual(["task"]);
 });
 
-test("workflowYaml installs task by default and no language runtimes", () => {
+test("workflowYaml installs task by default with repo-token and no language runtimes", () => {
   const yaml = workflowYaml(models, def, noBot);
   expect(yaml).toContain("uses: arduino/setup-task@v3.0.0");
+  expect(yaml).toContain("repo-token: ${{ secrets.GITHUB_TOKEN }}");
   expect(yaml).not.toContain("setup-go");
   expect(yaml).not.toContain("hashFiles");
 });
