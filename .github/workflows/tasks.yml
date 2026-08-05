@@ -27,6 +27,10 @@ on:
         description: Image generation model (workflow_dispatch only)
         required: false
         default: ""
+      agents:
+        description: A2A agents to spin up (comma-separated, workflow_dispatch only)
+        required: false
+        default: ""
   issues:
     types:
       - opened
@@ -62,7 +66,7 @@ jobs:
         with:
           version: 3.x
 
-      - uses: inference-gateway/infer-action@v0.44.2
+      - uses: inference-gateway/infer-action@v0.44.4
         with:
           debug: "false"
           github-token: ${{ steps.app-token.outputs.token }}
