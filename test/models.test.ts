@@ -82,8 +82,8 @@ test("workflowYaml exposes a prompt input wired to infer-action direct-prompt", 
 });
 
 test("workflowYaml wires the debug flag onto infer-action, off by default", () => {
-  expect(workflowYaml(models, def, noBot)).toContain(`debug: "false"`);
-  expect(workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, [], [], DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, true)).toContain(`debug: "true"`);
+  expect(workflowYaml(models, def, noBot)).toContain(`debug: false`);
+  expect(workflowYaml(models, def, noBot, DEFAULT_PERMISSIONS, [], [], DEFAULT_TIMEOUT, DEFAULT_INSTRUCTIONS, DEFAULT_DEPENDENCIES, true)).toContain(`debug: true`);
 });
 
 test("workflowYaml exposes an enable_git input defaulting to the createPRs permission", () => {
