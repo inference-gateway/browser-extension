@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.4](https://github.com/inference-gateway/opentask/compare/v1.6.3...v1.6.4) (2026-08-05)
+
+### 🐛 Bug Fixes
+
+* **workflow:** grant bash allowlist entries for enabled language dependencies ([#119](https://github.com/inference-gateway/opentask/issues/119)) ([9f2f852](https://github.com/inference-gateway/opentask/commit/9f2f852186eb8efa3851300aca6543b06da6f850))
+
 ## [1.6.3](https://github.com/inference-gateway/opentask/compare/v1.6.2...v1.6.3) (2026-08-05)
 
 ### 🐛 Bug Fixes
