@@ -149,12 +149,16 @@ export const DEFAULT_DEPENDENCIES: DependenciesConfig = {
 // Registry mapping each dependency id to its rendered workflow step (6-space indent for
 // `- uses:`, matching checkoutStep) and, for language runtimes, the hashFiles guard used
 // in auto-detect mode. Order here is the render order in the generated workflow.
-export const DEPENDENCY_DEFS: { id: string; label: string; step: string; detect?: string }[] = [
+// `allow` lists the bash-allow-append entries (Go regexes, anchored by the CLI matcher)
+// granted alongside the toolchain - installing a toolchain the agent is not permitted to
+// run leaves it hand-simulating the tool instead of invoking it. `task` needs none: it is
+// already in the Infer CLI's read-only bash baseline.
+export const DEPENDENCY_DEFS: { id: string; label: string; step: string; detect?: string; allow?: string[] }[] = [
   { id: "task", label: "Task (go-task)", step: `      - uses: arduino/setup-task@v3.0.0\n        with:\n          version: 3.x\n          repo-token: \${{ secrets.GITHUB_TOKEN }}` },
-  { id: "go", label: "Go", step: `      - uses: actions/setup-go@v7.0.0\n        with:\n          go-version: stable`, detect: "hashFiles('**/go.mod') != ''" },
-  { id: "rust", label: "Rust", step: `      - uses: dtolnay/rust-toolchain@stable`, detect: "hashFiles('**/Cargo.toml') != ''" },
-  { id: "node", label: "Node.js / TypeScript", step: `      - uses: actions/setup-node@v7.0.0\n        with:\n          node-version: lts/*`, detect: "hashFiles('**/package.json') != ''" },
-  { id: "python", label: "Python", step: `      - uses: actions/setup-python@v7.0.0\n        with:\n          python-version: '3.x'`, detect: "hashFiles('**/pyproject.toml', '**/requirements.txt', '**/setup.py') != ''" },
+  { id: "go", label: "Go", step: `      - uses: actions/setup-go@v7.0.0\n        with:\n          go-version: stable`, detect: "hashFiles('**/go.mod') != ''", allow: ["gofmt( .*)?", "go (fmt|vet|test|build|run|mod|generate|tool)( .*)?"] },
+  { id: "rust", label: "Rust", step: `      - uses: dtolnay/rust-toolchain@stable`, detect: "hashFiles('**/Cargo.toml') != ''", allow: ["cargo( .*)?", "rustfmt( .*)?", "rustc( .*)?"] },
+  { id: "node", label: "Node.js / TypeScript", step: `      - uses: actions/setup-node@v7.0.0\n        with:\n          node-version: lts/*`, detect: "hashFiles('**/package.json') != ''", allow: ["npm( .*)?", "npx( .*)?", "yarn( .*)?", "pnpm( .*)?", "bun( .*)?", "bunx( .*)?"] },
+  { id: "python", label: "Python", step: `      - uses: actions/setup-python@v7.0.0\n        with:\n          python-version: '3.x'`, detect: "hashFiles('**/pyproject.toml', '**/requirements.txt', '**/setup.py') != ''", allow: ["python3?( .*)?", "pip3?( .*)?", "pytest( .*)?", "ruff( .*)?", "uv( .*)?"] },
 ];
 
 export function isDependenciesConfig(x: unknown): x is DependenciesConfig {
@@ -178,6 +182,16 @@ export function dependencySteps(deps: DependenciesConfig): string {
     if (on.has(def.id)) return [def.step];
     return [];
   }).join("\n\n");
+}
+
+// The bash-allow-append entries for every dependency whose setup step is emitted, in
+// render order. Auto-detect emits every language runtime, so their allow entries come
+// along too (harmless when the toolchain is absent - the command just is not there).
+export function dependencyAllowEntries(deps: DependenciesConfig): string[] {
+  const on = new Set(deps.items.filter((d) => d.enabled).map((d) => d.id));
+  return DEPENDENCY_DEFS.flatMap((def) =>
+    def.allow && ((deps.autoDetect && def.detect) || on.has(def.id)) ? def.allow : [],
+  );
 }
 
 export function isRefineConfig(r: unknown): r is RefineConfig {
@@ -248,6 +262,7 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
   ];
   if (perms.createIssues) appends.push("gh issue create( .*)?", "gh issue edit( .*)?");
   if (perms.comment) appends.push("gh issue comment( .*)?", "gh pr comment( .*)?");
+  appends.push(...dependencyAllowEntries(deps));
   const instrBlock = instructions.trim()
     ? `\n          custom-instructions: |\n${instructions.split("\n").map((l) => `            ${l}`).join("\n")}`
     : "";
