@@ -87,6 +87,7 @@ export function InstallPanel({ owner, repo, onClose }: { owner: string; repo: st
       if (resp.error) return setSend({ kind: "error", message: resp.error });
       setSend({ kind: "sent", url: resp.url as string, issue: createIssue });
       setTask("");
+      onClose();
     });
   }
 
