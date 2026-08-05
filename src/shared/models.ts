@@ -150,7 +150,7 @@ export const DEFAULT_DEPENDENCIES: DependenciesConfig = {
 // `- uses:`, matching checkoutStep) and, for language runtimes, the hashFiles guard used
 // in auto-detect mode. Order here is the render order in the generated workflow.
 export const DEPENDENCY_DEFS: { id: string; label: string; step: string; detect?: string }[] = [
-  { id: "task", label: "Task (go-task)", step: `      - uses: arduino/setup-task@v3.0.0\n        with:\n          version: 3.x` },
+  { id: "task", label: "Task (go-task)", step: `      - uses: arduino/setup-task@v3.0.0\n        with:\n          version: 3.x\n          repo-token: \${{ secrets.GITHUB_TOKEN }}` },
   { id: "go", label: "Go", step: `      - uses: actions/setup-go@v7.0.0\n        with:\n          go-version: stable`, detect: "hashFiles('**/go.mod') != ''" },
   { id: "rust", label: "Rust", step: `      - uses: dtolnay/rust-toolchain@stable`, detect: "hashFiles('**/Cargo.toml') != ''" },
   { id: "node", label: "Node.js / TypeScript", step: `      - uses: actions/setup-node@v7.0.0\n        with:\n          node-version: lts/*`, detect: "hashFiles('**/package.json') != ''" },
