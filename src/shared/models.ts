@@ -350,7 +350,7 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.44.4
+      - uses: inference-gateway/infer-action@v0.45.0
         with:
           debug: ${debug}
           github-token: ${githubToken}${botSlugLine}
