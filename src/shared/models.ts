@@ -259,7 +259,7 @@ export function workflowYaml(models: ModelOption[], defaultModel: string, bot: B
     (imageModel.trim() ? `\n          image-model: \${{ inputs.image-model || '${imageModel.trim()}' }}` : "");
 
   const pluginLines = plugins.length ? `\n          plugins: |\n${plugins.map((p) => `            ${p}`).join("\n")}` : "";
-  const agentLines = agents.length ? `\n          agents: |\n${agents.map((a) => `            ${a}`).join("\n")}` : "";
+  const agentLines = agents.length ? `\n          agents: \${{ inputs.agents || '${agents.join(",")}' }}` : "";
 
   const providers: Provider[] = [...DEFAULT_PROVIDERS];
   const seen = new Set(providers.map((p) => p.keyInput));
@@ -323,6 +323,10 @@ on:
         description: Image generation model (workflow_dispatch only)
         required: false
         default: ${imageModel.trim() || '""'}
+      agents:
+        description: A2A agents to spin up (comma-separated, workflow_dispatch only)
+        required: false
+        default: ""
   issues:
     types:
       - opened
@@ -346,7 +350,7 @@ jobs:
     steps:
 ${appTokenStep}${checkoutStep}${depSteps}
 
-      - uses: inference-gateway/infer-action@v0.44.2
+      - uses: inference-gateway/infer-action@v0.44.4
         with:
           debug: "${debug}"
           github-token: ${githubToken}${botSlugLine}
