@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.2](https://github.com/inference-gateway/opentask/compare/v1.6.1...v1.6.2) (2026-08-05)
+
+### 🐛 Bug Fixes
+
+* rename infer to opentask ([f13d32c](https://github.com/inference-gateway/opentask/commit/f13d32c53d82b659ba63c161c436ab9fe6aca24f))
+
+### 👷 CI
+
+* add arduino/setup-task@v3.0.0 with repo-token to CI workflow ([#114](https://github.com/inference-gateway/opentask/issues/114)) ([41a04fe](https://github.com/inference-gateway/opentask/commit/41a04feab1c9a2c2c6d319924d9e2c782f3ebe9a))
+* sync OpenTask Agent workflow ([#115](https://github.com/inference-gateway/opentask/issues/115)) ([6f032b9](https://github.com/inference-gateway/opentask/commit/6f032b92aef47d4365ca10e69a24145bb4fc2c11))
+
 ## [1.6.1](https://github.com/inference-gateway/opentask/compare/v1.6.0...v1.6.1) (2026-08-05)
 
 ### 🐛 Bug Fixes
