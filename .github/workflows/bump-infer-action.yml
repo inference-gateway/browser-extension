@@ -1,0 +1,96 @@
+name: Bump infer-action
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "New infer-action version (e.g., v0.46.0). Empty = latest release."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ secrets.INFERENCE_GATEWAY_MAINTAINER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.INFERENCE_GATEWAY_MAINTAINER_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            ${{ github.event.repository.name }}
+
+      - name: Resolve version
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "$VERSION" ]; then
+            VERSION=$(gh release view --repo inference-gateway/infer-action --json tagName -q .tagName)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update version references
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Strip leading v for sed patterns
+          VER="${VERSION#v}"
+          # Update all three files: replace infer-action@vX.Y.Z with the new version
+          for f in .github/workflows/tasks.yml src/shared/models.ts test/models.test.ts; do
+            sed -i "s|inference-gateway/infer-action@v[0-9.]*|inference-gateway/infer-action@$VERSION|" "$f"
+          done
+          echo "Updated infer-action references to $VERSION"
+
+      - name: Write PR body
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          cat > /tmp/pr-body.md <<PRBODY
+          ## Summary
+
+          Bumps the pinned \`inference-gateway/infer-action\` version from the current default to **$VERSION** across the workflow template, CI workflow, and tests.
+
+          ## Changes
+
+          - **src/shared/models.ts**: Updated the default \`infer-action\` ref in the generated workflow YAML template
+          - **.github/workflows/tasks.yml**: Updated the CI workflow's \`infer-action\` usage
+          - **test/models.test.ts**: Updated test assertions to match the new version
+          PRBODY
+
+      - name: Compute branch name
+        id: branch-name
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          BRANCH="bump-infer-action-$(echo "$VERSION" | tr '.' '-')"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          commit-message: "deps: bump infer-action to ${{ steps.resolve.outputs.version }}"
+          title: "deps: bump infer-action to ${{ steps.resolve.outputs.version }}"
+          body-path: /tmp/pr-body.md
+          labels: dependencies
+          branch: ${{ steps.branch-name.outputs.branch }}
+          base: main
+          add-paths: |
+            .github/workflows/tasks.yml
+            src/shared/models.ts
+            test/models.test.ts
+          sign-commits: true
+          signoff: true
+          delete-branch: true
