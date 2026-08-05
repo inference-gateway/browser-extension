@@ -344,7 +344,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  infer:
+  opentask:
     runs-on: ubuntu-24.04
     timeout-minutes: ${timeoutMinutes}
     steps:
