@@ -48,7 +48,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  infer:
+  opentask:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -65,6 +65,7 @@ jobs:
       - uses: arduino/setup-task@v3.0.0
         with:
           version: 3.x
+          repo-token: ${{ steps.app-token.outputs.token }}
 
       - uses: inference-gateway/infer-action@v0.44.4
         with:
