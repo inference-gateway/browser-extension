@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0](https://github.com/inference-gateway/opentask/compare/v1.5.1...v1.6.0) (2026-08-05)
+
+### ✨ Features
+
+* bump infer-action to v0.44.4 and add agents workflow_dispatch input ([#108](https://github.com/inference-gateway/opentask/issues/108)) ([d90dff6](https://github.com/inference-gateway/opentask/commit/d90dff670e5616249f140880c7fc6502fd4cb204))
+
+### 🐛 Bug Fixes
+
+* **ci:** update release.yml ([026bf60](https://github.com/inference-gateway/opentask/commit/026bf60487e9160e01ccba1120a8eea85ab8460f))
+
 ## [1.5.1](https://github.com/inference-gateway/opentask/compare/v1.5.0...v1.5.1) (2026-08-04)
 
 ### 🔧 Miscellaneous
