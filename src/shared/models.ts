@@ -352,7 +352,7 @@ ${appTokenStep}${checkoutStep}${depSteps}
 
       - uses: inference-gateway/infer-action@v0.44.4
         with:
-          debug: "${debug}"
+          debug: ${debug}
           github-token: ${githubToken}${botSlugLine}
           trigger-phrase: "@opentask"
           model: \${{ inputs.model || vars.DEFAULT_MODEL || '${def}' }}
