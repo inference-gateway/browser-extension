@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.3](https://github.com/inference-gateway/opentask/compare/v1.6.2...v1.6.3) (2026-08-05)
+
+### 🐛 Bug Fixes
+
+* **ui:** close tasks popover on successful submission ([#118](https://github.com/inference-gateway/opentask/issues/118)) ([7fe4734](https://github.com/inference-gateway/opentask/commit/7fe47344e026ef0107a00301fa191f38e99b5314))
+
+### 🔧 Miscellaneous
+
+* **deps:** bump infer-action from v0.44.4 to v0.45.0 ([#117](https://github.com/inference-gateway/opentask/issues/117)) ([e87ddf3](https://github.com/inference-gateway/opentask/commit/e87ddf3a8d76d1e314a09cd1fc1a9f36df103b60))
+
 ## [1.6.2](https://github.com/inference-gateway/opentask/compare/v1.6.1...v1.6.2) (2026-08-05)
 
 ### 🐛 Bug Fixes
