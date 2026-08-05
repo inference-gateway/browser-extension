@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.1](https://github.com/inference-gateway/opentask/compare/v1.6.0...v1.6.1) (2026-08-05)
+
+### 🐛 Bug Fixes
+
+* debug value in generated workflow is a string, should be a boolean ([#112](https://github.com/inference-gateway/opentask/issues/112)) ([542e50a](https://github.com/inference-gateway/opentask/commit/542e50a3c5766f9c864934f50a85830021e59562))
+
+### 🔧 Miscellaneous
+
+* rename infer job to opentask and fix ci.yml permissions ([#111](https://github.com/inference-gateway/opentask/issues/111)) ([f16a1d4](https://github.com/inference-gateway/opentask/commit/f16a1d4c1422f5c3a1613c40615dfa4d408deb4c))
+
 ## [1.6.0](https://github.com/inference-gateway/opentask/compare/v1.5.1...v1.6.0) (2026-08-05)
 
 ### ✨ Features
