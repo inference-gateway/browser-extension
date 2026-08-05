@@ -335,6 +335,23 @@ test("auto-detect ignores the per-language toggles (rust off still emitted with 
   expect(yaml).not.toContain("uses: arduino/setup-task");
 });
 
+test("enabled language deps grant matching bash-allow-append entries; task adds none", () => {
+  const yaml = yamlWithDeps(setEnabled(["task", "go"]));
+  expect(yaml).toContain("gofmt( .*)?");
+  expect(yaml).toContain("go (fmt|vet|test|build|run|mod|generate|tool)( .*)?");
+  expect(yaml).not.toContain("cargo( .*)?");
+  const none = yamlWithDeps(setEnabled(["task"]));
+  expect(none).not.toContain("gofmt");
+});
+
+test("auto-detect grants allow entries for every language runtime", () => {
+  const yaml = yamlWithDeps(setEnabled([], true));
+  expect(yaml).toContain("gofmt( .*)?");
+  expect(yaml).toContain("cargo( .*)?");
+  expect(yaml).toContain("npm( .*)?");
+  expect(yaml).toContain("pytest( .*)?");
+});
+
 test("isDependenciesConfig accepts a valid config and rejects bad shapes", () => {
   expect(isDependenciesConfig(DEFAULT_DEPENDENCIES)).toBe(true);
   expect(isDependenciesConfig({ autoDetect: true, items: [] })).toBe(true);
