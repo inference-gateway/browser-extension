@@ -6,7 +6,7 @@ on:
       model:
         description: Model to use (provider/model, e.g. llamacpp/phi-4)
         required: false
-        default: ollama_cloud/deepseek-v4-flash
+        default: ollama_cloud/deepseek-v4-flash:preview
       prompt:
         description: Task for the agent (workflow_dispatch only)
         required: false
@@ -75,7 +75,7 @@ jobs:
           github-token: ${{ steps.app-token.outputs.token }}
           github-app-slug: ${{ steps.app-token.outputs.app-slug }}
           trigger-phrase: "@opentask"
-          model: ${{ inputs.model || vars.DEFAULT_MODEL || 'ollama_cloud/deepseek-v4-flash' }}
+          model: ${{ inputs.model || vars.DEFAULT_MODEL || 'ollama_cloud/deepseek-v4-flash:preview' }}
           direct-prompt: ${{ inputs.prompt }}
           system-prompt-direct: ${{ inputs.system_prompt }}
           enable-git-operations: "${{ inputs.enable_git || 'true' }}"

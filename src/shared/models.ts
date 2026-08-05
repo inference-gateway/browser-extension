@@ -7,7 +7,7 @@ export type ModelOption = { model: string; keyInput: string; secret: string };
 
 // Curated from infer-action's README supported-model list. First entry = default.
 export const DEFAULT_MODELS: ModelOption[] = [
-  { model: "ollama_cloud/deepseek-v4-flash", keyInput: "ollama-cloud-api-key", secret: "OLLAMA_CLOUD_API_KEY" },
+  { model: "ollama_cloud/deepseek-v4-flash:preview", keyInput: "ollama-cloud-api-key", secret: "OLLAMA_CLOUD_API_KEY" },
   { model: "deepseek/deepseek-v4-flash", keyInput: "deepseek-api-key", secret: "DEEPSEEK_API_KEY" },
   { model: "anthropic/claude-sonnet-4-6", keyInput: "anthropic-api-key", secret: "ANTHROPIC_API_KEY" },
   { model: "openai/gpt-5", keyInput: "openai-api-key", secret: "OPENAI_API_KEY" },
