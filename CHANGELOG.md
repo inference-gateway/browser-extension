@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0](https://github.com/inference-gateway/opentask/compare/v1.6.4...v1.7.0) (2026-08-07)
+
+### ✨ Features
+
+* add opentask skill at .agents/skills/opentask/ ([#121](https://github.com/inference-gateway/opentask/issues/121)) ([acec02d](https://github.com/inference-gateway/opentask/commit/acec02d9cfa1c62952be261f6ff24ecc6eee8584))
+
+### 🔧 Miscellaneous
+
+* rename ollama_cloud/deepseek-v4-flash to ollama_cloud/deepseek-v4-flash:preview ([3d67cff](https://github.com/inference-gateway/opentask/commit/3d67cff3dd1058f01d308611f7de58d8f0388fc9))
+
 ## [1.6.4](https://github.com/inference-gateway/opentask/compare/v1.6.3...v1.6.4) (2026-08-05)
 
 ### 🐛 Bug Fixes
