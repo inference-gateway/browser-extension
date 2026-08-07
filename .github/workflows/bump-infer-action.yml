@@ -81,8 +81,8 @@ jobs:
         uses: peter-evans/create-pull-request@v8.1.1
         with:
           token: ${{ steps.app-token.outputs.token }}
-          commit-message: "deps: bump infer-action to ${{ steps.resolve.outputs.version }}"
-          title: "deps: bump infer-action to ${{ steps.resolve.outputs.version }}"
+          commit-message: "chore(deps): bump infer-action to ${{ steps.resolve.outputs.version }}"
+          title: "chore(deps): bump infer-action to ${{ steps.resolve.outputs.version }}"
           body-path: /tmp/pr-body.md
           labels: dependencies
           branch: ${{ steps.branch-name.outputs.branch }}
